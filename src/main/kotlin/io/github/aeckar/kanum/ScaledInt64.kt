@@ -1,13 +1,11 @@
 package io.github.aeckar.kanum
 
-import java.math.BigInteger
-
 /**
  * Destructuring of a value into the closest scaled 64-bit integer to this and its scale.
  *
  * Some information may be lost during conversion.
  */
-internal class Int64 {
+internal class ScaledInt64 {
     private val value: Long
     private val scale: Int
 

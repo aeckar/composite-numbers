@@ -1,6 +1,6 @@
 package io.github.aeckar.kanum
 
-import io.github.aeckar.kanum.utils.addOverflows
+import io.github.aeckar.kanum.utils.addValueOverflows
 import io.github.aeckar.kanum.utils.raiseUndefined
 import io.github.aeckar.kanum.utils.raiseOverflow
 import kotlin.math.absoluteValue
@@ -9,13 +9,13 @@ import kotlin.math.absoluteValue
 
 private infix fun Long.times128(other: Long): Int128 {
     val product = this * other
-    if (multiplyOverflows(this, other, product)) {
+    if (multiplyValueOverflows(this, other, product)) {
         return MutableInt128(this) * Int128(other)
     }
     return Int128(product)
 }
 
-private fun multiplyOverflows(x: Long, y: Long, product: Long = x * y): Boolean {
+private fun multiplyValueOverflows(x: Long, y: Long, product: Long = x * y): Boolean {
     if (x == Long.MIN_VALUE && y == -1L || y == Long.MIN_VALUE && x == -1L) {
         return true
     }
@@ -77,7 +77,15 @@ private fun log10(x: Long): Int {
     return result
 }
 
-// ---------------------------------------- class definition ----------------------------------------
+// ---------------------------------------- class definitions ----------------------------------------
+
+/**
+ * A mutable rational number.
+ *
+ * See [Cumulative] for details on composite number mutability.
+ */
+class MutableRational
+// TODO
 
 /**
  * Returns [x] as a ratio.
@@ -85,7 +93,7 @@ private fun log10(x: Long): Int {
  * Some information may be lost after conversion.
  */
 fun Rational(x: Int128): Rational {
-    val (numer, scale) = Int64(x)
+    val (numer, scale) = ScaledInt64(x)
     return Rational(numer, 1, scale, x.sign)
 }
 
@@ -140,8 +148,8 @@ open class Rational : CompositeNumber<Rational> {
         this.denom = unscaledDenom / gcf
         val rawScale = numerScale - denomScale
         this.scale = rawScale + scaleAugment
-        if (addOverflows(rawScale, scaleAugment, scale)) {
-            raiseOverflow("Rational number")
+        if (addValueOverflows(rawScale, scaleAugment, scale)) {
+            raiseOverflow()
         }
         this.sign = productSign(numer, denom)
     }
@@ -179,13 +187,13 @@ open class Rational : CompositeNumber<Rational> {
     // Used by arithmetic operations working with large numbers
     private constructor(numer: Int128, denom: Int128, scaleAugment: Int, sign: Int) {
         val gcf = gcf(numer, denom)
-        val (unscaledNumer, numerScale) = Int64(numer / gcf)
-        val (unscaledDenom, denomScale) = Int64(denom / gcf)
+        val (unscaledNumer, numerScale) = ScaledInt64(numer / gcf)
+        val (unscaledDenom, denomScale) = ScaledInt64(denom / gcf)
         this.numer = unscaledNumer
         this.denom = unscaledDenom
         this.scale = (numerScale - denomScale) + scaleAugment
         if (scale < scaleAugment) { // Sum overflows
-            raiseOverflow("The result of the operation")
+            raiseOverflow("The result of the operation")    // TODO when valueOf is implemented, catch this and specify result
         }
         this.sign = sign
     }

@@ -22,16 +22,16 @@ private val LONG_MAX = Long.MAX_VALUE.toBigInteger()
 private val BigDecimal.sign inline get() = this.signum() or 1
 
 /**
- * Returns [Int64] of the absolute value of [value].
+ * Returns [ScaledInt64] of the absolute value of [value].
  */
-private fun Int64(value: BigInteger): Int64 {
+private fun Int64(value: BigInteger): ScaledInt64 {
     var int = value.abs()
     var scale = 0
     while (int > LONG_MAX) {
         int /= BigInteger.TEN
         ++scale
     }
-    return Int64(int.longValueExact(), scale)
+    return ScaledInt64(int.longValueExact(), scale)
 }
 
 // ------------------------------ 128-bit integer functions ------------------------------
@@ -84,7 +84,7 @@ fun Int128(value: BigDecimal) = Int128(value.toBigInteger())
 fun Int128(value: BigInteger): Int128 {
     val bytes = value.toByteArray()
     if (bytes.size > 16) {
-        raiseOverflow("128-bit integer")
+        Int128.raiseOverflow()
     }
     val parts = IntArray(4).apply(ByteBuffer.wrap(bytes).asIntBuffer()::get)
     return Int128(parts[0], parts[1], parts[2], parts[3])

@@ -1,11 +1,5 @@
 package io.github.aeckar.kanum
 
-// ------------------------------ arithmetic ------------------------------
-
-
-
-// ------------------------------ class definition ------------------------------
-
 /**
  * A numeric value composed of multiple primitive values.
  *
