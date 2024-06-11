@@ -1,4 +1,4 @@
-package io.github.aeckar.kanum
+package io.github.aeckar.composite
 
 /**
  * Destructuring of a value into the closest scaled 64-bit integer to this and its scale.

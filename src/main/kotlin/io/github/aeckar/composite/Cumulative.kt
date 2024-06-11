@@ -1,4 +1,4 @@
-package io.github.aeckar.kanum
+package io.github.aeckar.composite
 
 /**
  * When applied to a function, indicates that if the caller is mutable, the result will be stored in the same instance.

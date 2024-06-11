@@ -1,4 +1,4 @@
-package io.github.aeckar.kanum
+package io.github.aeckar.composite
 
 /**
  * A numeric value composed of multiple primitive values.
@@ -10,22 +10,61 @@ package io.github.aeckar.kanum
  * Additionally, composite numbers may also be converted to and from their respective string representation.
  * Conversions from other types using the constructors provided by implementations result in no information loss.
  *
- * Implementations of this class are:
+ * Instances of this class are:
  * - Immutable: Public state cannot be modified
  * - Unique: There exists only one possible state for a given value
  * - Limited precision: Precision is fixed to a given number of binary digits (however, they may be scaled)
  * - Efficient: Fixed-precision allows for certain key optimizations to be made
+ * - Accurate: If the result of an operation is too large or small to be represented accurately
+ * as a composite number, such as in the event of an integer overflow, an [ArithmeticException] will be thrown
  *
+ * Results of computationally expensive operations, are not cached
+ * and should be stored in a variable if used more than once.
+ * The one exception to this is [toString].
  * @param T the inheritor of this class
  */
 @Suppress("EqualsOrHashCode")
 sealed class CompositeNumber<T : CompositeNumber<T>> : Number(), Comparable<T> {
+    protected var string: String? = null
+
     /**
      * -1 if this value is negative, else 1.
      *
      * Should be used instead of [signum] when equality to 0 is irrelevant.
      */
     abstract val sign: Int
+
+    // ------------------------------ mutability --------------------
+
+    /*
+        Conversion between mutable and immutable instances should be restricted the specific inheritor.
+        Operations with argument(s) of type T that utilize mutability will generally reside with the same class.
+        Restricting this functionality reduces the chances of mutability
+        being used incorrectly by causing unwanted side effects.
+     */
+
+    /**
+     * Returns an immutable composite number equal in value to this.
+     *
+     * If chained to an operation, this function should be called second.
+     * If the caller is guaranteed to be immutable, this function does nothing.
+     */
+    protected abstract fun immutable(): T
+
+    /**
+     * Returns a mutable composite number equal in value to this.
+     *
+     * If chained to an operation, this function should be called first.
+     * If the caller is guaranteed to be immutable, for instance a static constant,
+     * the mutable instance should be instantiated directly instead.
+     */
+    @Cumulative
+    protected abstract fun mutable(): T
+
+    /**
+     * Returns a new instance with the given value, or if [mutable], the same instance with the value stored.
+     */
+    protected abstract fun valueOf(other: T): T
 
     // ------------------------------ arithmetic ------------------------------
 
@@ -113,7 +152,7 @@ sealed class CompositeNumber<T : CompositeNumber<T>> : Number(), Comparable<T> {
      */
     protected abstract fun isLongValue(): Boolean
 
-    // ------------------------------ conversion functions ------------------------------
+    // ------------------------------ conversions ------------------------------
 
     final override fun toByte() = toInt().toByte()
     final override fun toShort() = toInt().toShort()
@@ -130,9 +169,9 @@ sealed class CompositeNumber<T : CompositeNumber<T>> : Number(), Comparable<T> {
     abstract fun toInt128(): Int128
 
     /**
-     * Returns a string representation of this value.
+     * Returns a string representation of this value in base 10.
      *
-     * When passed to the string constructor, creates an instance equal in value to this.
+     * When passed to the string constructor of the inheritor, creates an instance equal in value to this.
      */
     abstract override fun toString(): String
 }

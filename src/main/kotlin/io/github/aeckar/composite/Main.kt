@@ -1,4 +1,4 @@
-package io.github.aeckar.kanum
+package io.github.aeckar.composite
 
 infix fun Char.from(acceptable: String): Char {
     if (this !in acceptable) {

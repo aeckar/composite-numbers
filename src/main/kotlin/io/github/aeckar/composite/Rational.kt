@@ -1,8 +1,8 @@
-package io.github.aeckar.kanum
+package io.github.aeckar.composite
 
-import io.github.aeckar.kanum.utils.addValueOverflows
-import io.github.aeckar.kanum.utils.raiseUndefined
-import io.github.aeckar.kanum.utils.raiseOverflow
+import io.github.aeckar.composite.utils.addValueOverflows
+import io.github.aeckar.composite.utils.raiseUndefined
+import io.github.aeckar.composite.utils.raiseOverflow
 import kotlin.math.absoluteValue
 
 // ---------------------------------------- arithmetic ----------------------------------------
@@ -121,6 +121,17 @@ open class Rational : CompositeNumber<Rational> {
     val scale: Int
 
     final override val sign: Int
+    override fun immutable(): Rational {
+        TODO("Not yet implemented")
+    }
+
+    override fun mutable(): Rational {
+        TODO("Not yet implemented")
+    }
+
+    override fun valueOf(other: Rational): Rational {
+        TODO("Not yet implemented")
+    }
 
     /**
      * Returns a ratio with the given [numerator][numer] and [denominator][denom] after simplification.
@@ -193,7 +204,7 @@ open class Rational : CompositeNumber<Rational> {
         this.denom = unscaledDenom
         this.scale = (numerScale - denomScale) + scaleAugment
         if (scale < scaleAugment) { // Sum overflows
-            raiseOverflow("The result of the operation")    // TODO when valueOf is implemented, catch this and specify result
+            raiseOverflow()    // TODO when valueOf is implemented, catch this and specify result
         }
         this.sign = sign
     }

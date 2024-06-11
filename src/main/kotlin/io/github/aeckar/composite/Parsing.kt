@@ -1,4 +1,4 @@
-package io.github.aeckar.kanum
+package io.github.aeckar.composite
 
 internal const val DIGITS = "0123456789"
 

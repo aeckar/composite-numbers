@@ -1,6 +1,6 @@
-package io.github.aeckar.kanum
+package io.github.aeckar.composite
 
-import io.github.aeckar.kanum.utils.raiseOverflow
+import io.github.aeckar.composite.utils.raiseOverflow
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.nio.ByteBuffer
@@ -22,9 +22,9 @@ private val LONG_MAX = Long.MAX_VALUE.toBigInteger()
 private val BigDecimal.sign inline get() = this.signum() or 1
 
 /**
- * Returns [ScaledInt64] of the absolute value of [value].
+ * Returns a scaled, 64-bit integer equal to the absolute value of [value].
  */
-private fun Int64(value: BigInteger): ScaledInt64 {
+private fun ScaledInt64(value: BigInteger): ScaledInt64 {
     var int = value.abs()
     var scale = 0
     while (int > LONG_MAX) {
@@ -59,12 +59,7 @@ fun Int128.toBigDecimal() = toBigInteger().toBigDecimal()
  * Returns an arbitrary-precision integer equal in value to this.
  */
 fun Int128.toBigInteger(): BigInteger {
-    val value = ByteBuffer.allocate(16).apply {
-        putInt(q1)
-        putInt(q2)
-        putInt(q3)
-        putInt(q4)
-    }.array()
+    val value = ByteBuffer.allocate(Int128.SIZE_BYTES).apply { putInt(q1); putInt(q2); putInt(q3); putInt(q4) }.array()
     return BigInteger(value)
 }
 
@@ -74,6 +69,7 @@ fun Int128.toBigInteger(): BigInteger {
  * Any decimal digits are truncated during conversion.
  * @throws ArithmeticException [value] is too large to be represented as an Int128
  */
+@Suppress("unused")
 fun Int128(value: BigDecimal) = Int128(value.toBigInteger())
 
 /**
@@ -82,9 +78,16 @@ fun Int128(value: BigDecimal) = Int128(value.toBigInteger())
  * @throws ArithmeticException [value] is too large to be represented as an Int128
  */
 fun Int128(value: BigInteger): Int128 {
-    val bytes = value.toByteArray()
-    if (bytes.size > 16) {
-        Int128.raiseOverflow()
+    var bytes = value.toByteArray()
+    val maxBytes = Int128.SIZE_BYTES
+    if (bytes.size > maxBytes) {
+        Int128.raiseOverflow(additionalInfo = value.toString())
+    }
+    if (bytes.size != maxBytes) {
+        val padding = maxBytes - bytes.size
+        bytes = bytes.copyInto(ByteArray(maxBytes), padding)
+        val blank = Int128.blank(value.signum() or 1 /* if zero */)
+        repeat(padding) { bytes[it] = blank.toByte() }
     }
     val parts = IntArray(4).apply(ByteBuffer.wrap(bytes).asIntBuffer()::get)
     return Int128(parts[0], parts[1], parts[2], parts[3])
@@ -125,12 +128,12 @@ fun Rational.toBigInteger() = numer.toBigInteger() * BigInteger.TEN.pow(scale) *
  */
 fun Rational(value: BigDecimal): Rational {
     val int = value.toBigInteger()
-    val (unscaledInt, intScale) = Int64(int)
+    val (unscaledInt, intScale) = ScaledInt64(int)
     val rawFracScale: Int
     val frac = (value - int.toBigDecimal())
         .also { rawFracScale = it.scale() /* < 0 */ }
         .setScale(rawFracScale - rawFracScale.coerceAtLeast(-19 /* = -log10(Long.MAX_SIZE) */))
-    val (unscaledFrac, fracScale) = Int64(frac.toBigInteger())
+    val (unscaledFrac, fracScale) = ScaledInt64(frac.toBigInteger())
     return Rational(unscaledInt, 1L, intScale, 1) +/* = */ Rational(unscaledFrac, 1L, -fracScale, value.sign)
 }// TODO change to mutable ^
 
@@ -140,6 +143,6 @@ fun Rational(value: BigDecimal): Rational {
  * Some information may be lost on conversion.
  */
 fun Rational(value: BigInteger): Rational {
-    val (numer, scale) = Int64(value)
+    val (numer, scale) = ScaledInt64(value)
     return Rational(numer, 1L, scale, 1)
 }
