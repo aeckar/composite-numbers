@@ -8,6 +8,18 @@ internal class InvalidDimensionsException(
     columnCount: Int
 ) : Exception("${rowCount}x$columnCount table has 0 rows or 0 columns")
 
+internal inline fun <E : Any> Table(
+    rowCount: Int,
+    columnCount: Int,
+    defaultEntry: (Int, Int) -> E
+): Table<E> {
+    val table = Table<E>(rowCount, columnCount)
+    repeat(rowCount) { rowIndex ->
+        repeat(columnCount) { columnIndex -> table[rowIndex, columnIndex] = defaultEntry(rowIndex, columnIndex) }
+    }
+    return table
+}
+
 /**
  * A table of entries.
  *
@@ -18,12 +30,13 @@ internal class InvalidDimensionsException(
  * Access to entries involves casting them to their non-nullable form.
  * If an entry is not initialized, that is to say it is null, a [NoSuchElementException] will be thrown upon access.
  *
- * This class also provides to iterate over entries, rows, columns idiomatically.
+ * Unlike other iterable classes, this class does not implement from [Iterable].
+ * Additionally, iteration functions are prefixed with `by` instead of `for`.
  *
- * Instances are mutable.
+ * Instances are mutable and should be defensively copied when appropriate.
  */
 @JvmInline
-internal value class Table<E : Any> private constructor(private val backingArray: Array<Array<E?>>) {
+internal value class Table<E : Any>(private val backingArray: Array<Array<E?>>) {
     init {
         if (backingArray.isEmpty() || backingArray[0].isEmpty()) {
             val rowCount = backingArray.size
@@ -35,21 +48,38 @@ internal value class Table<E : Any> private constructor(private val backingArray
     @Suppress("UNCHECKED_CAST")
     constructor(
         rowCount: Int,
-        columnCount: Int
-    ) : this(Array<Array<Any?>>(rowCount) { Array<Any?>(columnCount) { null } } as Array<Array<E?>>)
+        columnCount: Int,
+        defaultEntry: E? = null
+    ) : this(Array<Array<Any?>>(rowCount) { Array<Any?>(columnCount) { defaultEntry } } as Array<Array<E?>>)
 
-    interface Index {
-        operator fun component1(): Int
-        operator fun component2(): Int
+    /**
+     * Will stop after the rightmost column before going down to the next row.
+     * However, will not stop at last row.
+     */
+    class IndexIterator(table: Table<*>) {
+        private val lastColumn: Int = table.countColumns() - 1
+        var row = 0
+            private set
+        var column = 0
+            private set
+        
+        operator fun inc() = this.also {
+            if (column == lastColumn) {
+                ++row
+                column = 0
+            } else {
+                ++column
+            }
+        }
     }
-
+    
     @JvmInline
     value class Row<E : Any>(private val entries: Array<E>) {
         inline fun byColumn(action: (E) -> Unit) = entries.forEach(action)
 
         inline fun byColumnIndexed(action: (Int, E) -> Unit) = entries.forEachIndexed(action)
     }
-
+    
     // ------------------------------ access and modification ------------------------------
 
     operator fun get(rowIndex: Int, columnIndex: Int): E {
@@ -76,7 +106,7 @@ internal value class Table<E : Any> private constructor(private val backingArray
     private fun raiseInvalidIndex(rowIndex: Int, columnIndex: Int): Nothing {
         throw NoSuchElementException(
             "Index [$rowIndex, $columnIndex] lies outside the bounds of the table " +
-                    "(rows = ${countRows()}, columns = ${countColumns()})"
+            "(rows = ${countRows()}, columns = ${countColumns()})"
         )
     }
 
@@ -89,40 +119,33 @@ internal value class Table<E : Any> private constructor(private val backingArray
     inline fun byRow(action: (Row<E>) -> Unit) = backingArray.forEach { action(Row(it as Array<E>)) }
 
     @Suppress("UNCHECKED_CAST")
-    inline fun byRowIndexed(action: (Int, Row<E>) -> Unit) = backingArray.forEachIndexed { index, row ->
-        action(index, Row(row as Array<E>))
+    inline fun byRowIndexed(action: (Int, Row<E>) -> Unit) {
+        backingArray.forEachIndexed { index, row -> action(index, Row(row as Array<E>)) }
     }
 
     inline fun byEntry(action: (E) -> Unit) {
-        var rowIndex = 0
-        var columnIndex = 0
-        do {
-            (backingArray[rowIndex][columnIndex] as E).apply(action)
-            if (columnIndex == backingArray[rowIndex].lastIndex) {
-                ++rowIndex
-                columnIndex = 0
-            } else {
-                ++columnIndex
-            }
-        } while (rowIndex < backingArray.size)
-    }
-
-    inline fun byEntryIndexed(action: (Index, E) -> Unit) {
-        val index = object : Index {
-            var rowIndex: Int = 0
-            var columnIndex: Int = 0
-
-            override fun component1() = rowIndex
-            override fun component2() = columnIndex
-        }
-        while (index.rowIndex < backingArray.size) with(index) {
-            action(index, backingArray[rowIndex][columnIndex] as E)
-            if (columnIndex == backingArray[rowIndex].lastIndex) {
-                ++rowIndex
-                columnIndex = 0
-            } else {
-                ++columnIndex
-            }
+        var index = indexIterator()
+        while (index.row < backingArray.size) with(index) {
+            (backingArray[row][column] as E).apply(action)
+            ++index
         }
     }
+
+    inline fun byEntryIndexed(action: (Int, Int, E) -> Unit) {
+        var index = indexIterator()
+        while (index.row < backingArray.size) with (index) {
+            action(row, column, backingArray[row][column] as E)
+            ++index
+        }
+    }
+
+    // ------------------------------ miscellaneous ------------------------------
+
+    /**
+     * Returns the 2-dimensional backing array of this table.
+     */
+    @Suppress("UNCHECKED_CAST")
+    fun array() = backingArray as Array<Array<E>>
+
+    fun indexIterator() = IndexIterator(this)
 }

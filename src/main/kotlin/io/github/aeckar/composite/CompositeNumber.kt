@@ -18,14 +18,15 @@ package io.github.aeckar.composite
  * - Accurate: If the result of an operation is too large or small to be represented accurately
  * as a composite number, such as in the event of an integer overflow, an [ArithmeticException] will be thrown
  *
- * Results of computationally expensive operations, are not cached
+ * Results of computationally expensive operations are not cached,
  * and should be stored in a variable if used more than once.
  * The one exception to this is [toString].
+ *
  * @param T the inheritor of this class
  */
 @Suppress("EqualsOrHashCode")
 sealed class CompositeNumber<T : CompositeNumber<T>> : Number(), Comparable<T> {
-    protected var string: String? = null
+    protected var lazyString: String? = null
 
     /**
      * -1 if this value is negative, else 1.

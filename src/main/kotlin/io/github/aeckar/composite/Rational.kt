@@ -332,10 +332,11 @@ open class Rational : CompositeNumber<Rational> {
     }
 
     companion object {
-        val ZERO = Rational(0L, 1L, 0, 0)
-        val ONE = Rational(1L, 1L, 0, 0)
-        val TWO = Rational(2L, 1L, 0, 0)
-        val TEN = Rational(10L, 1L, 0, 0)
+        val NEGATIVE_ONE = Rational(1, 1, 0, -1)
+        val ZERO = Rational(0, 1, 0, 0)
+        val ONE = Rational(1, 1, 0, 0)
+        val TWO = Rational(2, 1, 0, 0)
+        val TEN = Rational(10, 1, 0, 0)
     }
 }
 /*

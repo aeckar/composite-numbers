@@ -22,7 +22,7 @@ internal fun Int.widen() = this.toUInt().toLong()
  */
 internal fun addValueOverflows(x: Int, y: Int, sum: Int = x + y): Boolean {
     val isNegative = x < 0
-    return isNegative == (y < 0) && isNegative != (sum  < 0)
+    return isNegative == (y < 0) && isNegative xor (sum  < 0)
 }
 
 // ------------------------------ exception handling ------------------------------

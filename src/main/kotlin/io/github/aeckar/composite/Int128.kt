@@ -47,10 +47,14 @@ internal class MutableInt128 : Int128 {
  */
 @Suppress("EqualsOrHashCode")
 open class Int128 : CompositeNumber<Int128> {
-    var q1: Int internal set
-    var q2: Int internal set
-    var q3: Int internal set
-    var q4: Int internal set
+    var q1: Int
+        internal set
+    var q2: Int
+        internal set
+    var q3: Int
+        internal set
+    var q4: Int
+        internal set
 
     internal val isNegative inline get() = q1 < 0
     private val isPositive inline get() = q1 >= 0
@@ -387,7 +391,7 @@ open class Int128 : CompositeNumber<Int128> {
         val q1 = q1w() + other.q1w() + q2.isNotI32().toInt()
         val q1Low = q1.low
         if (this.sign == other.sign) {
-            if (q1.isNotI32() || (q1Low < 0) != this.isNegative /* sign bit overflow */) {
+            if (q1.isNotI32() || (q1Low < 0) xor this.isNegative /* sign bit overflow */) {
                 raiseOverflow(additionalInfo = "$this + $other")
             }
         }
@@ -680,8 +684,8 @@ open class Int128 : CompositeNumber<Int128> {
      */
     @Suppress("MemberVisibilityCanBePrivate")
     fun toString(radix: Int): String {
-        string?.let { return it }
-        return toBigInteger().toString(radix).also { this.string = it }
+        lazyString?.let { return it }
+        return toBigInteger().toString(radix).also { this.lazyString = it }
     }
 
     final override fun toInt() = q4
@@ -708,12 +712,12 @@ open class Int128 : CompositeNumber<Int128> {
     final override fun toString() = toString(radix = 10)
 
     companion object {
+        val MIN_VALUE = Int128(Int.MIN_VALUE, 0, 0, 0)
+        val NEGATIVE_ONE = Int128(-1, -1, -1, -1)
         val ZERO = Int128(0, 0, 0, 0)
         val ONE = Int128(0, 0, 0, 1)
         val TWO = Int128(0, 0, 0, 2)
         val TEN = Int128(0, 0, 0, 10)
-
-        val MIN_VALUE = Int128(Int.MIN_VALUE, 0, 0, 0)
         val MAX_VALUE = Int128(Int.MAX_VALUE, -1, -1, -1)
 
         const val SIZE_BYTES = 128 / Byte.SIZE_BITS

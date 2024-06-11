@@ -32,6 +32,8 @@ class Int128Test {
         private val max64Str = Long.MAX_VALUE.toString()
         private val min64Str = Long.MIN_VALUE.toString()
 
+        private val neg1 = Int128("-1")
+
         @Test
         fun string() {
             assertEquals(posStr, Int128(posStr).toString())
@@ -42,7 +44,9 @@ class Int128Test {
             assertEquals(min64Str, Int128(min64Str).toString())
             assertEquals("1", Int128("1").toString())
             assertEquals("0", Int128("0").toString())
-            assertEquals("-1", Int128("-1").toString())
+            assertEquals("-1", neg1.toString())
+
+            assertEquals(Int128.NEGATIVE_ONE, neg1)
 
             assertThrows<NumberFormatException> { Int128("") }
             assertThrows<NumberFormatException> { Int128("3.14") }
