@@ -15,16 +15,6 @@ internal val Long.high inline get() = (this ushr 32).toInt()
  */
 internal val Long.low inline get() = this.toInt()
 
-/**
- * The [upper half][high] of this value.
- */
-internal operator fun Long.component1() = high
-
-/**
- * The [lower half][low] of this value.
- */
-internal operator fun Long.component2() = low
-
 internal fun Int.widen() = this.toUInt().toLong()
 
 /**
@@ -35,18 +25,18 @@ internal fun addValueOverflows(x: Int, y: Int, sum: Int = x + y): Boolean {
     return isNegative == (y < 0) && isNegative != (sum  < 0)
 }
 
-/**
- * Returns true if the sum is the result of an unsigned integer overflow.
- */
-internal fun addIntOverflows(x: Int, y: Int, sum: Int = x + y) = (x.widen() + y.widen()).high != 0
-
 // ------------------------------ exception handling ------------------------------
 
+/**
+ * @throws ArithmeticException always
+ */
 internal fun raiseUndefined(message: String): Nothing = throw ArithmeticException(message)
 
 /**
  * The name of the expected result may be inferred from the composite number receiver type or companion.
  * For specific operations, an explicit result name may be preferable.
+ *
+ * @throws ArithmeticException always
  */
 internal fun Any.raiseOverflow(
     type: String = receiver(),
@@ -60,6 +50,8 @@ internal fun Any.raiseOverflow(
 /**
  * The name of the expected result may be inferred from the composite number receiver type or companion.
  * For specific operations, an explicit result name may be preferable.
+ *
+ * @throws ArithmeticException always
  */
 internal fun Any.raiseIncorrectFormat(
     reason: String,

@@ -8,10 +8,11 @@ import java.nio.ByteBuffer
 /*
     Use of extension functions instead of inheritance makes it easier if this library was to be made multiplatform.
     Right now, the work necessary to publish this library to Maven Central is not worth supporting this.
-    If JitPack ever ends up supporting multiplatform projects, this file will be moved to "/jvmMain".
+    If this library ever becomes multiplatform, this file will be moved to "/jvmMain".
 
-    This library is useful primarily for low-error calculations.
-    Therefore, it would not make sense to code in constructors with a Double argument for the composite numbers.
+    This library is primarily useful for performing calculations with a low margin of error.
+    Therefore, it would not make sense to code in constructors with a Double argument
+    for the composite numbers, despite it being possible.
  */
 
 private val LONG_MAX = Long.MAX_VALUE.toBigInteger()
@@ -135,7 +136,7 @@ fun Rational(value: BigDecimal): Rational {
         .setScale(rawFracScale - rawFracScale.coerceAtLeast(-19 /* = -log10(Long.MAX_SIZE) */))
     val (unscaledFrac, fracScale) = ScaledInt64(frac.toBigInteger())
     return Rational(unscaledInt, 1L, intScale, 1) +/* = */ Rational(unscaledFrac, 1L, -fracScale, value.sign)
-}// TODO change to mutable ^
+}   // TODO change to MutableRational ^
 
 /**
  * Returns a rational number equal to the given value.

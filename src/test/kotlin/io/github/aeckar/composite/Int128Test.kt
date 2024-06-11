@@ -1,12 +1,12 @@
 package io.github.aeckar.composite
 
+import io.github.aeckar.composite.utils.HUGE_STRING
+import io.github.aeckar.composite.utils.random
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import org.opentest4j.AssertionFailedError
-import java.math.BigInteger
-import kotlin.random.Random
 import kotlin.random.nextInt
 import kotlin.test.assertEquals
 
@@ -21,30 +21,16 @@ private fun assertEquals2c(x: Int128, y: Int128) {
 }
 
 class Int128Test {
-    private val rng = Random(0)
-
-    private fun i128() = Int128(rng)
+    private fun i128() = Int128(random)
 
     @Nested
     inner class Conversion {
-        private val posStr = rng.nextInt().toString()
-        private val negStr = (-rng.nextInt()).toString()
+        private val posStr = random.nextInt().toString()
+        private val negStr = (-random.nextInt()).toString()
         private val max32Str = Int.MAX_VALUE.toString()
         private val min32Str = Int.MIN_VALUE.toString()
         private val max64Str = Long.MAX_VALUE.toString()
         private val min64Str = Long.MIN_VALUE.toString()
-
-        private val posInt = rng.nextInt().toBigInteger()
-        private val negInt = (-rng.nextInt()).toBigInteger()
-        private val max32Int = Int.MAX_VALUE.toBigInteger()
-        private val min32Int = Int.MIN_VALUE.toBigInteger()
-        private val max64Int = Long.MAX_VALUE.toBigInteger()
-        private val min64Int = Long.MIN_VALUE.toBigInteger()
-        private val oneInt = BigInteger.ONE
-        private val zeroInt = BigInteger.ZERO
-        private val neg1Int = (-1).toBigInteger()
-
-        private val largeStr = "1461501637330902918203684832716283019655932542976"
 
         @Test
         fun string() {
@@ -60,31 +46,16 @@ class Int128Test {
 
             assertThrows<NumberFormatException> { Int128("") }
             assertThrows<NumberFormatException> { Int128("3.14") }
-            assertThrows<ArithmeticException> { Int128(largeStr) }
-        }
-
-        @Test
-        fun big_integer() {
-            assertEquals(posInt, Int128(posInt).toBigInteger())
-            assertEquals(negInt, Int128(negInt).toBigInteger())
-            assertEquals(max32Int, Int128(max32Int).toBigInteger())
-            assertEquals(min32Int, Int128(min32Int).toBigInteger())
-            assertEquals(max64Int, Int128(max64Int).toBigInteger())
-            assertEquals(min64Int, Int128(min64Int).toBigInteger())
-            assertEquals(oneInt, Int128(oneInt).toBigInteger())
-            assertEquals(zeroInt, Int128(zeroInt).toBigInteger())
-            assertEquals(neg1Int, Int128(neg1Int).toBigInteger())
-
-            assertThrows<ArithmeticException> { Int128(BigInteger(largeStr)) }
+            assertThrows<ArithmeticException> { Int128(HUGE_STRING) }
         }
     }
 
     @Nested
     inner class BitwiseShift {
-        private val pos16 = rng.nextInt(0..Short.MAX_VALUE)
-        private val neg16 = rng.nextInt(Short.MIN_VALUE..-1)
-        private val shift16 = rng.nextInt(0..<16)
-        private val gte128 = rng.nextInt(128..160)
+        private val pos16 = random.nextInt(0..Short.MAX_VALUE)
+        private val neg16 = random.nextInt(Short.MIN_VALUE..-1)
+        private val shift16 = random.nextInt(0..<16)
+        private val gte128 = random.nextInt(128..160)
 
         @Test
         fun shl() {
@@ -93,7 +64,7 @@ class Int128Test {
             println((Int128(neg16 shl shift16)).twosComplement())
             assertEquals2c(Int128(pos16 shl shift16), Int128(pos16) shl shift16)
             assertEquals2c(Int128(neg16 shl shift16), Int128(neg16) shl shift16)
-            assertEquals2c(Int128.ZERO, Int128(rng) shl gte128)
+            assertEquals2c(Int128.ZERO, Int128(random) shl gte128)
             assertThrows<IllegalArgumentException> { Int128.ONE shl -1 }
         }
 
@@ -101,7 +72,7 @@ class Int128Test {
         fun shr() {
             assertEquals2c(Int128(pos16 shr shift16), Int128(pos16) shr shift16)
             assertEquals2c(Int128(neg16 shr shift16), Int128(neg16) shr shift16)
-            assertEquals2c(Int128(-1), Int128(rng) shr gte128)
+            assertEquals2c(Int128(-1), Int128(random) shr gte128)
             assertThrows<IllegalArgumentException> { Int128.ONE shr -1 }
         }
 
@@ -109,14 +80,14 @@ class Int128Test {
         fun ushr() {
             assertEquals2c(Int128(pos16 ushr shift16), Int128(pos16) ushr shift16)
             assertEquals2c(Int128(-1 ushr shift16, -1, -1, neg16 shr shift16), Int128(neg16) ushr shift16)
-            assertEquals2c(Int128.ZERO, Int128(rng) ushr gte128)
+            assertEquals2c(Int128.ZERO, Int128(random) ushr gte128)
             assertThrows<IllegalArgumentException> { Int128.ONE ushr -1 }
         }
     }
 
     @Nested
     inner class Arithmetic {
-        private val int64 = rng.nextLong()
+        private val int64 = random.nextLong()
 
         @Test
         fun unaryMinus() {

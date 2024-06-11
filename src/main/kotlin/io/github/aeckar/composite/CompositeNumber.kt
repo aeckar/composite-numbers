@@ -72,11 +72,13 @@ sealed class CompositeNumber<T : CompositeNumber<T>> : Number(), Comparable<T> {
      * Returns an instance equal in value to the absolute value of this
      */
     @Suppress("UNCHECKED_CAST")
+    @Cumulative
     fun abs(): T = if (sign < 0) -this else this as T
 
     /**
      * Returns a new instance equal in value to the difference.
      */
+    @Cumulative
     operator fun minus(other: T) = this + (-other)
 
     /**
@@ -88,11 +90,13 @@ sealed class CompositeNumber<T : CompositeNumber<T>> : Number(), Comparable<T> {
     /**
      * Returns a new instance equal in value to this, negated.
      */
+    @Cumulative
     abstract operator fun unaryMinus(): T
 
     /**
      * Returns a new instance equal in value to the sum.
      */
+    @Cumulative
     abstract operator fun plus(other: T): T
 
     /**
@@ -108,6 +112,7 @@ sealed class CompositeNumber<T : CompositeNumber<T>> : Number(), Comparable<T> {
     /**
      * Returns an instance equal in value to this raised to [power].
      */
+    @Cumulative
     abstract fun pow(power: Int): T
 
     // ------------------------------ comparison ------------------------------
@@ -136,7 +141,7 @@ sealed class CompositeNumber<T : CompositeNumber<T>> : Number(), Comparable<T> {
             }
 
             is Double, is Float -> (other as Number).toDouble() == toDouble()
-            is Number -> isLongValue() && other.toLong() == toLong()
+            is Number -> isLong() && other.toLong() == toLong()
             else -> false
         }
     }
@@ -145,12 +150,10 @@ sealed class CompositeNumber<T : CompositeNumber<T>> : Number(), Comparable<T> {
 
     internal abstract fun stateEquals(other: T): Boolean
 
-    protected abstract fun isWhole(): Boolean
-
     /**
      * If true, this can be represented as a 64-bit integer without losing information.
      */
-    protected abstract fun isLongValue(): Boolean
+    protected abstract fun isLong(): Boolean
 
     // ------------------------------ conversions ------------------------------
 

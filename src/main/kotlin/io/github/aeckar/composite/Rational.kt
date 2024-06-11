@@ -8,40 +8,18 @@ import kotlin.math.absoluteValue
 // ---------------------------------------- arithmetic ----------------------------------------
 
 private infix fun Long.times128(other: Long): Int128 {
+    fun multiplyValueOverflows(x: Long, y: Long, product: Long = x * y): Boolean {
+        if (x == Long.MIN_VALUE && y == -1L || y == Long.MIN_VALUE && x == -1L) {
+            return true
+        }
+        return x != 0L && y != 0L && x != product / y
+    }
+
     val product = this * other
     if (multiplyValueOverflows(this, other, product)) {
         return MutableInt128(this) * Int128(other)
     }
     return Int128(product)
-}
-
-private fun multiplyValueOverflows(x: Long, y: Long, product: Long = x * y): Boolean {
-    if (x == Long.MIN_VALUE && y == -1L || y == Long.MIN_VALUE && x == -1L) {
-        return true
-    }
-    return x != 0L && y != 0L && x != product / y
-}
-
-private fun gcf(x: Long, y: Long): Long {
-    tailrec fun euclideanGCF(max: Long, min: Long): Long {
-        val rem = max % min
-        return if (rem == 0L) min else euclideanGCF(min, rem)
-    }
-
-    val max = maxOf(x, y)
-    val min = minOf(x, y)
-    return euclideanGCF(max, min)
-}
-
-private fun gcf(x: Int128, y: Int128): Int128 {
-    tailrec fun euclideanGCF(max: Int128, min: Int128): Int128 {
-        val rem = max % min
-        return if (rem == Int128.ZERO) min else euclideanGCF(min, rem)
-    }
-
-    val max = maxOf(x, y)
-    val min = if (max === x) y else x
-    return euclideanGCF(max, min)
 }
 
 private fun tenPow(power: Int): Long {
@@ -138,6 +116,17 @@ open class Rational : CompositeNumber<Rational> {
      * @throws ArithmeticException [denom] is 0 or the value is too large to be representable
      */
     constructor(numer: Long, denom: Long = 1L, scaleAugment: Int = 0) {
+        fun gcf(x: Long, y: Long): Long {
+            tailrec fun euclideanGCF(max: Long, min: Long): Long {
+                val rem = max % min
+                return if (rem == 0L) min else euclideanGCF(min, rem)
+            }
+
+            val max = maxOf(x, y)
+            val min = minOf(x, y)
+            return euclideanGCF(max, min)
+        }
+
         if (denom == 0L) {
             raiseUndefined("Denominator cannot be zero")
         }
@@ -197,6 +186,17 @@ open class Rational : CompositeNumber<Rational> {
 
     // Used by arithmetic operations working with large numbers
     private constructor(numer: Int128, denom: Int128, scaleAugment: Int, sign: Int) {
+        fun gcf(x: Int128, y: Int128): Int128 {
+            tailrec fun euclideanGCF(max: Int128, min: Int128): Int128 {
+                val rem = max % min
+                return if (rem == Int128.ZERO) min else euclideanGCF(min, rem)
+            }
+
+            val max = maxOf(x, y)
+            val min = if (max === x) y else x
+            return euclideanGCF(max, min)
+        }
+
         val gcf = gcf(numer, denom)
         val (unscaledNumer, numerScale) = ScaledInt64(numer / gcf)
         val (unscaledDenom, denomScale) = ScaledInt64(denom / gcf)
@@ -301,7 +301,7 @@ open class Rational : CompositeNumber<Rational> {
 
     override /* protected */ fun isWhole() = denom == 1L && scale >= 0
 
-    override /* protected */ fun isLongValue() = isWhole() && log10(numer) + scale > 18
+    override /* protected */ fun isLong() = isWhole() && log10(numer) + scale > 18
 
     // ---------------------------------------- conversion functions ----------------------------------------
 

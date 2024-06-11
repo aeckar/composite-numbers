@@ -10,10 +10,10 @@ internal class ScaledInt64 {
     private val scale: Int
 
     constructor(i128: Int128) {
-        val value = MutableInt128(i128)/* = */.abs()
+        var value = MutableInt128(i128)/* = */.abs()
         var scale = 0
         while (value > Int.MAX_VALUE.toLong()) {
-            value / /* = */ Int128.TEN
+            value /= Int128.TEN
             ++scale
         }
         this.value = value.toLong() * i128.sign
