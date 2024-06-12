@@ -45,8 +45,6 @@ class Matrix {
         this.table = Table(tableRows as Array<Array<Rational?>>)
     }
 
-    // ------------------------------ validation --------------------
-
     private fun ensureSquare(result: String) {
         if (countRows() != countColumns()) {
             raiseUndefined("$result is only defined for square matrices")
@@ -96,9 +94,9 @@ class Matrix {
     }
 
     /**
-     * Returns this matrix as if it were in row echelon form.
+     * Returns this matrix as if it were in row echelon form (REF).
      *
-     * The row echelon form is the matrix, after applying elementary row operations, where:
+     * The REF is the matrix, after applying elementary row operations, where:
      * - All entries below the main diagonal are zero
      * - All entries on the main diagonal are one
      * - All zero rows are on the bottom
@@ -127,10 +125,12 @@ class Matrix {
      * For an explanation of elementary row operations, see [ref].
      */
     fun rref(): Matrix {
+        val rowEchelonForm = ref()
+
         TODO("Not implemented yet")
     }
 
-    // ------------------------------ scalar-returning operations --------------------
+    // ------------------------------ arithmetic --------------------
 
     /**
      * Returns the determinant of this matrix.
@@ -163,7 +163,7 @@ class Matrix {
         val rowEchelon = ref().table
         var zeroRows = 0
         rowEchelon.byRow {
-            it.byColumn { entry ->
+            byColumn { entry ->
                 if (entry != ZERO) {
                     ++zeroRows
                     return@byColumn
@@ -172,8 +172,6 @@ class Matrix {
         }
         return rowEchelon.countRows() - zeroRows
     }
-
-    // ------------------------------ matrix-returning operations ------------------------------
 
     /**
      * Returns the minor, M, at the given entry.
@@ -207,7 +205,7 @@ class Matrix {
         var index = table.indexIterator()
         this.table.byEntryIndexed { row, column, entry ->
             if (row != rowIndex && column != columnIndex) {
-                table[index.row, index.column] = entry
+                table[index] = entry
                 ++index
             }
         }
@@ -251,15 +249,35 @@ class Matrix {
      * Returns the result of this matrix multiplied by the other.
      *
      * The multiplication is done as the dot product of rows of this matrix by the columns of the other.
-     * In other words, TODO
+     * In other words, each entry becomes the sum of it multiplied by
+     * each entry in each column of the other matrix, per column.
+     * This is done for each row in this matrix.
+     *
+     * This operation is not commutative.
      */
     operator fun times(other: Matrix): Matrix {
-        val rowCount = countRows()
         val columnCount = countColumns()
-        if (rowCount != other.countColumns() || columnCount != other.countRows()) {
-            raiseUndefined("Product is undefined for matrices ")
+        val otherRowCount = other.countRows()
+        if (columnCount != otherRowCount) {
+            raiseUndefined(
+                "Product is undefined when the # of columns of the left argument " +
+                "is not equal to the # of rows of the right argument"
+            )
         }
-        TODO("Not implemented yet")
+        val rowCount = countRows()
+        val otherColumnCount = other.countColumns()
+        val table = Table<Rational>(rowCount, otherColumnCount)
+        var index = table.indexIterator()
+        var sum = ZERO  // TODO replace with MutableRational(ZERO)
+        this.table.byRow {
+            repeat(otherColumnCount) { otherColumnIndex ->
+                byColumnIndexed { termNumber, entry -> sum +/* = */ (entry * other[termNumber, otherColumnIndex]) }
+                table[index] = sum/*.immutable()*/
+                sum = ZERO
+                ++index
+            }
+        }
+        return Matrix(table)
     }
 
     /**
@@ -289,7 +307,7 @@ class Matrix {
         val string = buildString {
             entryStrings.byRow {
                 append("| ")
-                it.byColumnIndexed { columnIndex, entryString ->
+                byColumnIndexed { columnIndex, entryString ->
                     repeat(colMaxLengths[columnIndex] - entryString.lastIndex) { append(' ') }  // Right-justify
                     append(entryString)
                 }

@@ -599,7 +599,7 @@ open class Int128 : CompositeNumber<Int128> {
             )
         }   // TODO TODO TODO !!!
         // TODO Figure out how many leading bits to zero out to take out log2diff bits
-        divisor -/* = */ log2
+        // TODO divisor -/* = */ log2
         var additions = 0
         do {
             divisor +/* = */ divisor

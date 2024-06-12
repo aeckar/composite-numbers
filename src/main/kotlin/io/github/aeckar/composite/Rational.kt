@@ -62,8 +62,12 @@ private fun log10(x: Long): Int {
  *
  * See [Cumulative] for details on composite number mutability.
  */
-class MutableRational
-// TODO
+class MutableRational {
+    constructor(rational: Rational) {
+
+    }
+}
+// TODO implement AFTER testing of immutable class
 
 /**
  * Returns [x] as a ratio.
@@ -299,9 +303,7 @@ open class Rational : CompositeNumber<Rational> {
         return numer == other.numer && denom == other.denom && scale == other.scale && sign == other.sign
     }
 
-    override /* protected */ fun isWhole() = denom == 1L && scale >= 0
-
-    override /* protected */ fun isLong() = isWhole() && log10(numer) + scale > 18
+    override /* protected */ fun isLong() = denom == 1L && scale >= 0 && log10(numer) + scale > 18
 
     // ---------------------------------------- conversion functions ----------------------------------------
 

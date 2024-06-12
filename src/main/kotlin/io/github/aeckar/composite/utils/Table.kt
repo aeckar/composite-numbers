@@ -79,7 +79,7 @@ internal value class Table<E : Any>(private val backingArray: Array<Array<E?>>) 
 
         inline fun byColumnIndexed(action: (Int, E) -> Unit) = entries.forEachIndexed(action)
     }
-    
+
     // ------------------------------ access and modification ------------------------------
 
     operator fun get(rowIndex: Int, columnIndex: Int): E {
@@ -90,6 +90,10 @@ internal value class Table<E : Any>(private val backingArray: Array<Array<E?>>) 
         } catch (_: ArrayIndexOutOfBoundsException) {
             raiseInvalidIndex(rowIndex, columnIndex)
         }
+    }
+
+    operator fun set(index: IndexIterator, entry: E) {
+        this[index.row, index.column] = entry
     }
 
     operator fun set(rowIndex: Int, columnIndex: Int, entry: E) {
@@ -116,20 +120,7 @@ internal value class Table<E : Any>(private val backingArray: Array<Array<E?>>) 
     fun countColumns() = backingArray[0].size
 
     @Suppress("UNCHECKED_CAST")
-    inline fun byRow(action: (Row<E>) -> Unit) = backingArray.forEach { action(Row(it as Array<E>)) }
-
-    @Suppress("UNCHECKED_CAST")
-    inline fun byRowIndexed(action: (Int, Row<E>) -> Unit) {
-        backingArray.forEachIndexed { index, row -> action(index, Row(row as Array<E>)) }
-    }
-
-    inline fun byEntry(action: (E) -> Unit) {
-        var index = indexIterator()
-        while (index.row < backingArray.size) with(index) {
-            (backingArray[row][column] as E).apply(action)
-            ++index
-        }
-    }
+    inline fun byRow(action: Row<E>.() -> Unit) = backingArray.forEach { action(Row(it as Array<E>)) }
 
     inline fun byEntryIndexed(action: (Int, Int, E) -> Unit) {
         var index = indexIterator()
