@@ -1,7 +1,7 @@
 package io.github.aeckar.composite
 
-import io.github.aeckar.composite.utils.HUGE_STRING
-import io.github.aeckar.composite.utils.random
+import io.github.aeckar.composite.constants.HUGE_STRING
+import io.github.aeckar.composite.constants.random
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -28,20 +28,25 @@ class ArbitraryPrecisionTest {
     inner class Int128 {
         @Test
         fun big_integer_conversion() {
-            @Test
-            fun big_integer() {
-                assertEquals(posInt, Int128(posInt).toBigInteger())
-                assertEquals(negInt, Int128(negInt).toBigInteger())
-                assertEquals(max32Int, Int128(max32Int).toBigInteger())
-                assertEquals(min32Int, Int128(min32Int).toBigInteger())
-                assertEquals(max64Int, Int128(max64Int).toBigInteger())
-                assertEquals(min64Int, Int128(min64Int).toBigInteger())
-                assertEquals(oneInt, Int128(oneInt).toBigInteger())
-                assertEquals(zeroInt, Int128(zeroInt).toBigInteger())
-                assertEquals(neg1Int, Int128(neg1Int).toBigInteger())
+            assertEquals(posInt, Int128(posInt).toBigInteger())
+            assertEquals(negInt, Int128(negInt).toBigInteger())
+            assertEquals(max32Int, Int128(max32Int).toBigInteger())
+            assertEquals(min32Int, Int128(min32Int).toBigInteger())
+            assertEquals(max64Int, Int128(max64Int).toBigInteger())
+            assertEquals(min64Int, Int128(min64Int).toBigInteger())
+            assertEquals(oneInt, Int128(oneInt).toBigInteger())
+            assertEquals(zeroInt, Int128(zeroInt).toBigInteger())
+            assertEquals(neg1Int, Int128(neg1Int).toBigInteger())
 
-                assertThrows<ArithmeticException> { Int128(BigInteger(HUGE_STRING)) }
-            }
+            assertThrows<ArithmeticException> { Int128(BigInteger(HUGE_STRING)) }
+        }
+    }
+
+    @Nested
+    inner class Rational {
+        @Test
+        fun big_integer_conversion() {
+
         }
     }
 }

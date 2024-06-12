@@ -103,7 +103,7 @@ open class Int128 : CompositeNumber<Int128> {
     }
 
     /**
-     * Returns a random 12-bit integer using [rng].
+     * Returns a random 128-bit integer using [rng].
      */
     constructor(rng: Random) {
         val mag = rng.nextInt(1, 5)
@@ -238,12 +238,19 @@ open class Int128 : CompositeNumber<Int128> {
      * @throws IllegalArgumentException [count] is negative
      */
     infix fun shl(count: Int): Int128 {
+        ensureValidShift(count)
+        return leftShift(count)
+    }
+
+    /**
+     * Assumes [count] is non-negative.
+     */
+    private fun leftShift(count: Int): Int128 {
         /**
          * Returns the quarter at the current position after a left shift.
          */
         fun q(qCur: Int, qNext: Int, qShift: Int) = (qCur shl qShift) or (qNext ushr (Int.SIZE_BITS - qShift))
 
-        ensureValidShift(count)
         if (count == 0) {
             return this
         }
@@ -286,13 +293,6 @@ open class Int128 : CompositeNumber<Int128> {
      */
     infix fun ushr(count: Int): Int128 {
         ensureValidShift(count)
-        return unsignedRightShift(count)
-    }
-
-    /**
-     * Assumes [count] is non-negative.
-     */
-    private fun unsignedRightShift(count: Int): Int128 {
         if (count == 0) {
             return this
         }
@@ -470,7 +470,7 @@ open class Int128 : CompositeNumber<Int128> {
         }
 
         fun addMultiply(q0q1partial: Long, q1q2partial: Long, q2q3partial: Long, q3q4partial: Long): Int128 {
-            if (q0q1partial.high != 0) {
+            if (q0q1partial.low < 0) {  // Sign bit overflow
                 raiseOverflow()
             }
             val (q1summand1, q2, q3, q4) = addMultiply(q1q2partial, q2q3partial, q3q4partial)
@@ -578,39 +578,53 @@ open class Int128 : CompositeNumber<Int128> {
                 remainder = { ZERO }
             )
         }
+        if (this.stateEquals(other)) {
+            return division.result(
+                quotient = { ONE},
+                remainder = { ZERO }
+            )
+        }
         if (other.stateEquals(ZERO)) {
             raiseUndefined("Divisor cannot be 0 (dividend = $this)")
         }
         val sign = productSign(sign, other.sign)
-        val caller = this.immutable()
-        val dividend = this.mutable().abs()
-        val divisor = other.mutable().abs() // Will be used as accumulator in some instances
+        val abs = MutableInt128(this)/* = */.abs()
+        val dividend = MutableInt128(this)/* = */.valueOf(abs)
+        val divisor = other.mutable().abs()
         if (divisor > dividend) {
             return division.result(
                 quotient = { ZERO },
                 remainder = { this.abs() }
             )
         }
-        val log2diff = divisor.countLeadingZeroBits() - dividend.countLeadingZeroBits()
-        if (caller.countOneBits() == 1 && dividend/* = */.unsignedRightShift(log2diff) == divisor) {
+        // TODO add short circuit for small numbers
+        val leadingZeros =  dividend.countLeadingZeroBits()
+        val leftShift = divisor.countLeadingZeroBits() - leadingZeros
+        val addend = divisor.immutable()
+        if (leftShift != 0) {
+            divisor/* = */.leftShift(leftShift)
+        }
+        if (dividend.stateEquals(divisor)) {
             return division.result(
-                quotient = { (divisor/* = */.valueOf(1) shl log2diff) * valueOf(sign) },
+                quotient = { (divisor/* = */.valueOf(1) shl leftShift) * valueOf(sign) },
                 remainder = { ZERO }
             )
-        }   // TODO TODO TODO !!!
-        // TODO Figure out how many leading bits to zero out to take out log2diff bits
-        // TODO divisor -/* = */ log2
+        }
         var additions = 0
         do {
-            divisor +/* = */ divisor
             if (divisor >= dividend) {
                 val nextMultiple = MutableInt128(divisor)
-                val shiftQuotient = MutableInt128(divisor/* = */.valueOf(1) shl log2diff)
+                val quotient = MutableInt128(divisor/* = */.valueOf(1) shl leftShift)
+                quotient +/* = */ divisor/* = */.valueOf(additions)
                 return division.result(
-                    quotient = { (shiftQuotient + divisor/* = */.valueOf(additions)) * divisor.valueOf(sign) },
-                    remainder = { nextMultiple - dividend }
+                    quotient = { if (sign == -1) /* quotient = */ -quotient else quotient },
+                    remainder = {
+                        val remainder = nextMultiple -/* = */ this
+                        if (sign == -1) /* remainder = */ -remainder else remainder
+                    }
                 )
             }
+            divisor +/* = */ addend
             ++additions
         } while (true)
     }
@@ -623,7 +637,7 @@ open class Int128 : CompositeNumber<Int128> {
             this.isNegative && other.isPositive -> -1
             this.isPositive && other.isNegative -> 1
             else -> {
-                var difference = q1.compareTo(other.q1);
+                var difference = q1.compareTo(other.q1)
                 if (difference != 0) {
                     return difference
                 }
@@ -670,7 +684,7 @@ open class Int128 : CompositeNumber<Int128> {
      * To get an ordinary binary representation with an optional negative sign, use [toString] with radix 2.
      */
     fun twosComplement(): String {
-        fun Int.to2c() = this.toString(radix = 2).padStart(Int.SIZE_BITS, '0')
+        fun Int.to2c() = this.toUInt().toString(radix = 2).padStart(Int.SIZE_BITS, '0')
 
         return "${q1.to2c()}_${q2.to2c()}_${q3.to2c()}_${q4.to2c()}"
     }
@@ -684,7 +698,7 @@ open class Int128 : CompositeNumber<Int128> {
      */
     @Suppress("MemberVisibilityCanBePrivate")
     fun toString(radix: Int): String {
-        lazyString?.let { return it }
+        lazyString?.takeIf { this !is MutableInt128 }?.let { return it }
         return toBigInteger().toString(radix).also { this.lazyString = it }
     }
 
@@ -734,7 +748,7 @@ open class Int128 : CompositeNumber<Int128> {
         /**
          * Returns true if the sum is the result of an unsigned integer overflow.
          */
-        private fun addIntOverflows(x: Int, y: Int) = (x.widen() + y.widen()).high != 0
+        private fun addIntOverflows(x: Int, y: Int) = (x < 0 ) != (y < 0) && (x.widen() + y.widen()).high != 0
 
         // ---------------------------------------- partitions ----------------------------------------
 

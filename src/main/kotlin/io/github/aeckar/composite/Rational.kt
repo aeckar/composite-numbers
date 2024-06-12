@@ -327,10 +327,11 @@ open class Rational : CompositeNumber<Rational> {
     }
 
     override fun toString(): String {
+        lazyString?.let { return it }
         val sign = if (sign != -1) "" else "-"
         val denom = if (denom == 1L) "" else "/$denom"
         val scale = if (scale == 0) "" else " * 10^$scale"
-        return "$sign$numer$denom$scale"
+        return "$sign$numer$denom$scale".also { lazyString = it }
     }
 
     companion object {

@@ -1,7 +1,7 @@
 package io.github.aeckar.composite
 
-import io.github.aeckar.composite.utils.HUGE_STRING
-import io.github.aeckar.composite.utils.random
+import io.github.aeckar.composite.constants.HUGE_STRING
+import io.github.aeckar.composite.constants.random
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
@@ -122,8 +122,9 @@ class Int128Test {
 
         @Test
         fun times() {
-            val i128a = i128()
-            val i128b = i128()
+            // TODO add test for inexact results
+            val i128a = Int128(5000)
+            val i128b = Int128(1250)
             val product = i128a * i128b
             assertEquals2c(i128a, product / i128b)
             assertEquals2c(i128b, product / i128a)
@@ -133,7 +134,7 @@ class Int128Test {
 
         @Test
         fun divide() {
-            // TODO make tests for every possible path in divide()
+            // TODO add test for inexact results
             val i128a = Int128(5000)
             val i128b = Int128(1250)
             val quotient = i128a / i128b
