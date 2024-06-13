@@ -5,6 +5,23 @@ import kotlin.math.sign
 import kotlin.random.Random
 
 /**
+ * Multiplies the two 64-bit integers and stores the result accurately within a 128-bit integer.
+ */
+internal infix fun Long.times(other: Long): MutableInt128 {
+    fun multiplyValueOverflows(x: Long, y: Long, product: Long = x * y): Boolean {
+        if (x == Long.MIN_VALUE && y == -1L || y == Long.MIN_VALUE && x == -1L) {
+            return true
+        }
+        return x != 0L && y != 0L && x != product / y
+    }
+    val product = this * other
+    if (multiplyValueOverflows(this, other, product)) {
+        return (MutableInt128(this) */* = */ Int128(other)) as MutableInt128
+    }
+    return MutableInt128(product)
+}
+
+/**
  * Returns a 128-bit integer equal in value to the given string.
  *
  * A correctly formatted string contains only a sequence of digits agreeing with the given [radix].
@@ -138,17 +155,20 @@ open class Int128 : CompositeNumber<Int128> {
     @Cumulative
     override fun mutable(): Int128 = MutableInt128(this)
 
+    @Cumulative
     override fun valueOf(other: Int128) = with (other) { valueOf(q1, q2, q3, q4) }
 
     /**
      * Value function with delegation to by-quarter constructor.
      */
+    @Cumulative
     protected open fun valueOf(q1: Int, q2: Int, q3: Int, q4: Int) = Int128(q1, q2, q3, q4)
 
     /**
      * Value function with delegation to fourth-quarter constructor.
      */
     // Accessed by Companion.parse, divide()
+    @Cumulative
     protected fun valueOf(q4: Int) = valueOf(0, 0, 0, q4)
 
     // ---------------------------------------- partitions ----------------------------------------
@@ -377,7 +397,7 @@ open class Int128 : CompositeNumber<Int128> {
         } catch (e: ArithmeticException) {
             raiseOverflow("$this ^ $power", e)
         }
-        return valueOf(result)
+        return result
     }
 
     final override fun signum() = if (q4 == 0 && q3 == 0 && q2 == 0 && q1 == 0) 0 else sign
@@ -743,42 +763,6 @@ open class Int128 : CompositeNumber<Int128> {
 
         const val SIZE_BYTES = 128 / Byte.SIZE_BITS
 
-        // ---------------------------------------- bitwise & arithmetic ----------------------------------------
-
-        /**
-         * C-style boolean-to-integer conversion. 1 if true, 0 if false.
-         */
-        private fun Boolean.toInt() = if (this) 1 else 0
-
-        private fun Int.widen() = this.toUInt().toLong()
-
-        /**
-         * The most significant 32 bits of this value.
-         */
-        private val Long.high inline get() = (this ushr 32).toInt()
-
-        /**
-         * The least significant 32 bits of this value.
-         */
-        private val Long.low inline get() = this.toInt()
-
-        /**
-         * The [upper half][high] of this value.
-         */
-        private operator fun Long.component1() = high
-
-        /**
-         * The [lower half][low] of this value.
-         */
-        private operator fun Long.component2() = low
-
-        private fun ensureValidShift(count: Int) = require(count >= 0) { "Shift argument cannot be negative" }
-
-        /**
-         * Returns true if the sum is the result of an unsigned integer overflow.
-         */
-        private fun addIntOverflows(x: Int, y: Int) = (x < 0 ) != (y < 0) && (x.widen() + y.widen()).high != 0
-
         // ---------------------------------------- destructuring ----------------------------------------
 
         /**
@@ -829,6 +813,56 @@ open class Int128 : CompositeNumber<Int128> {
             }
             val result = if (negateResult) /* value = */ -value else value
             return result.immutable()
+        }
+
+        // ---------------------------------------- helper functions ----------------------------------------
+
+        /**
+         * C-style boolean-to-integer conversion. 1 if true, 0 if false.
+         */
+        private fun Boolean.toInt() = if (this) 1 else 0
+
+        private fun Int.widen() = this.toUInt().toLong()
+
+        /**
+         * The most significant 32 bits of this value.
+         */
+        private val Long.high inline get() = (this ushr 32).toInt()
+
+        /**
+         * The least significant 32 bits of this value.
+         */
+        private val Long.low inline get() = this.toInt()
+
+        /**
+         * The [upper half][high] of this value.
+         */
+        private operator fun Long.component1() = high
+
+        /**
+         * The [lower half][low] of this value.
+         */
+        private operator fun Long.component2() = low
+
+        private fun ensureValidShift(count: Int) = require(count >= 0) { "Shift argument cannot be negative" }
+
+        /**
+         * Returns true if the sum is the result of an unsigned integer overflow.
+         */
+        private fun addIntOverflows(x: Int, y: Int) = (x < 0 ) != (y < 0) && (x.widen() + y.widen()).high != 0
+
+        /**
+         * Returns true if the sum is the result of a signed integer overflow.
+         *
+         * If a result of multiple additions must be checked, this function must be called for each intermediate sum.
+         * Also checks for the case [Int.MIN_VALUE] - 1.
+         */
+        private fun addValueOverflows(x: Int, y: Int, sum: Int): Boolean {
+            if (x == Int.MIN_VALUE && y == -1 || y == Int.MIN_VALUE && x == -1) {
+                return true
+            }
+            val isNegative = x < 0
+            return isNegative == (y < 0) && isNegative xor (sum < 0)
         }
     }
 }

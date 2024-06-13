@@ -1,65 +1,9 @@
 package io.github.aeckar.composite
 
-import io.github.aeckar.composite.Rational.Companion.ZERO
-import io.github.aeckar.composite.utils.addValueOverflows
 import io.github.aeckar.composite.utils.productSign
 import io.github.aeckar.composite.utils.raiseUndefined
 import io.github.aeckar.composite.utils.raiseOverflow
 import kotlin.math.absoluteValue
-
-// ---------------------------------------- arithmetic ----------------------------------------
-
-/**
- * Multiplies the two 64-bit integers and stores the result accurately within a 128-bit integer.
- */
-private infix fun Long.times(other: Long): MutableInt128 {
-    fun multiplyValueOverflows(x: Long, y: Long, product: Long = x * y): Boolean {
-        if (x == Long.MIN_VALUE && y == -1L || y == Long.MIN_VALUE && x == -1L) {
-            return true
-        }
-        return x != 0L && y != 0L && x != product / y
-    }
-    val product = this * other
-    if (multiplyValueOverflows(this, other, product)) {
-        return (MutableInt128(this) */* = */ Int128(other)) as MutableInt128
-    }
-    return MutableInt128(product)
-}
-
-private fun tenPow(power: Int): Long {
-    var result = 1L
-    repeat(power) { result *= 10 }
-    return result
-}
-
-/**
- * Resultant sign represented as 1 or -1.
- * @return the sign of the product/quotient of the two values
- */
-private fun productSign(x: Long, y: Long) = if ((x < 0L) == (y < 0L)) 1 else -1
-
-/**
- * Computes the base-10 logarithm of [x], floored if not a whole number.
- *
- * Formally, the returned values are, in order:
- * - the integer base-10 logarithm of x
- * - x - 10^result
- * @return the result paired to the remainder
- */
-private fun log10(x: Long): Int {
-    if (x <= 0) {
-        raiseUndefined("Log10 of $x does not exist")
-    }
-    var arg = x
-    var result = 0
-    while (arg >= 10L) {
-        arg /= 10L
-        ++result
-    }
-    return result
-}
-
-// ---------------------------------------- class definitions ----------------------------------------
 
 /**
  * A mutable rational number.
@@ -73,23 +17,23 @@ internal class MutableRational(unique: Rational) : Rational(unique.numer, unique
     override fun mutable() = this
 
     @Cumulative
-    override fun valueOf(numer: Long, denom: Long, scale: Int, sign: Int) = this.also {
+    override fun valueOf(numer: Long, denom: Long, scale: Short, sign: Int) = this.also {
         it.numer = numer;   it.scale = scale
         it.denom = denom;   it.sign = sign
     }
 }
 
 /**
- * Returns a ratio equal to this value over the other as a fraction after simplification.
+ * Returns a rational number equal to this value over the other as a fraction after simplification.
  * @throws ArithmeticException [other] is 0 or the value is too large to be representable
  */
-infix fun Int.over(other: Int) = Rational(this.toLong(), other.toLong(), 0, productSign(this, other))
+infix fun Int.over(other: Int) = Rational.ONE.valueOf(this.toLong(), other.toLong(), 0)
 
 /**
- * Returns a ratio equal to this value over the other as a fraction after simplification.
+ * Returns a rational number equal to this value over the other as a fraction after simplification.
  * @throws ArithmeticException [other] is 0 or the value is too large to be representable
  */
-infix fun Long.over(other: Long) = Rational(this, other, 0, productSign(this, other))
+infix fun Long.over(other: Long) = Rational.ONE.valueOf(this, other, 0)
 
 /**
  * Returns a rational number equal in value to [x].
@@ -105,12 +49,21 @@ fun Rational(x: Int128): Rational {
  * Returns a ratio with the given [numerator][numer] and [denominator][denom] after simplification.
  * @throws ArithmeticException [denom] is 0 or the value is too large to be representable
  */
-fun Rational(numer: Long, denom: Long = 1, scaleAugment: Int = 0) = Rational(numer, denom, scaleAugment, 0)
+fun Rational(numer: Long, denom: Long = 1, scaleAugment: Int = 0): Rational {
+    return Rational.ONE.valueOf(numer, denom, scaleAugment.toShort())
+}
 
 /**
- * A ratio of two 32-bit integers designed for minimal information loss.
+ * A rational number.
  *
- * Instances of this class are scalable by a base-10, 32-bit integer.
+ * Instances of this class are comprised of:
+ * - A 64-bit integer numerator
+ * - A 64-bit integer denominator
+ * - A 32-bit scalar, n, by which this value is multiplied by 10^n
+ * - A sign value, 1 or -1, by which this value is multiplied by
+ *
+ * Designed for minimal information loss,
+ *
  * Conversion from an arbitrary-precision number is currently unsupported.
  */
 @Suppress("EqualsOrHashCode")
@@ -133,7 +86,7 @@ open class Rational : CompositeNumber<Rational> {
      * Validation should be used to ensure this value never holds the value
      * of [Int.MIN_VALUE] to prevent incorrect operation results.
      */
-    var scale: Int
+    var scale: Short
         protected set
 
     final override var sign: Int
@@ -161,7 +114,7 @@ open class Rational : CompositeNumber<Rational> {
         // TODO
     }
 
-    internal constructor(numer: Long, denom: Long, scale: Int, sign: Int) {
+    internal constructor(numer: Long, denom: Long, scale: Short, sign: Int) {
         this.numer = numer
         this.denom = denom
         this.scale = scale
@@ -179,7 +132,7 @@ open class Rational : CompositeNumber<Rational> {
     /**
      * Value function with delegation to by-property constructor.
      */
-    internal open fun valueOf(numer: Long, denom: Long, scale: Int, sign: Int): Rational {
+    internal open fun valueOf(numer: Long, denom: Long, scale: Short, sign: Int): Rational {
         return Rational(numer, denom, scale, sign)
     }
 
@@ -189,7 +142,7 @@ open class Rational : CompositeNumber<Rational> {
      * Returns a ratio with the given [numerator][numer] and [denominator][denom] after simplification.
      * @throws ArithmeticException [denom] is 0 or the value is too large to be representable
      */
-    internal fun valueOf(numer: Long, denom: Long, scaleAugment: Int): Rational {
+    internal fun valueOf(numer: Long, denom: Long, scaleAugment: Short): Rational {
         fun gcf(x: Long, y: Long): Long {
             tailrec fun euclideanGCF(max: Long, min: Long): Long {
                 val rem = max % min
@@ -211,11 +164,11 @@ open class Rational : CompositeNumber<Rational> {
         val denomAbs = denom.absoluteValue
         val numerScale = log10(numerAbs)
         val denomScale = log10(denomAbs)
-        var scale = numerScale - denomScale
+        var scale = (numerScale - denomScale).toShort()
         if (addValueOverflows(numerScale, denomScale, scale)) {
             raiseOverflow()
         }
-        val augmentedScale = scale + scaleAugment
+        val augmentedScale = (scale + scaleAugment).toShort()
         if (addValueOverflows(scale, scaleAugment, augmentedScale)) {
             raiseOverflow()
         }
@@ -234,24 +187,24 @@ open class Rational : CompositeNumber<Rational> {
     private inline fun valueOf(
         numer: Int128,
         denom: Int128,
-        scaleAugment: Int,
+        scaleAugment: Short,
         sign: Int,
         additionalInfo: () -> String
     ): Rational {
         val gcf = gcf(numer, denom)
         val (unscaledNumer, numerScale) = ScaledInt64(numer / gcf)
         val (unscaledDenom, denomScale) = ScaledInt64(denom / gcf)
-        var scale = numerScale - denomScale
+        var scale = (numerScale - denomScale).toShort()
         try {
             if (addValueOverflows(numerScale, denomScale, scale)) {
                 raiseOverflow()
             }
-            val augmentedScale = scale + scaleAugment
+            val augmentedScale = (scale + scaleAugment).toShort()
             if (addValueOverflows(scale, scaleAugment, augmentedScale)) {
                 raiseOverflow()
             }
             scale = augmentedScale
-             return valueOf(unscaledNumer, unscaledDenom, scale, sign)
+            return valueOf(unscaledNumer, unscaledDenom, scale, sign)
         } catch (e: ArithmeticException) {
             raiseOverflow(additionalInfo())
         }
@@ -263,16 +216,16 @@ open class Rational : CompositeNumber<Rational> {
      * Returns a new instance equal to this when the numerator and denominator are swapped.
      */
     @Cumulative
-    fun reciprocal() = valueOf(denom, numer, -scale, sign)
+    fun reciprocal() = valueOf(denom, numer, (-scale).toShort(), sign)
 
-    override fun signum() = if (numer == 0L) 0 else sign
+    final override fun signum() = if (numer == 0L) 0 else sign
 
     @Cumulative
-    override fun unaryMinus() = valueOf(numer, denom, scale, -sign)
+    final override fun unaryMinus() = valueOf(numer, denom, scale, -sign)
 
     // a/b + c/d = (ad + bc)/bd
     @Cumulative
-    override fun plus(other: Rational): Rational {
+    final override fun plus(other: Rational): Rational {
         val ad = numer times other.denom
         val bc = other.numer times denom
         val sign: Int
@@ -290,7 +243,7 @@ open class Rational : CompositeNumber<Rational> {
     }
 
     // a/b * c/d = ac/cd
-    override fun times(other: Rational): Rational {
+    final override fun times(other: Rational): Rational {
         if (other.stateEquals(ONE)) {
             return this
         }
@@ -302,7 +255,7 @@ open class Rational : CompositeNumber<Rational> {
         }
         val numer = numer times other.numer
         val denom = denom times other.denom
-        val scale = scale + other.scale
+        val scale = (scale + other.scale).toShort()
         if (addValueOverflows(scale, other.scale, scale)) {
             raiseOverflow("$this * $other")
         }
@@ -310,27 +263,24 @@ open class Rational : CompositeNumber<Rational> {
     }
 
     // a/b / c/d = a/b * d/c
-    override fun div(other: Rational) = this * other.reciprocal()
+    final override fun div(other: Rational) = this * other.reciprocal()
 
     // (a/b)^k = a^k/b^k
-    override fun pow(power: Int): Rational {
+    @Cumulative
+    final override fun pow(power: Int): Rational {
         if (power == Int.MIN_VALUE) {
             raiseOverflow("$this ^ Int.MIN_VALUE")
         }
-        val value = if (power < 0) {
-            raiseTo(-power)/* = */.reciprocal()
-        } else {
-            raiseTo(power)
-        }
-        return value
+        return if (power < 0) raiseTo(-power)/* = */.reciprocal() else raiseTo(power)
     }
 
+    @Cumulative
     private fun raiseTo(power: Int): Rational {
         if (power == 1) {
             return this
         }
         if (power == 0) {
-            return ONE
+            return valueOf(ONE)
         }
         val pow = power.absoluteValue
         var numer = numer
@@ -350,9 +300,9 @@ open class Rational : CompositeNumber<Rational> {
             }
         }
         return try {
-            Rational(numer * sign, denom, scale)
+            valueOf(numer * sign, denom, scale)
         } catch (e: ArithmeticException) {
-            raiseOverflow("$this ^ $power")
+            raiseOverflow("$this ^ $power", e)
         }
     }
 
@@ -362,11 +312,11 @@ open class Rational : CompositeNumber<Rational> {
 
     // ---------------------------------------- comparison ----------------------------------------
 
-    override fun compareTo(other: Rational): Int {
+    final override fun compareTo(other: Rational): Int {
         return if (sign != other.sign) sign.compareTo(other.sign) else toBigDecimal().compareTo(other.toBigDecimal())
     }
 
-    override fun hashCode(): Int {
+    final override fun hashCode(): Int {
         var hash = 7
         hash = 31 * hash + numer.hashCode()
         hash = 31 * hash + denom.hashCode()
@@ -374,38 +324,43 @@ open class Rational : CompositeNumber<Rational> {
         return hash * sign
     }
 
-    override /* internal */ fun stateEquals(other: Rational): Boolean {
+    final override /* internal */ fun stateEquals(other: Rational): Boolean {
         return numer == other.numer && denom == other.denom && scale == other.scale && sign == other.sign
     }
 
-    override /* protected */ fun isLong() = denom == 1L && scale >= 0 && log10(numer) + scale > 18
+    final override /* protected */ fun isLong() = denom == 1L && scale >= 0 && log10(numer) + scale > 18
 
     // ---------------------------------------- conversion functions ----------------------------------------
 
-    override fun toInt() = toLong().toInt()
+    final override fun toInt() = toLong().toInt()
 
-    override fun toLong() = (numer / denom) * tenPow(scale) * sign
+    final override fun toLong() = (numer / denom) * tenPowExact(scale) * sign
 
-    override fun toDouble() = (numer.toDouble() / denom) * tenPow(scale) * sign
+    final override fun toDouble() = (numer.toDouble() / denom) * tenPowExact(scale) * sign
 
     /**
      * Returns this instance.
      */
-    override fun toRational() = this
+    final override fun toRational() = this
 
-    override fun toInt128(): Int128 {
+    /**
+     * Returns a 128-bit integer equal in value to this.
+     *
+     * Some information may be lost during conversion.
+     */
+    final override fun toInt128(): Int128 {
         return if (scale < 0) {
-            -(Int128(numer) / (denom times tenPow(-scale)))
+            Int128.ZERO
         } else {
-            (numer times tenPow(scale)) / Int128(denom)
+            ((MutableInt128(numer) * Int128.TEN.pow(scale.toInt())) / Int128(denom)).immutable()
         }
     }
 
-    override fun toString(): String {
+    final override fun toString(): String {
         lazyString?.let { return it }
         val sign = if (sign != -1) "" else "-"
         val denom = if (denom == 1L) "" else "/$denom"
-        val scale = if (scale == 0) "" else " * 10^$scale"
+        val scale = if (scale == 0.toShort()) "" else " * 10^$scale"
         return "$sign$numer$denom$scale".also { lazyString = it }
     }
 
@@ -416,7 +371,51 @@ open class Rational : CompositeNumber<Rational> {
         val TWO = Rational(2, 1, 0, 0)
         val TEN = Rational(10, 1, 0, 0)
 
-        // ------------------------------ arithmetic ------------------------------
+        // ------------------------------ helper functions ------------------------------
+
+        /**
+         * If the exponentiation causes signed integer overflow, throws [ArithmeticException].
+         */
+        private fun tenPowExact(scale: Short): Long {
+            if (scale > 62) {   // log10(10^n) >= log10(2^63 - 1)
+                Long.raiseOverflow()
+            }
+            return tenPow(scale)
+        }
+
+        private fun tenPow(scale: Short): Long {
+            var result = 1L
+            repeat(scale.toInt()) { result *= 10 }
+            return result
+        }
+
+        /**
+         * Resultant sign represented as 1 or -1.
+         * @return the sign of the product/quotient of the two values
+         */
+        private fun productSign(x: Long, y: Long) = if ((x < 0L) == (y < 0L)) 1 else -1
+
+        /**
+         * Computes the base-10 logarithm of [x], floored if not a whole number.
+         *
+         * Formally, the returned values are, in order:
+         * - the integer base-10 logarithm of x
+         * - x - 10^result
+         * @return the result paired to the remainder
+         */
+        private fun log10(x: Long): Short {
+            if (x <= 0) {
+                raiseUndefined("Log10 of $x does not exist")
+            }
+            var arg = x
+            var result: Short = 0
+            while (arg >= 10L) {
+                arg /= 10L
+                ++result
+            }
+            return result
+        }
+
         private fun gcf(x: Int128, y: Int128): Int128 {
             tailrec fun euclideanGCF(max: Int128, min: Int128): Int128 {
                 val rem = max % min
@@ -427,12 +426,20 @@ open class Rational : CompositeNumber<Rational> {
             val min = if (max === x) y else x
             return euclideanGCF(max, min)
         }
+
+        /**
+         * Returns true if the sum is the result of a signed integer overflow.
+         *
+         * If a result of multiple additions must be checked, this function must be called for each intermediate sum.
+         * Also checks for the case [Short.MIN_VALUE] - 1.
+         */
+        private fun addValueOverflows(x: Short, y: Short, sum: Short): Boolean {
+            val neg1 = (-1).toShort()
+            if (x == Short.MIN_VALUE && y == neg1 || y == Short.MIN_VALUE && x == neg1) {
+                return true
+            }
+            val isNegative = x < 0
+            return isNegative == (y < 0) && isNegative xor (sum < 0)
+        }
     }
 }
-/*
-module kanum {
-    requires kotlin.stdlib;
-
-    exports io.github.aeckar.kanum;
-}
- */

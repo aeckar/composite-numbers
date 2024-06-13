@@ -27,7 +27,7 @@ private val BigDecimal.sign inline get() = this.signum() or 1
  */
 private fun ScaledInt64(value: BigInteger): ScaledInt64 {
     var int = value.abs()
-    var scale = 0
+    var scale: Short = 0
     while (int > LONG_MAX) {
         int /= BigInteger.TEN
         ++scale
@@ -115,12 +115,12 @@ operator fun Rational.compareTo(value: BigInteger) = toBigInteger().compareTo(va
  *
  * Information may be lost during conversion.
  */
-fun Rational.toBigDecimal() = numer.toBigDecimal().setScale(scale) / denom.toBigDecimal() * sign.toBigDecimal()
+fun Rational.toBigDecimal() = numer.toBigDecimal().setScale(scale.toInt()) / denom.toBigDecimal() * sign.toBigDecimal()
 
 /**
  * Returns an arbitrary-precision integer equal in value to this.
  */
-fun Rational.toBigInteger() = numer.toBigInteger() * BigInteger.TEN.pow(scale) * sign.toBigInteger()
+fun Rational.toBigInteger() = numer.toBigInteger() * BigInteger.TEN.pow(scale.toInt()) * sign.toBigInteger()
 
 /**
  * Returns a rational number equal to the given value.
@@ -135,7 +135,7 @@ fun Rational(value: BigDecimal): Rational {
         .also { rawFracScale = it.scale() /* < 0 */ }
         .setScale(rawFracScale - rawFracScale.coerceAtLeast(-19 /* = -log10(Long.MAX_SIZE) */))
     val (unscaledFrac, fracScale) = ScaledInt64(frac.toBigInteger())
-    return Rational(unscaledInt, 1L, intScale, 1) +/* = */ Rational(unscaledFrac, 1L, -fracScale, value.sign)
+    return Rational(unscaledInt, 1L, intScale, 1) + Rational(unscaledFrac, 1L, (-fracScale).toShort(), value.sign)
 }
 
 /**

@@ -74,6 +74,7 @@ sealed class CompositeNumber<T : CompositeNumber<T>> : Number(), Comparable<T> {
      * Overrides of this function will typically delegate the responsibility
      * of value creation to another value function.
      */
+    @Cumulative
     internal abstract fun valueOf(other: T): T
 
     // ------------------------------ arithmetic ------------------------------

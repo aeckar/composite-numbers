@@ -135,7 +135,7 @@ class Matrix {
     /**
      * Returns the determinant of this matrix.
      *
-     * // TODO describe determinant
+     * The determinant can be defined recursively as
      * @throws ArithmeticException this matrix is not square
      */
     fun determinant(): Rational {
@@ -144,7 +144,7 @@ class Matrix {
     }
 
     /**
-     *
+     * Assumes this matrix is square.
      */
     private fun determinant(rowIndex: Int, columnIndex: Int, sideLength: Int): Rational {
         if (sideLength == 2) {

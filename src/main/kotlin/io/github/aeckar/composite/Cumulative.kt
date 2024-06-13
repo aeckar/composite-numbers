@@ -6,6 +6,7 @@ package io.github.aeckar.composite
  * Applies to operations that return only their caller or a value returned
  * by [valueOf][CompositeNumber.valueOf], or some variant of it.
  * Any operation that breaks this contract is not considered cumulative.
+ * Furthermore, overrides of functions with this annotation must also be cumulative.
  *
  * Mutability of composite numbers is necessary to keep allocations
  * to a minimum when performing intermediate operations.
@@ -25,7 +26,6 @@ package io.github.aeckar.composite
  * - If the caller is `mutable`, the result may be immutable or refer to the same instance
  * - If a mutable caller invokes a [cumulative][Cumulative] operation, the result is the same instance
  * - Mutable integers must never be passed as more than one parameter to an operation
- *
  * @see MutableInt128
  * @see MutableRational
  */
