@@ -45,9 +45,9 @@ class Matrix {
         this.table = Table(tableRows as Array<Array<Rational?>>)
     }
 
-    private fun ensureSquare(result: String) {
+    private fun ensureSquare(operation: String) {
         if (countRows() != countColumns()) {
-            raiseUndefined("$result is only defined for square matrices")
+            raiseUndefined("$operation is only defined for square matrices")
         }
     }
 
@@ -135,20 +135,35 @@ class Matrix {
     /**
      * Returns the determinant of this matrix.
      *
-     * TODO
+     * // TODO describe determinant
+     * @throws ArithmeticException this matrix is not square
      */
     fun determinant(): Rational {
-        TODO("Not implemented yet")
+        ensureSquare(operation = "Determinant")
+        return determinant(0, 0, sideLength = countRows())
+    }
+
+    /**
+     *
+     */
+    private fun determinant(rowIndex: Int, columnIndex: Int, sideLength: Int): Rational {
+        if (sideLength == 2) {
+            return (this[0, 0] * this[1, 1]) - (this[0, 1] * this[1, 0])
+        }
+//        repeat(sideLength) { columnIndex ->
+//            determinant(, columnIndex, sideLength - 1)
+//        }
+        TODO("Not yet implemented")
     }
 
     /**
      * Returns the trace of this matrix.
      *
      * The trace is the sum of all entries on the main diagonal.
-     * @throws ArithmeticException this matrix is not a square matrix
+     * @throws ArithmeticException this matrix is not square
      */
     fun trace(): Rational {
-        ensureSquare("Trace")
+        ensureSquare(operation = "Trace")
         var result = ZERO
         repeat(countRows()) { result += table[it, it] }
         return result
@@ -177,10 +192,10 @@ class Matrix {
      * Returns the minor, M, at the given entry.
      *
      * Since this implementation of the minor is by entry, the matrix must be square.
-     * @throws ArithmeticException the matrix is not square
+     * @throws ArithmeticException this matrix is not square
      */
     fun minor(rowIndex: Int, columnIndex: Int): Matrix {
-        ensureSquare("Minor")
+        ensureSquare(operation = "Minor")
         return getMinor(rowIndex, columnIndex)
     }
 
@@ -188,10 +203,10 @@ class Matrix {
      * Returns the cofactor, C, at the given entry.
      *
      * For the specific properties that are required in order to return a cofactor, see [minor].
-     * @throws ArithmeticException the matrix is not square
+     * @throws ArithmeticException this matrix is not square
      */
     fun cofactor(rowIndex: Int, columnIndex: Int): Matrix {
-        ensureSquare("Cofactor")
+        ensureSquare(operation = "Cofactor")
         val minor = getMinor(rowIndex, columnIndex)
         return if ((rowIndex % 2 == 0) xor (columnIndex % 2 == 0)) -minor else minor
     }
@@ -268,12 +283,12 @@ class Matrix {
         val otherColumnCount = other.countColumns()
         val table = Table<Rational>(rowCount, otherColumnCount)
         var index = table.indexIterator()
-        var sum = ZERO  // TODO replace with MutableRational(ZERO)
+        val sum = MutableRational(ZERO)
         this.table.byRow {
             repeat(otherColumnCount) { otherColumnIndex ->
                 byColumnIndexed { termNumber, entry -> sum +/* = */ (entry * other[termNumber, otherColumnIndex]) }
-                table[index] = sum/*.immutable()*/
-                sum = ZERO
+                table[index] = sum.immutable()
+                sum/* = */.valueOf(ZERO)
                 ++index
             }
         }

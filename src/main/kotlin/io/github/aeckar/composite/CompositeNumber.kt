@@ -14,7 +14,7 @@ package io.github.aeckar.composite
  * - Immutable: Public state cannot be modified
  * - Unique: There exists only one possible state for a given value
  * - Limited precision: Precision is fixed to a given number of binary digits (however, they may be scaled)
- * - Efficient: Fixed-precision allows for certain key optimizations to be made
+ * - Efficient: Fixed-precision allows for certain key optimizations to be made.
  * - Accurate: If the result of an operation is too large or small to be represented accurately
  * as a composite number, such as in the event of an integer overflow, an [ArithmeticException] will be thrown
  *
@@ -22,6 +22,8 @@ package io.github.aeckar.composite
  * and should be stored in a variable if used more than once.
  * The one exception to this is [toString].
  *
+ * When a value is described as being "too large", it is either
+ * too high or too low to be accurately represented as the given composite number type.
  * @param T the inheritor of this class
  */
 @Suppress("EqualsOrHashCode")
@@ -49,8 +51,10 @@ sealed class CompositeNumber<T : CompositeNumber<T>> : Number(), Comparable<T> {
      *
      * If chained to an operation, this function should be called second.
      * If the caller is guaranteed to be immutable, this function does nothing.
+     *
+     * Overrides of this function should never be marked final.
      */
-    protected abstract fun immutable(): T
+    internal abstract fun immutable(): T
 
     /**
      * Returns a mutable composite number equal in value to this.
@@ -58,14 +62,19 @@ sealed class CompositeNumber<T : CompositeNumber<T>> : Number(), Comparable<T> {
      * If chained to an operation, this function should be called first.
      * If the caller is guaranteed to be immutable, for instance a static constant,
      * the mutable instance should be instantiated directly instead.
+     *
+     * Overrides of this function should never be marked final.
      */
     @Cumulative
-    protected abstract fun mutable(): T
+    internal abstract fun mutable(): T
 
     /**
      * Returns a new instance with the given value, or if [mutable], the same instance with the value stored.
+     *
+     * Overrides of this function will typically delegate the responsibility
+     * of value creation to another value function.
      */
-    protected abstract fun valueOf(other: T): T
+    internal abstract fun valueOf(other: T): T
 
     // ------------------------------ arithmetic ------------------------------
 

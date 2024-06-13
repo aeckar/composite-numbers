@@ -82,7 +82,7 @@ fun Int128(value: BigInteger): Int128 {
     var bytes = value.toByteArray()
     val maxBytes = Int128.SIZE_BYTES
     if (bytes.size > maxBytes) {
-        Int128.raiseOverflow(additionalInfo = value.toString())
+        Int128.raiseOverflow(value.toString())
     }
     if (bytes.size != maxBytes) {
         val padding = maxBytes - bytes.size
@@ -136,7 +136,7 @@ fun Rational(value: BigDecimal): Rational {
         .setScale(rawFracScale - rawFracScale.coerceAtLeast(-19 /* = -log10(Long.MAX_SIZE) */))
     val (unscaledFrac, fracScale) = ScaledInt64(frac.toBigInteger())
     return Rational(unscaledInt, 1L, intScale, 1) +/* = */ Rational(unscaledFrac, 1L, -fracScale, value.sign)
-}   // TODO change to MutableRational ^
+}
 
 /**
  * Returns a rational number equal to the given value.

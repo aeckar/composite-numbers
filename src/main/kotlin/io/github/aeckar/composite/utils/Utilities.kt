@@ -6,23 +6,23 @@ import io.github.aeckar.composite.Rational
 // ------------------------------ arithmetic ------------------------------
 
 /**
- * The most significant 32 bits of this value.
+ * Resultant sign represented as 1 or -1.
+ * @return the sign of the product/quotient of the two values
  */
-internal val Long.high inline get() = (this ushr 32).toInt()
-
-/**
- * The least significant 32 bits of this value.
- */
-internal val Long.low inline get() = this.toInt()
-
-internal fun Int.widen() = this.toUInt().toLong()
+internal fun productSign(x: Int, y: Int) = if ((x < 0) == (y < 0)) 1 else -1
 
 /**
  * Returns true if the sum is the result of a signed integer overflow.
+ *
+ * If a result of multiple additions must be checked, this function must be called for each intermediate sum.
+ * Also checks for the case [Int.MIN_VALUE] - 1.
  */
-internal fun addValueOverflows(x: Int, y: Int, sum: Int = x + y): Boolean {
+internal fun addValueOverflows(x: Int, y: Int, sum: Int): Boolean {
+    if (x == Int.MIN_VALUE && y == -1 || y == Int.MIN_VALUE && x == -1) {
+        return true
+    }
     val isNegative = x < 0
-    return isNegative == (y < 0) && isNegative xor (sum  < 0)
+    return isNegative == (y < 0) && isNegative xor (sum < 0)
 }
 
 // ------------------------------ exception handling ------------------------------
@@ -39,12 +39,11 @@ internal fun raiseUndefined(message: String): Nothing = throw ArithmeticExceptio
  * @throws ArithmeticException always
  */
 internal fun Any.raiseOverflow(
-    type: String = receiver(),
     additionalInfo: String? = null,
     cause: Throwable? = null
 ): Nothing {
     val info = additionalInfo?.let { " ($it)" } ?: ""
-    throw ArithmeticException("$type overflows$info").initCause(cause)
+    throw ArithmeticException("${receiver()} overflows$info").initCause(cause)
 }
 
 /**
@@ -55,10 +54,9 @@ internal fun Any.raiseOverflow(
  */
 internal fun Any.raiseIncorrectFormat(
     reason: String,
-    type: String = receiver(),
     cause: Throwable? = null
 ): Nothing {
-    val e = NumberFormatException("String does not contain a ${type.lowercase()} in the correct format ($reason)")
+    val e = NumberFormatException("String does not contain a ${receiver().lowercase()} in the correct format ($reason)")
     throw e.initCause(cause)
 }
 

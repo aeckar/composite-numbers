@@ -4,13 +4,18 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="12726248-6293-408b-8509-c256c37abb1d" name="Changes" comment="Resume Int128 testing">
+    <list default="true" id="12726248-6293-408b-8509-c256c37abb1d" name="Changes" comment="Int128 tests passing">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/composite/ArbitraryPrecision.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/composite/ArbitraryPrecision.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/composite/CompositeNumber.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/composite/CompositeNumber.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/composite/Cumulative.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/composite/Cumulative.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/composite/Int128.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/composite/Int128.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/composite/Matrix.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/composite/Matrix.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/composite/Rational.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/composite/Rational.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/kotlin/io/github/aeckar/composite/ArbitraryPrecisionTest.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/kotlin/io/github/aeckar/composite/ArbitraryPrecisionTest.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/composite/ScaledInt64.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/composite/ScaledInt64.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/composite/utils/Utilities.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/composite/utils/Utilities.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/test/kotlin/io/github/aeckar/composite/Int128Test.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/kotlin/io/github/aeckar/composite/Int128Test.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/kotlin/io/github/aeckar/composite/utils/Utilities.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/kotlin/io/github/aeckar/composite/constants/Constants.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/kotlin/io/github/aeckar/composite/constants/Constants.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/kotlin/io/github/aeckar/composite/constants/Constants.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -99,56 +104,57 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Gradle.ArbitraryPrecisionTest.executor": "Run",
-    "Gradle.Arithmetic.divide.executor": "Run",
-    "Gradle.Arithmetic.executor": "Run",
-    "Gradle.Arithmetic.minus.executor": "Run",
-    "Gradle.Arithmetic.plus.executor": "Run",
-    "Gradle.Arithmetic.times (1).executor": "Run",
-    "Gradle.Arithmetic.times.executor": "Run",
-    "Gradle.Arithmetic.unaryMinus.executor": "Run",
-    "Gradle.BitwiseOperations.executor": "Run",
-    "Gradle.BitwiseOperations.shr.executor": "Run",
-    "Gradle.Build kanum.executor": "Run",
-    "Gradle.Build matrix.executor": "Run",
-    "Gradle.Conversion.big_integer.executor": "Run",
-    "Gradle.Conversion.executor": "Run",
-    "Gradle.Conversion.string.executor": "Run",
-    "Gradle.Instantiation.executor": "Run",
-    "Gradle.Int128.executor": "Run",
-    "Gradle.Int128Arithmetic.executor": "Run",
-    "Gradle.Int128Arithmetic.shl.executor": "Run",
-    "Gradle.Int128Bitwise.executor": "Run",
-    "Gradle.Int128Bitwise.shl.executor": "Debug",
-    "Gradle.Int128Instantiation.from_string.executor": "Run",
-    "Gradle.Int128Instantiation.string.executor": "Debug",
-    "Gradle.Int128Test.executor": "Run",
-    "Gradle.Int128Test.fromString.executor": "Run",
-    "Gradle.Int128Test.instantiate_from_string.executor": "Run",
-    "Gradle.Int128Test.unaryMinus.executor": "Run",
-    "Gradle.kanum [classes].executor": "Run",
-    "Gradle.kanum [clean].executor": "Run",
-    "Kotlin.MainKt (1).executor": "Debug",
-    "Kotlin.MainKt.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "git-widget-placeholder": "master",
-    "ignore.virus.scanning.warn.message": "true",
-    "kotlin-language-version-configured": "true",
-    "onboarding.tips.debug.path": "C:/Users/eckar/IdeaProjects/matrix/src/main/kotlin/Main.kt",
-    "project.structure.last.edited": "Project",
-    "project.structure.proportion": "0.0",
-    "project.structure.side.proportion": "0.0",
-    "settings.editor.selected.configurable": "configurable.group.appearance"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Gradle.ArbitraryPrecisionTest.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Arithmetic.div.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Arithmetic.divide.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Arithmetic.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Arithmetic.minus.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Arithmetic.plus.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Arithmetic.times (1).executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Arithmetic.times.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Arithmetic.unaryMinus.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.BitwiseOperations.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.BitwiseOperations.shr.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Build kanum.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Build matrix.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Conversion.big_integer.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Conversion.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Conversion.string.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Instantiation.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Int128.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Int128Arithmetic.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Int128Arithmetic.shl.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Int128Bitwise.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Int128Bitwise.shl.executor&quot;: &quot;Debug&quot;,
+    &quot;Gradle.Int128Instantiation.from_string.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Int128Instantiation.string.executor&quot;: &quot;Debug&quot;,
+    &quot;Gradle.Int128Test.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Int128Test.fromString.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Int128Test.instantiate_from_string.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Int128Test.unaryMinus.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.kanum [classes].executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.kanum [clean].executor&quot;: &quot;Run&quot;,
+    &quot;Kotlin.MainKt (1).executor&quot;: &quot;Debug&quot;,
+    &quot;Kotlin.MainKt.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;onboarding.tips.debug.path&quot;: &quot;C:/Users/eckar/IdeaProjects/matrix/src/main/kotlin/Main.kt&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;configurable.group.appearance&quot;
   },
-  "keyToStringList": {
-    "kotlin-gradle-user-dirs": [
-      "C:\\Users\\eckar\\.gradle"
+  &quot;keyToStringList&quot;: {
+    &quot;kotlin-gradle-user-dirs&quot;: [
+      &quot;C:\\Users\\eckar\\.gradle&quot;
     ]
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\eckar\IdeaProjects\kanum\src\test\kotlin\io\github\aeckar\composite\utils" />
@@ -161,7 +167,7 @@
       <recent name="io.github.aeckar.kanum" />
     </key>
   </component>
-  <component name="RunManager" selected="Gradle.Int128">
+  <component name="RunManager" selected="Gradle.Arithmetic.div">
     <configuration name="ArbitraryPrecisionTest" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
@@ -186,7 +192,7 @@
       <RunAsTest>true</RunAsTest>
       <method v="2" />
     </configuration>
-    <configuration name="Arithmetic.divide" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+    <configuration name="Arithmetic.div" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
@@ -199,7 +205,7 @@
           <list>
             <option value=":test" />
             <option value="--tests" />
-            <option value="&quot;io.github.aeckar.composite.Int128Test$Arithmetic.divide&quot;" />
+            <option value="&quot;io.github.aeckar.composite.Int128Test$Arithmetic.div&quot;" />
           </list>
         </option>
         <option name="vmOptions" />
@@ -297,11 +303,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Gradle.Arithmetic.div" />
+        <item itemvalue="Gradle.Int128Test" />
         <item itemvalue="Gradle.Int128" />
         <item itemvalue="Gradle.ArbitraryPrecisionTest" />
-        <item itemvalue="Gradle.Int128Test" />
         <item itemvalue="Gradle.Arithmetic.times" />
-        <item itemvalue="Gradle.Arithmetic.divide" />
       </list>
     </recent_temporary>
   </component>
@@ -362,7 +368,15 @@
       <option name="project" value="LOCAL" />
       <updated>1718160133544</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="Int128 tests passing">
+      <option name="closed" value="true" />
+      <created>1718222408036</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1718222408036</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -383,7 +397,8 @@
     <MESSAGE value="Continued development III" />
     <MESSAGE value="Halfway done implementing matrix functions" />
     <MESSAGE value="Resume Int128 testing" />
-    <option name="LAST_COMMIT_MESSAGE" value="Resume Int128 testing" />
+    <MESSAGE value="Int128 tests passing" />
+    <option name="LAST_COMMIT_MESSAGE" value="Int128 tests passing" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -392,6 +407,16 @@
           <properties class="java.lang.ArithmeticException" package="java.lang" />
           <option name="timeStamp" value="5" />
         </breakpoint>
+        <line-breakpoint enabled="true" type="kotlin-line">
+          <url>file://$PROJECT_DIR$/src/test/kotlin/io/github/aeckar/composite/Int128Test.kt</url>
+          <line>110</line>
+          <option name="timeStamp" value="32" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="kotlin-line">
+          <url>file://$PROJECT_DIR$/src/test/kotlin/io/github/aeckar/composite/Int128Test.kt</url>
+          <line>147</line>
+          <option name="timeStamp" value="33" />
+        </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
   </component>

@@ -9,15 +9,19 @@ internal class ScaledInt64 {
     private val value: Long
     private val scale: Int
 
+    /**
+     * Does not preserve the state of mutable values.
+     */
     constructor(i128: Int128) {
-        var value = MutableInt128(i128)/* = */.abs()
+        val sign = i128.sign
+        var abs = i128.abs()
         var scale = 0
-        while (value > Int.MAX_VALUE.toLong()) {
-            value /= Int128.TEN
+        while (abs > Int.MAX_VALUE.toLong()) {
+            abs /= Int128.TEN // Division is not cumulative
             ++scale
         }
-        this.value = value.toLong() * i128.sign
-        this.scale = scale
+        this.value = abs.toLong() * sign
+        this.scale = scale * sign
     }
 
     constructor(value: Long, scale: Int) {
@@ -31,7 +35,7 @@ internal class ScaledInt64 {
     operator fun component1() = value
 
     /**
-     * A non-zero, base-10 scalar.
+     * See [Rational.scale] for details.
      */
     operator fun component2() = scale
 }

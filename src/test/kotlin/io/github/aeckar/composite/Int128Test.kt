@@ -74,9 +74,11 @@ class Int128Test {
 
         @Test
         fun shr() {
+            val random128 = Int128(random)
+
             assertEquals2c(Int128(pos16 shr shift16), Int128(pos16) shr shift16)
             assertEquals2c(Int128(neg16 shr shift16), Int128(neg16) shr shift16)
-            assertEquals2c(Int128(-1), Int128(random) shr gte128)
+            assertEquals2c(Int128(random128.sign shr 1), random128 shr gte128)
             assertThrows<IllegalArgumentException> { Int128.ONE shr -1 }
         }
 
@@ -122,10 +124,10 @@ class Int128Test {
 
         @Test
         fun times() {
-            // TODO add test for inexact results
             val i128a = Int128(5000)
             val i128b = Int128(1250)
             val product = i128a * i128b
+
             assertEquals2c(i128a, product / i128b)
             assertEquals2c(i128b, product / i128a)
             assertDoesNotThrow { Int128.MAX_VALUE * Int128.ONE }
@@ -133,15 +135,18 @@ class Int128Test {
         }
 
         @Test
-        fun divide() {
-            // TODO add test for inexact results
+        fun div() { // Comment out to-long conversion in divide() during testing
             val i128a = Int128(5000)
             val i128b = Int128(1250)
             val quotient = i128a / i128b
+
             assertEquals2c(i128a, quotient * i128b)
             assertEquals2c(i128b, i128a / quotient)
             assertDoesNotThrow { Int128.ONE / Int128.MAX_VALUE }
             assertThrows<ArithmeticException> { Int128.ONE / Int128.ZERO }
+
+            assertEquals(Int128.TEN, Int128(101) / Int128.TEN)
+            assertEquals(Int128.TEN, Int128(109) / Int128.TEN)
         }
     }
 }
