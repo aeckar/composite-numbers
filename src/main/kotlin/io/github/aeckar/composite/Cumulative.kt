@@ -4,7 +4,7 @@ package io.github.aeckar.composite
  * When applied to a function, indicates that if the caller is mutable, the result will be stored in the same instance.
  *
  * Applies to operations that return only their caller or a value returned
- * by [valueOf][CompositeNumber.valueOf], or some variant of it.
+ * by [valueOf][CompositeNumber.valueOf] (or some variant of it) from within the same scope.
  * Any operation that breaks this contract cannot be considered cumulative.
  * Overrides of cumulative functions must abide by the same contract.
  *

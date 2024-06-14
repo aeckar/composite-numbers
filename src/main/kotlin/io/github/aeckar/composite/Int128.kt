@@ -770,7 +770,7 @@ open class Int128 : CompositeNumber<Int128> {
          *
          * @return a value where all bits are 1 or 0 depending on whether [sign] is -1 or 1, respectively
          */
-        // Accessed only by BigInteger pseudo-constructor
+        // Accessed externally by BigInteger pseudo-constructor only
         internal fun blank(sign: Int) = sign shr 1
 
         /**
@@ -783,25 +783,17 @@ open class Int128 : CompositeNumber<Int128> {
         // Accessed only by pseudo-constructor with String argument
         internal fun parse(s: String, radix: Int): Int128 {
             var cursor = s.lastIndex
-            val firstIndex: Int
-            val negateResult: Boolean
             val first = try {
                 s[0]
             } catch (e: StringIndexOutOfBoundsException) {
                 raiseIncorrectFormat("empty string")
             }
-            if (first == '-') {
-                firstIndex = 1
-                negateResult = true
-            } else {
-                firstIndex = 0
-                negateResult = false
-            }
+            val startIndex = (first == '-').toInt()
             val digit = MutableInt128(ZERO)
             val value = MutableInt128(ZERO)
             val pow = MutableInt128(ONE)
             val increment = Int128(radix)
-            while (cursor >= firstIndex) try {
+            while (cursor >= startIndex) try {
                 digit/* = */.valueOf(s[cursor].digitToInt())
                 value +/* = */ (digit */* (maybe) = */ pow)
                 pow */* = */ increment
@@ -811,7 +803,7 @@ open class Int128 : CompositeNumber<Int128> {
             } catch (e: ArithmeticException) {
                 raiseOverflow(s, cause = e)
             }
-            val result = if (negateResult) /* value = */ -value else value
+            val result = if (startIndex == 1) /* value = */ -value else value
             return result.immutable()
         }
 

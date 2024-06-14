@@ -25,6 +25,8 @@ package io.github.aeckar.composite
  * When a value is described as being "too large", it is either
  * too high or too low to be accurately represented as the given composite number type.
  * @param T the inheritor of this class
+ * @see Int128
+ * @see Rational
  */
 @Suppress("EqualsOrHashCode")
 sealed class CompositeNumber<T : CompositeNumber<T>> : Number(), Comparable<T> {
@@ -60,8 +62,7 @@ sealed class CompositeNumber<T : CompositeNumber<T>> : Number(), Comparable<T> {
      * Returns a mutable composite number equal in value to this.
      *
      * If chained to an operation, this function should be called first.
-     * If the caller is guaranteed to be immutable, for instance a static constant,
-     * the mutable instance should be instantiated directly instead.
+     * If the caller is guaranteed to be mutable, this function does nothing.
      *
      * Overrides of this function should never be marked final.
      */

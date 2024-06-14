@@ -2,6 +2,8 @@ package io.github.aeckar.composite.utils
 
 /**
  * Thrown when a [table][Table] is initialized with invalid dimensions.
+ *
+ * Assuming there aren't any bugs, this exception should never be thrown.
  */
 internal class InvalidDimensionsException(
     rowCount: Int,

@@ -307,6 +307,10 @@ class Matrix {
         return Matrix(table)
     }
 
+    // ------------------------------ eigenvalues ------------------------------
+
+    // TODO implement eigenvalue, eigenvector functions
+
     // ------------------------------ string conversion ------------------------------
 
     override fun toString(): String {
