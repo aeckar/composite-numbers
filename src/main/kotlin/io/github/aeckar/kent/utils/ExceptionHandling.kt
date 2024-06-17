@@ -1,7 +1,7 @@
-package io.github.aeckar.composite.utils
+package io.github.aeckar.kent.utils
 
-import io.github.aeckar.composite.Int128
-import io.github.aeckar.composite.Rational
+import io.github.aeckar.kent.Int128
+import io.github.aeckar.kent.Rational
 
 private fun Any.receiver() = when (this) {
     is Rational, is Rational.Companion -> "Rational number"

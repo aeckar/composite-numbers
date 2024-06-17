@@ -1,4 +1,4 @@
-package io.github.aeckar.composite.utils
+package io.github.aeckar.kent.utils
 
 /**
  * Thrown when a [table][Table] is initialized with invalid dimensions.

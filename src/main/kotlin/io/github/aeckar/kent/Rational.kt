@@ -1,8 +1,11 @@
-package io.github.aeckar.composite
+package io.github.aeckar.kent
 
-import io.github.aeckar.composite.utils.productSign
-import io.github.aeckar.composite.utils.raiseUndefined
-import io.github.aeckar.composite.utils.raiseOverflow
+import io.github.aeckar.kent.utils.*
+import io.github.aeckar.kent.utils.StringIndexIterator
+import io.github.aeckar.kent.utils.productSign
+import io.github.aeckar.kent.utils.raiseIncorrectFormat
+import io.github.aeckar.kent.utils.raiseOverflow
+import io.github.aeckar.kent.utils.raiseUndefined
 import kotlin.math.absoluteValue
 
 /**
@@ -68,6 +71,8 @@ fun Rational(numer: Long, denom: Long = 1, scaleAugment: Int = 0): Rational {
  */
 @Suppress("EqualsOrHashCode")
 open class Rational : CompositeNumber<Rational> {
+    // super.lazyString used to cache toString() only
+
     /**
      * The numerator of this value as a fraction.
      */
@@ -89,29 +94,109 @@ open class Rational : CompositeNumber<Rational> {
     var scale: Short
         protected set
 
+    final override val isNegative get() = sign == -1
+    final override val isPositive get() = sign == 1
     final override var sign: Int
         protected set
 
     /**
      * Returns a rational number equal in value to the given string.
      *
-     * // TODO
-     * Fractional components with leading 0 digits are allowed.
+     * A string is considered acceptable if it contains:
+     * 1. Minus sign *(optional)*
+     * 2. Decimal numerator
+     *    - A sequence of digits, `'0'..'9'`, optionally containing `'.'`
+     *    - Leading and trailing zeros are allowed, but a single dot is not
+     * 3. Denominator *(optional)*
+     *    - `'/'`, followed by a decimal denominator in the same format as the numerator
+     * 4. Exponent in scientific notation *(optional)*
+     *    - `'e'` or `'E'`, followed by a signed integer
+     *
+     * The decimal numerator and denominator may optionally be surrounded by parentheses.
+     * However, if an exponent is provided, parentheses are mandatory.
      *
      * The given string must be small enough to be representable and
      * not contain any extraneous characters (for example, whitespace).
-     * It may optionally be prefixed by a negative sign.
      *
      * @throws NumberFormatException [s] is in an incorrect format
      * @throws ArithmeticException the value cannot be represented accurately as a rational number
      */
     constructor(s: String) {
-        this.numer = 0
-        this.denom = 0
-        this.scale = 0
-        this.sign = 0
+        fun i16At(iterator: StringIndexIterator): Short {
+            var curIndex = iterator
+            val start: Int
+            val sign: Short
+            if (curIndex.char() == '-') {
+                start = curIndex.cursor + 1
+                sign = -1
+            } else {
+                start = curIndex.cursor
+                sign = 1
+            }
+            do {
+                ++curIndex
+            } while (curIndex.exists() && curIndex.char() in '0'..'9')
+            if (curIndex.cursor == ) {
+                raiseIncorrectFormat()
+            }
+            var i16: Short = 0
+            while (curIndex.cursor >= start) {
 
-        // TODO
+            }
+            return (i16 * sign).toShort()
+        }
+
+        if (s.isEmpty()) {
+            raiseIncorrectFormat("empty string")
+        }
+        var curIndex = StringIndexIterator(s)
+        var hasParentheses = false
+        this.sign = 1
+        while (true) try {
+            when (curIndex.char()) {
+                '-' -> sign = -1
+                '(' -> hasParentheses = true
+                '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> break
+                else -> raiseIncorrectFormat("illegal character before or within represented value")
+            }
+            ++curIndex
+        } catch (e: NoSuchElementException) {
+            raiseIncorrectFormat("character expected", e)
+        }
+        val (unscaledNumer, numerScale) = ScaledInt64.at(curIndex)
+        var unscaledDenom = 1L
+        var denomScale: Short = 0
+        if (curIndex.char() == '/') {
+            val denom = ScaledInt64.at(curIndex)
+            unscaledDenom = denom.component1()
+            denomScale = denom.component2()
+        }
+        if (hasParentheses) {
+            if (curIndex.char() != ')') {
+                raiseIncorrectFormat("missing closing parenthesis")
+            }
+            ++curIndex
+        }
+        this.numer = unscaledNumer
+        this.denom = unscaledDenom
+        this.scale = if (curIndex.exists() && curIndex.char() == 'e' || curIndex.char() == 'E') {
+            ++curIndex
+            i16At(curIndex)
+        } else {
+            0
+        }
+        if (curIndex.exists()) {
+            raiseIncorrectFormat("illegal character after represented value")
+        }
+        var augmentedScale = scale plus numerScale
+        if (addValueOverflows(scale, numerScale, augmentedScale)) {
+            raiseOverflow()
+        }
+        scale = augmentedScale
+        augmentedScale = scale plus denomScale
+        if (addValueOverflows(scale, denomScale, augmentedScale)) {
+            raiseOverflow()
+        }
     }
 
     internal constructor(numer: Long, denom: Long, scale: Short, sign: Int) {
@@ -164,11 +249,11 @@ open class Rational : CompositeNumber<Rational> {
         val denomAbs = denom.absoluteValue
         val numerScale = log10(numerAbs)
         val denomScale = log10(denomAbs)
-        var scale = (numerScale - denomScale).toShort()
+        var scale = numerScale minus denomScale
         if (addValueOverflows(numerScale, denomScale, scale)) {
             raiseOverflow()
         }
-        val augmentedScale = (scale + scaleAugment).toShort()
+        val augmentedScale = scale plus scaleAugment
         if (addValueOverflows(scale, scaleAugment, augmentedScale)) {
             raiseOverflow()
         }
@@ -194,12 +279,12 @@ open class Rational : CompositeNumber<Rational> {
         val gcf = gcf(numer, denom)
         val (unscaledNumer, numerScale) = ScaledInt64(numer / gcf)
         val (unscaledDenom, denomScale) = ScaledInt64(denom / gcf)
-        var scale = (numerScale - denomScale).toShort()
+        var scale = numerScale minus denomScale
         try {
             if (addValueOverflows(numerScale, denomScale, scale)) {
                 raiseOverflow()
             }
-            val augmentedScale = (scale + scaleAugment).toShort()
+            val augmentedScale = scale plus scaleAugment
             if (addValueOverflows(scale, scaleAugment, augmentedScale)) {
                 raiseOverflow()
             }
@@ -226,14 +311,14 @@ open class Rational : CompositeNumber<Rational> {
     // a/b + c/d = (ad + bc)/bd
     @Cumulative
     final override fun plus(other: Rational): Rational {
-        val ad = numer times other.denom
-        val bc = other.numer times denom
+        val ad: Int128 = numer times other.denom
+        val bc: Int128 = other.numer times denom
         val sign: Int
         val numer = if (this.sign == other.sign) {
-            sign = if (this.sign < 0) -1 else 1
+            sign = if (this.isNegative) -1 else 1
             ad +/* = */ bc
         } else {    // (positive addend) - (abs. value of negative addend)
-            val isNegative = this.sign < 0
+            val isNegative = this.isNegative
             val minuend = if (isNegative) bc else ad
             val subtrahend = if (isNegative) ad else bc
             (minuend -/* = */ subtrahend).also { sign = if (it.isNegative) -1 else 1 }/* = */.abs()
@@ -253,9 +338,9 @@ open class Rational : CompositeNumber<Rational> {
         if (other.stateEquals(ZERO) || this.stateEquals(ZERO)) {
             return ZERO
         }
-        val numer = numer times other.numer
-        val denom = denom times other.denom
-        val scale = (scale + other.scale).toShort()
+        val numer: Int128 = numer times other.numer
+        val denom: Int128 = denom times other.denom
+        val scale = scale plus other.scale
         if (addValueOverflows(scale, other.scale, scale)) {
             raiseOverflow("$this * $other")
         }
@@ -356,12 +441,33 @@ open class Rational : CompositeNumber<Rational> {
         }
     }
 
+    /**
+     * Returns a string representation of this value, in terms of its components, in base-10.
+     *
+     * If the value of any component would otherwise have no effect on the value of
+     * this composite numer as a whole, it is omitted from the returned string
+     * (for example, if the denominator is 1).
+     *
+     * For details on what instances of this class are composed of, see [Rational].
+     *
+     * On the JVM, to get a string representation of this value when the returned string is evaluated,
+     * call `.toBigDecimal().toString()`.
+     */
     final override fun toString(): String {
         lazyString?.let { return it }
-        val sign = if (sign != -1) "" else "-"
-        val denom = if (denom == 1L) "" else "/$denom"
-        val scale = if (scale == 0.toShort()) "" else " * 10^$scale"
-        return "$sign$numer$denom$scale".also { lazyString = it }
+        val minusSign = if (this.isNegative) "-" else ""
+        val scale = if (scale != 0.toShort()) "e$scale" else ""
+        val denom = if (denom != 1L) "/$denom" else ""
+        val open: String
+        val close: String
+        if (minusSign.isNotEmpty() || scale.isNotEmpty()) {
+            open = "("
+            close = ")"
+        } else {
+            open = ""
+            close = ""
+        }
+        return "$minusSign$open$numer$denom$close$scale".also { lazyString = it }
     }
 
     companion object {

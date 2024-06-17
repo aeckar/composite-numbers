@@ -1,4 +1,4 @@
-package io.github.aeckar.composite
+package io.github.aeckar.kent
 
 import org.junit.jupiter.api.Nested
 

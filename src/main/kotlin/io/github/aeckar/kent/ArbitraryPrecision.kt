@@ -1,6 +1,7 @@
-package io.github.aeckar.composite
+package io.github.aeckar.kent
 
-import io.github.aeckar.composite.utils.raiseOverflow
+import io.github.aeckar.kent.utils.ScaledInt64
+import io.github.aeckar.kent.utils.raiseOverflow
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.nio.ByteBuffer
@@ -115,10 +116,12 @@ operator fun Rational.compareTo(value: BigInteger) = toBigInteger().compareTo(va
  *
  * Information may be lost during conversion.
  */
-fun Rational.toBigDecimal() = numer.toBigDecimal().setScale(scale.toInt()) / denom.toBigDecimal() * sign.toBigDecimal()
+fun Rational.toBigDecimal() = numer.toBigDecimal().setScale(-scale.toInt()) / denom.toBigDecimal() * sign.toBigDecimal()
 
 /**
  * Returns an arbitrary-precision integer equal in value to this.
+ *
+ * Information may be lost during conversion.
  */
 fun Rational.toBigInteger() = numer.toBigInteger() * BigInteger.TEN.pow(scale.toInt()) * sign.toBigInteger()
 

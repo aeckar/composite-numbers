@@ -1,4 +1,4 @@
-package io.github.aeckar.composite
+package io.github.aeckar.kent
 
 /**
  * A numeric value composed of multiple primitive values.
@@ -39,12 +39,23 @@ sealed class CompositeNumber<T : CompositeNumber<T>> : Number(), Comparable<T> {
      */
     abstract val sign: Int
 
+    /**
+     * True if this value is negative.
+     */
+    abstract val isNegative: Boolean
+
+    /**
+     * True if this value is positive.
+     */
+    abstract val isPositive: Boolean
+
+
     // ------------------------------ mutability --------------------
 
     /*
         Conversion between mutable and immutable instances should be restricted the specific inheritor.
         Operations with argument(s) of type T that utilize mutability will generally reside with the same class.
-        Restricting this functionality reduces the chances of mutability
+        Restricting this functionality from the user reduces the chances of mutability
         being used incorrectly by causing unwanted side effects.
      */
 

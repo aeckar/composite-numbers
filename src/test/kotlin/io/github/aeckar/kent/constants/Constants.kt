@@ -1,4 +1,4 @@
-package io.github.aeckar.composite.constants
+package io.github.aeckar.kent.constants
 
 import kotlin.random.Random
 

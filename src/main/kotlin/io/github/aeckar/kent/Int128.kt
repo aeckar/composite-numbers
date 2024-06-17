@@ -1,6 +1,6 @@
-package io.github.aeckar.composite
+package io.github.aeckar.kent
 
-import io.github.aeckar.composite.utils.*
+import io.github.aeckar.kent.utils.*
 import kotlin.math.sign
 import kotlin.random.Random
 
@@ -77,9 +77,8 @@ open class Int128 : CompositeNumber<Int128> {
     var q4: Int
         protected set
 
-    internal val isNegative inline get() = q1 < 0
-    private val isPositive inline get() = q1 >= 0
-
+    final override val isNegative get() = q1 < 0
+    final override val isPositive get() = q1 >= 0
     final override val sign get() = if (isNegative) -1 else 1
 
     /**
@@ -782,12 +781,12 @@ open class Int128 : CompositeNumber<Int128> {
 
         // Accessed only by pseudo-constructor with String argument
         internal fun parse(s: String, radix: Int): Int128 {
-            var cursor = s.lastIndex
             val first = try {
                 s[0]
             } catch (e: StringIndexOutOfBoundsException) {
                 raiseIncorrectFormat("empty string")
             }
+            var cursor = s.lastIndex
             val startIndex = (first == '-').toInt()
             val digit = MutableInt128(ZERO)
             val value = MutableInt128(ZERO)

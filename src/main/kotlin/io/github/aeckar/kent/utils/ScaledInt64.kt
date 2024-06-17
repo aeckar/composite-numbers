@@ -1,4 +1,6 @@
-package io.github.aeckar.composite
+package io.github.aeckar.kent.utils
+
+import io.github.aeckar.kent.Int128
 
 /**
  * Destructuring of a value into the closest scaled 64-bit integer to this and its scale.
@@ -24,6 +26,7 @@ internal class ScaledInt64 {
         this.scale = (scale * sign).toShort()
     }
 
+    // Accessed by BigInteger pseudo-constructor only
     constructor(value: Long, scale: Short) {
         this.value = value
         this.scale = scale
@@ -35,7 +38,14 @@ internal class ScaledInt64 {
     operator fun component1() = value
 
     /**
-     * See [Rational.scale] for details.
+     * See [Rational.scale][io.github.aeckar.kent.Rational.scale] for details.
      */
     operator fun component2() = scale
+
+    companion object {
+        // Accessed by string constructor of Rational only
+        fun at(iterator: StringIndexIterator): ScaledInt64 {
+
+        }
+    }
 }
