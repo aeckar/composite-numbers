@@ -139,7 +139,7 @@ class Matrix {
      */
     fun determinant(): Rational {
         ensureSquare(operation = "Determinant")
-        return determinant(0, 0, sideLength = countRows())
+        return determinant(0, 0, sideLength = countRows()).immutable()
     }
 
     /**
@@ -147,11 +147,22 @@ class Matrix {
      */
     private fun determinant(rowIndex: Int, columnIndex: Int, sideLength: Int): Rational {
         if (sideLength == 2) {
-            return (this[0, 0] * this[1, 1]) - (this[0, 1] * this[1, 0])
+            /*
+                    | a b |
+                A = | c d |
+             */
+            val ad = table[rowIndex, columnIndex] * table[rowIndex + 1, columnIndex + 1]
+            val bc = table[rowIndex, columnIndex + 1] * table[rowIndex + 1, columnIndex]
+            return ad - bc
         }
+        var sign = 1
+        val value = MutableRational(ZERO)
         repeat(sideLength) {
-
+            val cofactorTarget = table[rowIndex, it % sideLength]
+            value +/* = */ (cofactorTarget * determinant(rowIndex + 1, it + 1, sideLength - 1) * sign.toRational())
+            sign = -sign
         }
+        return value
     }
 
     /**

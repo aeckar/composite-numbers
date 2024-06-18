@@ -35,6 +35,14 @@ infix fun Int.over(other: Int) = Rational.ONE.valueOf(this.toLong(), other.toLon
  */
 infix fun Long.over(other: Long) = Rational.ONE.valueOf(this, other, 0)
 
+fun Int.toRational() = when (this) {
+    -1 -> Rational.NEGATIVE_ONE
+    0 -> Rational.ZERO
+    1 -> Rational.ONE
+    2 -> Rational.TWO
+    else -> this over 1
+}
+
 /**
  * Returns a rational number equal in value to [x].
  *
@@ -341,14 +349,11 @@ open class Rational : CompositeNumber<Rational> {
 
     // a/b * c/d = ac/cd
     final override fun times(other: Rational): Rational {
-        if (other.stateEquals(ONE)) {
-            return this
-        }
-        if (this.stateEquals(ONE)) {
-            return other
-        }
-        if (other.stateEquals(ZERO) || this.stateEquals(ZERO)) {
-            return ZERO
+        when {
+            other.stateEquals(ONE) -> return this
+            other.stateEquals(NEGATIVE_ONE) -> return -this
+            this.stateEquals(ONE) -> return other
+            other.stateEquals(ZERO) || this.stateEquals(ZERO) -> return ZERO
         }
         val numer: Int128 = numer times other.numer
         val denom: Int128 = denom times other.denom
@@ -487,7 +492,6 @@ open class Rational : CompositeNumber<Rational> {
         val ZERO = Rational(0, 1, 0, 1)
         val ONE = Rational(1, 1, 0, 1)
         val TWO = Rational(2, 1, 0, 1)
-        val TEN = Rational(10, 1, 0, 1)
 
         // ------------------------------ helper functions ------------------------------
 

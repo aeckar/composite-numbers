@@ -3,9 +3,9 @@ package io.github.aeckar.kent.utils
 /**
  * Thrown when a [table][Table] is initialized with invalid dimensions.
  *
- * Assuming there aren't any bugs, this exception should never be thrown.
+ * This exception should normally never be thrown.
  */
-internal class InvalidDimensionsException(
+private class InvalidDimensionsException(
     rowCount: Int,
     columnCount: Int
 ) : Exception("${rowCount}x$columnCount table has 0 rows or 0 columns")
