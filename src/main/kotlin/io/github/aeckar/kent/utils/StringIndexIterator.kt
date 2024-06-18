@@ -1,15 +1,28 @@
 package io.github.aeckar.kent.utils
 
-internal class StringIndexIterator(private val source: String) {
-    var cursor = 0
+internal class StringIndexIterator(val string: String) {
+    var position = 0
         private set
 
     /**
-     * @throws StringIndexOutOfBoundsException the [cursor] is in a position outside the bounds of the underlying string
+     * To ensure that this function does not throw an exception, ensure [exists] is true.
+     *
+     * Should be preferred when a check has already been made that proves
+     * that the character at the current position exists.
+     * @throws StringIndexOutOfBoundsException the [position] is in a position outside the bounds of the underlying string
      */
-    fun char() = source[cursor]
+    fun char() = string[position]
 
-    operator fun inc() = this.also { ++cursor }
-    operator fun dec() = this.also { --cursor }
-    fun exists() = cursor >= 0 && cursor < source.length
+    /**
+     * Returns true if the character at the current position exists and satisfies the given predicate.
+     *
+     * Should be preferred when it is unknown whether the next character in the underlying string exists or not.
+     */
+    inline fun char(predicate: (Char) -> Boolean) = this.exists() && char().let(predicate)
+
+    fun exists() = position >= 0 && position < string.length
+    fun doesNotExist() = position < 0 || position >= string.length
+
+    operator fun inc() = this.also { ++position }
+    operator fun dec() = this.also { --position }
 }

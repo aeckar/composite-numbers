@@ -3,9 +3,6 @@ package io.github.aeckar.kent
 import io.github.aeckar.kent.utils.*
 import io.github.aeckar.kent.utils.StringIndexIterator
 import io.github.aeckar.kent.utils.productSign
-import io.github.aeckar.kent.utils.raiseIncorrectFormat
-import io.github.aeckar.kent.utils.raiseOverflow
-import io.github.aeckar.kent.utils.raiseUndefined
 import kotlin.math.absoluteValue
 
 /**
@@ -20,7 +17,7 @@ internal class MutableRational(unique: Rational) : Rational(unique.numer, unique
     override fun mutable() = this
 
     @Cumulative
-    override fun valueOf(numer: Long, denom: Long, scale: Short, sign: Int) = this.also {
+    override fun valueOf(numer: Long, denom: Long, scale: Int, sign: Int) = this.also {
         it.numer = numer;   it.scale = scale
         it.denom = denom;   it.sign = sign
     }
@@ -28,13 +25,13 @@ internal class MutableRational(unique: Rational) : Rational(unique.numer, unique
 
 /**
  * Returns a rational number equal to this value over the other as a fraction after simplification.
- * @throws ArithmeticException [other] is 0 or the value is too large to be representable
+ * @throws ArithmeticException [other] is 0 or the value is too large or small to be represented accurately
  */
 infix fun Int.over(other: Int) = Rational.ONE.valueOf(this.toLong(), other.toLong(), 0)
 
 /**
  * Returns a rational number equal to this value over the other as a fraction after simplification.
- * @throws ArithmeticException [other] is 0 or the value is too large to be representable
+ * @throws ArithmeticException [other] is 0 or the value is too large or small to be represented accurately
  */
 infix fun Long.over(other: Long) = Rational.ONE.valueOf(this, other, 0)
 
@@ -44,16 +41,16 @@ infix fun Long.over(other: Long) = Rational.ONE.valueOf(this, other, 0)
  * Some information may be lost after conversion.
  */
 fun Rational(x: Int128): Rational {
-    val (numer, scale) = ScaledInt64(x)
+    val (numer, scale) = ScaledLong(x)
     return Rational(numer, 1, scale, x.sign)
 }
 
 /**
  * Returns a ratio with the given [numerator][numer] and [denominator][denom] after simplification.
- * @throws ArithmeticException [denom] is 0 or the value is too large to be representable
+ * @throws ArithmeticException [denom] is 0 or the value is too large or small to be represented accurately
  */
 fun Rational(numer: Long, denom: Long = 1, scaleAugment: Int = 0): Rational {
-    return Rational.ONE.valueOf(numer, denom, scaleAugment.toShort())
+    return Rational.ONE.valueOf(numer, denom, scaleAugment)
 }
 
 /**
@@ -91,7 +88,7 @@ open class Rational : CompositeNumber<Rational> {
      * Validation should be used to ensure this value never holds the value
      * of [Int.MIN_VALUE] to prevent incorrect operation results.
      */
-    var scale: Short
+    var scale: Int
         protected set
 
     final override val isNegative get() = sign == -1
@@ -111,8 +108,9 @@ open class Rational : CompositeNumber<Rational> {
      *    - `'/'`, followed by a decimal denominator in the same format as the numerator
      * 4. Exponent in scientific notation *(optional)*
      *    - `'e'` or `'E'`, followed by a signed integer
+     *    - Value must be able to fit within 32 bits
      *
-     * The decimal numerator and denominator may optionally be surrounded by parentheses.
+     * The decimal numerator and denominator may optionally be surrounded by a single pair of parentheses.
      * However, if an exponent is provided, parentheses are mandatory.
      *
      * The given string must be small enough to be representable and
@@ -122,84 +120,100 @@ open class Rational : CompositeNumber<Rational> {
      * @throws ArithmeticException the value cannot be represented accurately as a rational number
      */
     constructor(s: String) {
-        fun i16At(iterator: StringIndexIterator): Short {
+        fun exponentAt(iterator: StringIndexIterator): Int {
             var curIndex = iterator
-            val start: Int
-            val sign: Short
-            if (curIndex.char() == '-') {
-                start = curIndex.cursor + 1
-                sign = -1
-            } else {
-                start = curIndex.cursor
-                sign = 1
-            }
-            do {
+            val sign = if (curIndex.char() == '-') {
                 ++curIndex
-            } while (curIndex.exists() && curIndex.char() in '0'..'9')
-            if (curIndex.cursor == ) {
-                raiseIncorrectFormat()
+                -1
+            } else {
+                1
             }
-            var i16: Short = 0
-            while (curIndex.cursor >= start) {
-
-            }
-            return (i16 * sign).toShort()
+            var exponent = 0L
+            do {
+                exponent *= 10
+                exponent += try {
+                    curIndex.char().digitToInt()
+                } catch (e: NoSuchElementException) {   // Caught on first iteration
+                    raiseIncorrectFormat("missing exponent value", e)
+                } catch (e: IllegalArgumentException) {
+                    raiseIncorrectFormat("illegal character embedded in exponent value", e)
+                }
+                if (exponent > Int.MAX_VALUE) {
+                    raiseOverflow()
+                }
+                ++curIndex
+            } while (curIndex.exists())
+            return exponent.toInt() * sign
         }
 
         if (s.isEmpty()) {
             raiseIncorrectFormat("empty string")
         }
         var curIndex = StringIndexIterator(s)
+        var hasExplicitPositive = false
         var hasParentheses = false
         this.sign = 1
         while (true) try {
             when (curIndex.char()) {
-                '-' -> sign = -1
-                '(' -> hasParentheses = true
-                '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> break
-                else -> raiseIncorrectFormat("illegal character before or within represented value")
+                '-' -> {
+                    if (sign == -1) {
+                        raiseIncorrectFormat("illegal embedded sign character")
+                    }
+                    sign = -1
+                }
+                '+' -> {
+                    if (hasExplicitPositive) {
+                        raiseIncorrectFormat("illegal embedded sign character")
+                    }
+                    hasExplicitPositive = true
+                }
+                '(' -> {
+                    if (hasParentheses) {
+                        raiseIncorrectFormat("illegal embedded parenthesis")
+                    }
+                    hasParentheses = true
+                }
+                '0' -> continue
+                '1', '2', '3', '4', '5', '6', '7', '8', '9', '.' -> break
+                else -> raiseIncorrectFormat("illegal embedded character")
             }
             ++curIndex
         } catch (e: NoSuchElementException) {
             raiseIncorrectFormat("character expected", e)
         }
-        val (unscaledNumer, numerScale) = ScaledInt64.at(curIndex)
+        val (unscaledNumer, numerScale) = ScaledLong.at(curIndex)
         var unscaledDenom = 1L
-        var denomScale: Short = 0
-        if (curIndex.char() == '/') {
-            val denom = ScaledInt64.at(curIndex)
+        var denomScale = 0
+        if (curIndex.char { it == '/' }) {
+            val denom = ScaledLong.at(curIndex)
             unscaledDenom = denom.component1()
             denomScale = denom.component2()
         }
         if (hasParentheses) {
-            if (curIndex.char() != ')') {
+            if (curIndex.char { it != ')' }) {
                 raiseIncorrectFormat("missing closing parenthesis")
             }
             ++curIndex
         }
         this.numer = unscaledNumer
         this.denom = unscaledDenom
-        this.scale = if (curIndex.exists() && curIndex.char() == 'e' || curIndex.char() == 'E') {
+        this.scale = if (curIndex.char { it == 'e' || it == 'E'}) {
             ++curIndex
-            i16At(curIndex)
+            exponentAt(curIndex)
         } else {
             0
         }
-        if (curIndex.exists()) {
-            raiseIncorrectFormat("illegal character after represented value")
-        }
-        var augmentedScale = scale plus numerScale
-        if (addValueOverflows(scale, numerScale, augmentedScale)) {
+        if (addValueOverflows(scale, numerScale)) {
             raiseOverflow()
         }
-        scale = augmentedScale
-        augmentedScale = scale plus denomScale
-        if (addValueOverflows(scale, denomScale, augmentedScale)) {
+        scale += numerScale
+        if (addValueOverflows(scale, denomScale)) {
             raiseOverflow()
         }
+        scale += denomScale
     }
 
-    internal constructor(numer: Long, denom: Long, scale: Short, sign: Int) {
+    internal constructor(numer: Long, denom: Long, scale: Int, sign: Int) {
         this.numer = numer
         this.denom = denom
         this.scale = scale
@@ -217,7 +231,7 @@ open class Rational : CompositeNumber<Rational> {
     /**
      * Value function with delegation to by-property constructor.
      */
-    internal open fun valueOf(numer: Long, denom: Long, scale: Short, sign: Int): Rational {
+    internal open fun valueOf(numer: Long, denom: Long, scale: Int, sign: Int): Rational {
         return Rational(numer, denom, scale, sign)
     }
 
@@ -225,9 +239,9 @@ open class Rational : CompositeNumber<Rational> {
      * Value function with delegation to by-property constructor.
      *
      * Returns a ratio with the given [numerator][numer] and [denominator][denom] after simplification.
-     * @throws ArithmeticException [denom] is 0 or the value is too large to be representable
+     * @throws ArithmeticException [denom] is 0 or the value is too large or small to be represented accurately
      */
-    internal fun valueOf(numer: Long, denom: Long, scaleAugment: Short): Rational {
+    internal fun valueOf(numer: Long, denom: Long, scaleAugment: Int): Rational {
         fun gcf(x: Long, y: Long): Long {
             tailrec fun euclideanGCF(max: Long, min: Long): Long {
                 val rem = max % min
@@ -249,15 +263,14 @@ open class Rational : CompositeNumber<Rational> {
         val denomAbs = denom.absoluteValue
         val numerScale = log10(numerAbs)
         val denomScale = log10(denomAbs)
-        var scale = numerScale minus denomScale
-        if (addValueOverflows(numerScale, denomScale, scale)) {
+        if (addValueOverflows(numerScale, denomScale)) {
             raiseOverflow()
         }
-        val augmentedScale = scale plus scaleAugment
-        if (addValueOverflows(scale, scaleAugment, augmentedScale)) {
+        var scale = numerScale - denomScale
+        if (addValueOverflows(scale, scaleAugment)) {
             raiseOverflow()
         }
-        scale = augmentedScale
+        scale += scaleAugment
         val unscaledNumer = numerAbs - tenPow(numerScale)
         val unscaledDenom = denomAbs - tenPow(denomScale)
         val gcf = gcf(unscaledNumer, unscaledDenom)
@@ -266,29 +279,28 @@ open class Rational : CompositeNumber<Rational> {
 
     /**
      * Value function with delegation to by-property constructor.
-     * @throws ArithmeticException [denom] is 0 or the value is too large to be representable
+     * @throws ArithmeticException [denom] is 0 or the value is too large or small to be represented accurately
      */
     // Accessed only by raiseTo(), plus(), and times()
     private inline fun valueOf(
         numer: Int128,
         denom: Int128,
-        scaleAugment: Short,
+        scaleAugment: Int,
         sign: Int,
         additionalInfo: () -> String
     ): Rational {
         val gcf = gcf(numer, denom)
-        val (unscaledNumer, numerScale) = ScaledInt64(numer / gcf)
-        val (unscaledDenom, denomScale) = ScaledInt64(denom / gcf)
-        var scale = numerScale minus denomScale
+        val (unscaledNumer, numerScale) = ScaledLong(numer / gcf)
+        val (unscaledDenom, denomScale) = ScaledLong(denom / gcf)
         try {
-            if (addValueOverflows(numerScale, denomScale, scale)) {
+            if (addValueOverflows(numerScale, denomScale)) {
                 raiseOverflow()
             }
-            val augmentedScale = scale plus scaleAugment
-            if (addValueOverflows(scale, scaleAugment, augmentedScale)) {
+            var scale = numerScale - denomScale
+            if (addValueOverflows(scale, scaleAugment)) {
                 raiseOverflow()
             }
-            scale = augmentedScale
+            scale += scaleAugment
             return valueOf(unscaledNumer, unscaledDenom, scale, sign)
         } catch (e: ArithmeticException) {
             raiseOverflow(additionalInfo())
@@ -301,7 +313,7 @@ open class Rational : CompositeNumber<Rational> {
      * Returns a new instance equal to this when the numerator and denominator are swapped.
      */
     @Cumulative
-    fun reciprocal() = valueOf(denom, numer, (-scale).toShort(), sign)
+    fun reciprocal() = valueOf(denom, numer, -scale, sign)
 
     final override fun signum() = if (numer == 0L) 0 else sign
 
@@ -340,10 +352,10 @@ open class Rational : CompositeNumber<Rational> {
         }
         val numer: Int128 = numer times other.numer
         val denom: Int128 = denom times other.denom
-        val scale = scale plus other.scale
-        if (addValueOverflows(scale, other.scale, scale)) {
+        if (addValueOverflows(scale, other.scale)) {
             raiseOverflow("$this * $other")
         }
+        val scale = scale + other.scale
         return valueOf(numer, denom, scale, productSign(sign, other.sign)) { "$this * $other" }
     }
 
@@ -437,7 +449,7 @@ open class Rational : CompositeNumber<Rational> {
         return if (scale < 0) {
             Int128.ZERO
         } else {
-            ((MutableInt128(numer) * Int128.TEN.pow(scale.toInt())) / Int128(denom)).immutable()
+            ((MutableInt128(numer) * Int128.TEN.pow(scale)) / Int128(denom)).immutable()
         }
     }
 
@@ -456,7 +468,7 @@ open class Rational : CompositeNumber<Rational> {
     final override fun toString(): String {
         lazyString?.let { return it }
         val minusSign = if (this.isNegative) "-" else ""
-        val scale = if (scale != 0.toShort()) "e$scale" else ""
+        val scale = if (scale != 0) "e$scale" else ""
         val denom = if (denom != 1L) "/$denom" else ""
         val open: String
         val close: String
@@ -472,26 +484,26 @@ open class Rational : CompositeNumber<Rational> {
 
     companion object {
         val NEGATIVE_ONE = Rational(1, 1, 0, -1)
-        val ZERO = Rational(0, 1, 0, 0)
-        val ONE = Rational(1, 1, 0, 0)
-        val TWO = Rational(2, 1, 0, 0)
-        val TEN = Rational(10, 1, 0, 0)
+        val ZERO = Rational(0, 1, 0, 1)
+        val ONE = Rational(1, 1, 0, 1)
+        val TWO = Rational(2, 1, 0, 1)
+        val TEN = Rational(10, 1, 0, 1)
 
         // ------------------------------ helper functions ------------------------------
 
         /**
          * If the exponentiation causes signed integer overflow, throws [ArithmeticException].
          */
-        private fun tenPowExact(scale: Short): Long {
+        private fun tenPowExact(scale: Int): Long {
             if (scale > 62) {   // log10(10^n) >= log10(2^63 - 1)
                 Long.raiseOverflow()
             }
             return tenPow(scale)
         }
 
-        private fun tenPow(scale: Short): Long {
+        private fun tenPow(scale: Int): Long {
             var result = 1L
-            repeat(scale.toInt()) { result *= 10 }
+            repeat(scale) { result *= 10 }
             return result
         }
 
@@ -509,12 +521,12 @@ open class Rational : CompositeNumber<Rational> {
          * - x - 10^result
          * @return the result paired to the remainder
          */
-        private fun log10(x: Long): Short {
+        private fun log10(x: Long): Int {
             if (x <= 0) {
                 raiseUndefined("Log10 of $x does not exist")
             }
             var arg = x
-            var result: Short = 0
+            var result = 0
             while (arg >= 10L) {
                 arg /= 10L
                 ++result
@@ -537,15 +549,11 @@ open class Rational : CompositeNumber<Rational> {
          * Returns true if the sum is the result of a signed integer overflow.
          *
          * If a result of multiple additions must be checked, this function must be called for each intermediate sum.
-         * Also checks for the case [Short.MIN_VALUE] - 1.
+         * Also checks for the case [Int.MIN_VALUE] - 1.
          */
-        private fun addValueOverflows(x: Short, y: Short, sum: Short): Boolean {
-            val neg1 = (-1).toShort()
-            if (x == Short.MIN_VALUE && y == neg1 || y == Short.MIN_VALUE && x == neg1) {
-                return true
-            }
-            val isNegative = x < 0
-            return isNegative == (y < 0) && isNegative xor (sum < 0)
+        private fun addValueOverflows(x: Int, y: Int): Boolean {
+            val sum = x.toLong() + y
+            return if (sum < 0L) sum < Int.MIN_VALUE else sum > Int.MAX_VALUE
         }
     }
 }

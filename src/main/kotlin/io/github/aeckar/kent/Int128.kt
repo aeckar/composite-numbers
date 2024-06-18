@@ -33,8 +33,31 @@ internal infix fun Long.times(other: Long): MutableInt128 {
  *
  * @throws NumberFormatException [s] is in an incorrect format
  * @throws ArithmeticException the value cannot be represented accurately as a 128-bit integer
+ * @throws IllegalArgumentException [radix] is negative or over 36
  */
-fun Int128(s: String, radix: Int = 10) = Int128.parse(s, radix)
+fun Int128(s: String, radix: Int = 10, start: Int = 0, endExclusive: Int = s.length): Int128 {
+    // Any radix above base-36 requires use of non-alphanumeric digits
+    require(radix !in 0..36) { "illegal radix" }
+    return Int128.parse(s, radix, start, endExclusive).immutable()
+}
+
+/**
+ * Returns a 128-bit integer with its lowest 32 bits equivalent to the given value.
+ *
+ * Performs the same widening conversion as a primitive type would.
+ * As such, the sign of the original value is preserved.
+ * If this value is associated with a reusable constant, that instance is returned instead.
+ */
+fun Int.toInt128() = when (this) {
+    -1 -> Int128.NEGATIVE_ONE
+    0 -> Int128.ZERO
+    1 -> Int128.ONE
+    2 -> Int128.TWO
+    10 -> Int128.TEN
+    16 -> Int128.SIXTEEN
+    else -> Int128(this)
+}
+
 
 /**
  * A mutable 128-bit integer.
@@ -64,7 +87,7 @@ internal class MutableInt128 : Int128 {
  * - The most significant bit (of the [upper half][high]) determines the sign
  * - Result of division and remainder are truncated
  *
- * Contrary to the behavior of primitive types, operations will throw [ArithmeticException] on overflow.
+ * Contrary to the behavior of primitive types, operations will throw [ArithmeticException] on overflow or underflow.
  */
 @Suppress("EqualsOrHashCode")
 open class Int128 : CompositeNumber<Int128> {
@@ -166,9 +189,9 @@ open class Int128 : CompositeNumber<Int128> {
     /**
      * Value function with delegation to fourth-quarter constructor.
      */
-    // Accessed by Companion.parse, divide()
+    // Accessed by Companion.parse, divide(), ScaledLong.at()
     @Cumulative
-    protected fun valueOf(q4: Int) = valueOf(0, 0, 0, q4)
+    internal fun valueOf(q4: Int) = valueOf(0, 0, 0, q4)
 
     // ---------------------------------------- partitions ----------------------------------------
 
@@ -384,13 +407,7 @@ open class Int128 : CompositeNumber<Int128> {
         if (power < 0) {
             return valueOf(ZERO)
         }
-        val pow = when (power) {
-            0 -> return ONE
-            1 -> return this
-            2 -> TWO
-            10 -> TEN
-            else -> Int128(power)
-        }
+        val pow = power.toInt128()
         try {
             repeat(power) { result *= pow }
         } catch (e: ArithmeticException) {
@@ -476,11 +493,10 @@ open class Int128 : CompositeNumber<Int128> {
             val q2carry = q2summand2 + carry
             val q2 = q2summand1 + q2carry
             carry = (addIntOverflows(q2summand1, q2carry) || addIntOverflows(q2summand1, q2summand2)).toInt()
-            val q1 = q1summand + carry
-            if (addValueOverflows(q1summand, carry, q1)) {
+            if (addValueOverflows(q1summand, carry)) {
                 raiseOverflow()
             }
-            return valueOf(q1, q2, q3, q4)
+            return valueOf(q1summand + carry, q2, q3, q4)
         }
 
         fun addMultiply(q0q1partial: Long, q1q2partial: Long, q2q3partial: Long, q3q4partial: Long): Int128 {
@@ -489,11 +505,10 @@ open class Int128 : CompositeNumber<Int128> {
             }
             val (q1summand1, q2, q3, q4) = addMultiply(q1q2partial, q2q3partial, q3q4partial)
             val q1summand2 = q0q1partial.low
-            val q1 = q1summand1 + q1summand2
-            if (addValueOverflows(q1summand1, q1summand2, q1)) {
+            if (addValueOverflows(q1summand1, q1summand2)) {
                 raiseOverflow()
             }
-            return valueOf(q1, q2, q3, q4)
+            return valueOf(q1summand1 + q1summand2, q2, q3, q4)
         }
 
         // dh
@@ -732,7 +747,7 @@ open class Int128 : CompositeNumber<Int128> {
 
     final override fun toLong() =(q3w() shl Int.SIZE_BITS) or q4w()
 
-    final override fun toRational() = ScaledInt64(this).let { (numer, scale) -> Rational(numer, 1L, scale, sign) }
+    final override fun toRational() = ScaledLong(this).let { (numer, scale) -> Rational(numer, 1L, scale, sign) }
 
     /**
      * Returns this instance.
@@ -758,6 +773,7 @@ open class Int128 : CompositeNumber<Int128> {
         val ONE = Int128(0, 0, 0, 1)
         val TWO = Int128(0, 0, 0, 2)
         val TEN = Int128(0, 0, 0, 10)
+        val SIXTEEN = Int128(0, 0, 0, 16)
         val MAX_VALUE = Int128(Int.MAX_VALUE, -1, -1, -1)
 
         const val SIZE_BYTES = 128 / Byte.SIZE_BITS
@@ -780,20 +796,29 @@ open class Int128 : CompositeNumber<Int128> {
         // ---------------------------------------- string conversion ----------------------------------------
 
         // Accessed only by pseudo-constructor with String argument
-        internal fun parse(s: String, radix: Int): Int128 {
+        internal fun parse(
+            s: String,
+            radix: Int,
+            start: Int,
+            endExclusive: Int,
+            ignoreDot: Boolean = false
+        ): MutableInt128 {
             val first = try {
-                s[0]
+                s[start]
             } catch (e: StringIndexOutOfBoundsException) {
                 raiseIncorrectFormat("empty string")
             }
-            var cursor = s.lastIndex
+            var cursor = endExclusive - 1
             val startIndex = (first == '-').toInt()
             val digit = MutableInt128(ZERO)
             val value = MutableInt128(ZERO)
             val pow = MutableInt128(ONE)
-            val increment = Int128(radix)
+            val increment = radix.toInt128()
             while (cursor >= startIndex) try {
-                digit/* = */.valueOf(s[cursor].digitToInt())
+                if (s[cursor] == '.' && ignoreDot) {
+                    continue
+                }
+                digit/* = */.valueOf(s[cursor].digitToInt(radix))
                 value +/* = */ (digit */* (maybe) = */ pow)
                 pow */* = */ increment
                 --cursor
@@ -803,7 +828,7 @@ open class Int128 : CompositeNumber<Int128> {
                 raiseOverflow(s, cause = e)
             }
             val result = if (startIndex == 1) /* value = */ -value else value
-            return result.immutable()
+            return result as MutableInt128
         }
 
         // ---------------------------------------- helper functions ----------------------------------------
@@ -840,7 +865,7 @@ open class Int128 : CompositeNumber<Int128> {
         /**
          * Returns true if the sum is the result of an unsigned integer overflow.
          */
-        private fun addIntOverflows(x: Int, y: Int) = (x < 0 ) != (y < 0) && (x.widen() + y.widen()).high != 0
+        private fun addIntOverflows(x: Int, y: Int) = (x < 0 ) != (y < 0) && (x.widen() + y.widen()) > Int.MAX_VALUE
 
         /**
          * Returns true if the sum is the result of a signed integer overflow.
@@ -848,12 +873,9 @@ open class Int128 : CompositeNumber<Int128> {
          * If a result of multiple additions must be checked, this function must be called for each intermediate sum.
          * Also checks for the case [Int.MIN_VALUE] - 1.
          */
-        private fun addValueOverflows(x: Int, y: Int, sum: Int): Boolean {
-            if (x == Int.MIN_VALUE && y == -1 || y == Int.MIN_VALUE && x == -1) {
-                return true
-            }
-            val isNegative = x < 0
-            return isNegative == (y < 0) && isNegative xor (sum < 0)
+        private fun addValueOverflows(x: Int, y: Int): Boolean {
+            val sum = x.toLong() + y
+            return if (sum < 0L) sum < Int.MIN_VALUE else sum > Int.MAX_VALUE
         }
     }
 }

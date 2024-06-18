@@ -3,7 +3,6 @@ package io.github.aeckar.kent
 import io.github.aeckar.kent.Rational.Companion.ZERO
 import io.github.aeckar.kent.Rational.Companion.ONE
 import io.github.aeckar.kent.utils.Table
-import io.github.aeckar.kent.utils.raiseUndefined
 
 /**
  * A 2-dimensional matrix.
@@ -150,10 +149,9 @@ class Matrix {
         if (sideLength == 2) {
             return (this[0, 0] * this[1, 1]) - (this[0, 1] * this[1, 0])
         }
-        repeat(sideLength) { columnIndex ->
-            determinant(, columnIndex, sideLength - 1)
+        repeat(sideLength) {
+
         }
-        TODO("Not yet implemented")
     }
 
     /**

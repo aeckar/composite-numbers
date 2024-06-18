@@ -1,7 +1,6 @@
 package io.github.aeckar.kent
 
-import io.github.aeckar.kent.utils.ScaledInt64
-import io.github.aeckar.kent.utils.raiseOverflow
+import io.github.aeckar.kent.utils.ScaledLong
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.nio.ByteBuffer
@@ -26,14 +25,14 @@ private val BigDecimal.sign inline get() = this.signum() or 1
 /**
  * Returns a scaled, 64-bit integer equal to the absolute value of [value].
  */
-private fun ScaledInt64(value: BigInteger): ScaledInt64 {
+private fun ScaledLong(value: BigInteger): ScaledLong {
     var int = value.abs()
-    var scale: Short = 0
+    var scale = 0
     while (int > LONG_MAX) {
         int /= BigInteger.TEN
         ++scale
     }
-    return ScaledInt64(int.longValueExact(), scale)
+    return ScaledLong(int.longValueExact(), scale)
 }
 
 // ------------------------------ 128-bit integer functions ------------------------------
@@ -132,13 +131,13 @@ fun Rational.toBigInteger() = numer.toBigInteger() * BigInteger.TEN.pow(scale.to
  */
 fun Rational(value: BigDecimal): Rational {
     val int = value.toBigInteger()
-    val (unscaledInt, intScale) = ScaledInt64(int)
+    val (unscaledInt, intScale) = ScaledLong(int)
     val rawFracScale: Int
     val frac = (value - int.toBigDecimal())
         .also { rawFracScale = it.scale() /* < 0 */ }
         .setScale(rawFracScale - rawFracScale.coerceAtLeast(-19 /* = -log10(Long.MAX_SIZE) */))
-    val (unscaledFrac, fracScale) = ScaledInt64(frac.toBigInteger())
-    return Rational(unscaledInt, 1L, intScale, 1) + Rational(unscaledFrac, 1L, (-fracScale).toShort(), value.sign)
+    val (unscaledFrac, fracScale) = ScaledLong(frac.toBigInteger())
+    return Rational(unscaledInt, 1L, intScale, 1) + Rational(unscaledFrac, 1L, -fracScale, value.sign)
 }
 
 /**
@@ -147,6 +146,6 @@ fun Rational(value: BigDecimal): Rational {
  * Some information may be lost on conversion.
  */
 fun Rational(value: BigInteger): Rational {
-    val (numer, scale) = ScaledInt64(value)
+    val (numer, scale) = ScaledLong(value)
     return Rational(numer, 1L, scale, 1)
 }
