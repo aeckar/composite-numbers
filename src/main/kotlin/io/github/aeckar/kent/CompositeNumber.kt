@@ -145,7 +145,14 @@ sealed class CompositeNumber<T : CompositeNumber<T>> : Number(), Comparable<T> {
      *
      * See [compareTo][Comparable.compareTo] for details.
      */
-    operator fun compareTo(value: Long) = toLong().compareTo(value)
+    operator fun compareTo(value: Int) = compareTo(value.toLong())
+
+    /**
+     * Compares this value to the other.
+     *
+     * See [compareTo][Comparable.compareTo] for details.
+     */
+    operator fun compareTo(value: Long) = if (!this.isLong()) sign else toLong().compareTo(value)
 
     /**
      * Comparison to composite numbers, built-in [numbers][Number], and
@@ -176,7 +183,7 @@ sealed class CompositeNumber<T : CompositeNumber<T>> : Number(), Comparable<T> {
     /**
      * If true, this can be represented as a 64-bit integer without losing information.
      */
-    protected abstract fun isLong(): Boolean
+    internal abstract fun isLong(): Boolean
 
     // ------------------------------ conversions ------------------------------
 

@@ -108,7 +108,8 @@ open class Rational : CompositeNumber<Rational> {
      * Returns a rational number equal in value to the given string.
      *
      * A string is considered acceptable if it contains:
-     * 1. Minus sign *(optional)*
+     * 1. Negative/positive sign *(optional)*
+     *    - May be placed inside or outside parentheses
      * 2. Decimal numerator
      *    - A sequence of digits, `'0'..'9'`, optionally containing `'.'`
      *    - Leading and trailing zeros are allowed, but a single dot is not
@@ -159,45 +160,53 @@ open class Rational : CompositeNumber<Rational> {
         }
         var curIndex = StringIndexIterator(s)
         var hasExplicitPositive = false
-        var hasParentheses = false
+        var insideParentheses = false
         this.sign = 1
         while (true) try {
             when (curIndex.char()) {
                 '-' -> {
-                    if (sign == -1) {
+                    if (sign == -1 || hasExplicitPositive) {
                         raiseIncorrectFormat("illegal embedded sign character")
                     }
                     sign = -1
+                    ++curIndex
                 }
                 '+' -> {
-                    if (hasExplicitPositive) {
+                    if (sign == -1 || hasExplicitPositive) {
                         raiseIncorrectFormat("illegal embedded sign character")
                     }
                     hasExplicitPositive = true
+                    ++curIndex
                 }
                 '(' -> {
-                    if (hasParentheses) {
-                        raiseIncorrectFormat("illegal embedded parenthesis")
+                    if (insideParentheses) {
+                        raiseIncorrectFormat("illegal embedded open parenthesis")
                     }
-                    hasParentheses = true
+                    insideParentheses = true
+                    ++curIndex
                 }
-                '0' -> continue
                 '1', '2', '3', '4', '5', '6', '7', '8', '9', '.' -> break
+                '0' -> {
+                    ++curIndex
+                    if (curIndex.doesNotExist() || curIndex.char() != '0' ) {
+                        --curIndex
+                        break
+                    }
+                }
                 else -> raiseIncorrectFormat("illegal embedded character")
             }
-            ++curIndex
-        } catch (e: NoSuchElementException) {
+        } catch (e: StringIndexOutOfBoundsException) {
             raiseIncorrectFormat("character expected", e)
         }
-        val (unscaledNumer, numerScale) = ScaledLong.at(curIndex)
+        val (unscaledNumer, numerScale) = ScaledLong.at(curIndex, "/eE)")
         var unscaledDenom = 1L
         var denomScale = 0
         if (curIndex.char { it == '/' }) {
-            val denom = ScaledLong.at(curIndex)
+            val denom = ScaledLong.at(curIndex, "eE)")
             unscaledDenom = denom.component1()
             denomScale = denom.component2()
         }
-        if (hasParentheses) {
+        if (insideParentheses) {
             if (curIndex.char { it != ')' }) {
                 raiseIncorrectFormat("missing closing parenthesis")
             }
@@ -211,11 +220,11 @@ open class Rational : CompositeNumber<Rational> {
         } else {
             0
         }
-        if (addValueOverflows(scale, numerScale)) {
+        if (addOverflowsValue(scale, numerScale)) {
             raiseOverflow()
         }
         scale += numerScale
-        if (addValueOverflows(scale, denomScale)) {
+        if (addOverflowsValue(scale, denomScale)) {
             raiseOverflow()
         }
         scale += denomScale
@@ -271,11 +280,11 @@ open class Rational : CompositeNumber<Rational> {
         val denomAbs = denom.absoluteValue
         val numerScale = log10(numerAbs)
         val denomScale = log10(denomAbs)
-        if (addValueOverflows(numerScale, denomScale)) {
+        if (addOverflowsValue(numerScale, denomScale)) {
             raiseOverflow()
         }
         var scale = numerScale - denomScale
-        if (addValueOverflows(scale, scaleAugment)) {
+        if (addOverflowsValue(scale, scaleAugment)) {
             raiseOverflow()
         }
         scale += scaleAugment
@@ -301,11 +310,11 @@ open class Rational : CompositeNumber<Rational> {
         val (unscaledNumer, numerScale) = ScaledLong(numer / gcf)
         val (unscaledDenom, denomScale) = ScaledLong(denom / gcf)
         try {
-            if (addValueOverflows(numerScale, denomScale)) {
+            if (addOverflowsValue(numerScale, denomScale)) {
                 raiseOverflow()
             }
             var scale = numerScale - denomScale
-            if (addValueOverflows(scale, scaleAugment)) {
+            if (addOverflowsValue(scale, scaleAugment)) {
                 raiseOverflow()
             }
             scale += scaleAugment
@@ -357,7 +366,7 @@ open class Rational : CompositeNumber<Rational> {
         }
         val numer: Int128 = numer times other.numer
         val denom: Int128 = denom times other.denom
-        if (addValueOverflows(scale, other.scale)) {
+        if (addOverflowsValue(scale, other.scale)) {
             raiseOverflow("$this * $other")
         }
         val scale = scale + other.scale
@@ -430,7 +439,7 @@ open class Rational : CompositeNumber<Rational> {
         return numer == other.numer && denom == other.denom && scale == other.scale && sign == other.sign
     }
 
-    final override /* protected */ fun isLong() = denom == 1L && scale >= 0 && log10(numer) + scale > 18
+    final override /* internal */ fun isLong() = denom == 1L && scale >= 0 && log10(numer) + scale <= 18
 
     // ---------------------------------------- conversion functions ----------------------------------------
 
@@ -477,7 +486,7 @@ open class Rational : CompositeNumber<Rational> {
         val denom = if (denom != 1L) "/$denom" else ""
         val open: String
         val close: String
-        if (minusSign.isNotEmpty() || scale.isNotEmpty()) {
+        if (denom.isNotEmpty() || scale.isNotEmpty()) {
             open = "("
             close = ")"
         } else {
@@ -487,7 +496,7 @@ open class Rational : CompositeNumber<Rational> {
         return "$minusSign$open$numer$denom$close$scale".also { lazyString = it }
     }
 
-    companion object {
+    companion object Constants {    // Named companion object makes calling from Java more idiomatic
         val NEGATIVE_ONE = Rational(1, 1, 0, -1)
         val ZERO = Rational(0, 1, 0, 1)
         val ONE = Rational(1, 1, 0, 1)
@@ -555,7 +564,7 @@ open class Rational : CompositeNumber<Rational> {
          * If a result of multiple additions must be checked, this function must be called for each intermediate sum.
          * Also checks for the case [Int.MIN_VALUE] - 1.
          */
-        private fun addValueOverflows(x: Int, y: Int): Boolean {
+        private fun addOverflowsValue(x: Int, y: Int): Boolean {
             val sum = x.toLong() + y
             return if (sum < 0L) sum < Int.MIN_VALUE else sum > Int.MAX_VALUE
         }

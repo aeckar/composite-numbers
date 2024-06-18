@@ -1,6 +1,7 @@
 package io.github.aeckar.kent.utils
 
 import io.github.aeckar.kent.Int128
+import io.github.aeckar.kent.raiseIncorrectFormat
 
 /**
  * Destructuring of a value into the closest scaled 64-bit integer to this and its scale.
@@ -15,14 +16,20 @@ internal class ScaledLong {
      * Some information may be lost during conversion.
      */
     constructor(i128: Int128, scaleAugment: Int = 0) {
+        if (i128.isLong()) {
+            this.value = i128.toLong()
+            this.scale = scaleAugment
+            return
+        }
         val sign = i128.sign.toShort()
-        var abs = i128.abs()
+        var value = i128.abs()  // May mutate `i128`
         var scale = scaleAugment
-        while (abs > Int.MAX_VALUE.toLong()) {
-            abs /= Int128.TEN // Division is not cumulative
+        // TODO if convertible to long, use that instead
+        while (value > Int.MAX_VALUE.toLong()) {
+            value /= Int128.TEN // Division is not cumulative
             ++scale
         }
-        this.value = abs.toLong() * sign
+        this.value = value.toLong() * sign
         this.scale = scale * sign
     }
 
@@ -48,20 +55,17 @@ internal class ScaledLong {
          * and that all trailing zeros have been skipped over.
          */
         // Accessed by string constructor of Rational only
-        fun at(iterator: StringIndexIterator): ScaledLong {
+        fun at(iterator: StringIndexIterator, sentinels: String): ScaledLong {
             fun fromInteger(start: Int, curIndex: StringIndexIterator): ScaledLong {
                 val string = curIndex.string
-                val position = curIndex.position
-                val positiveAugment = position % 38
-                return ScaledLong(Int128.parse(string, 10, start, position - positiveAugment), positiveAugment)
+                val endExclusive = curIndex.position
+                val positiveAugment = if (endExclusive <= 38) 0 else endExclusive % 38
+                return ScaledLong(Int128.parse(string, 10, start, endExclusive - positiveAugment), positiveAugment)
             }
 
             var curIndex = iterator
             val start = curIndex.position
-            var digitCount = 0
-            // Largest representable 128-bit integer is 39 decimal digits long
             while (curIndex.char { it != '.' && it != '/' }) {
-                ++digitCount
                 ++curIndex
             }
             if (curIndex.doesNotExist() || curIndex.char() == '/') {
@@ -71,6 +75,9 @@ internal class ScaledLong {
             do {
                 ++curIndex
             } while (curIndex.char { it in '0'..'9' })
+            if (curIndex.char { it !in sentinels }) {
+                raiseIncorrectFormat("illegal embedded character")
+            }
             do {
                 --curIndex
             } while (curIndex.char() == '0')
@@ -78,8 +85,7 @@ internal class ScaledLong {
             if (negativeAugment == 0) {    // Only zeros after dot
                 return fromInteger(start, curIndex)
             }
-            val string = curIndex.string
-            return ScaledLong(Int128.parse(string, 10, start, curIndex.position + 1, true), negativeAugment)
+            return ScaledLong(Int128.parse(curIndex.string, 10, start, curIndex.position + 1, true), negativeAugment)
         }
     }
 }

@@ -25,4 +25,6 @@ internal class StringIndexIterator(val string: String) {
 
     operator fun inc() = this.also { ++position }
     operator fun dec() = this.also { --position }
+
+    override fun toString() = "$position (length = ${string.length})"
 }
