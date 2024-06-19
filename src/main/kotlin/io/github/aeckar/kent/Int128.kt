@@ -87,6 +87,8 @@ internal class MutableInt128 : Int128 {
  * - Result of division and remainder are truncated
  *
  * Contrary to the behavior of primitive types, operations will throw [ArithmeticException] on overflow or underflow.
+ *
+ * Instances of this class are immutable.
  */
 @Suppress("EqualsOrHashCode")
 open class Int128 : CompositeNumber<Int128> {
@@ -620,7 +622,7 @@ open class Int128 : CompositeNumber<Int128> {
         }
         if (this.stateEquals(other)) {
             return division.result(
-                quotient = { ONE},
+                quotient = { ONE },
                 remainder = { ZERO }
             )
         }
@@ -636,7 +638,9 @@ open class Int128 : CompositeNumber<Int128> {
         }
         val leadingZeros =  dividend.countLeadingZeroBits()
         val leftShift = divisor.countLeadingZeroBits() - leadingZeros
-        val addend = divisor.immutable()    // FIXME addend is 10?
+        // TODO speed up division exponentially by compounding left shifts
+        // TODO afterwards, fix ScaledLong()
+        val addend = divisor.immutable()
         if (leftShift != 0) {
             divisor/* = */.leftShift(leftShift)
         }

@@ -1,6 +1,7 @@
 package io.github.aeckar.kent.utils
 
 import io.github.aeckar.kent.Int128
+import io.github.aeckar.kent.compareTo
 import io.github.aeckar.kent.raiseIncorrectFormat
 
 /**
@@ -16,6 +17,11 @@ internal class ScaledLong {
      * Some information may be lost during conversion.
      */
     constructor(i128: Int128, scaleAugment: Int = 0) {
+        if (i128.compareTo(Long.MIN_VALUE) == 0) {
+            this.value = 9223372036854775800L
+            this.scale = 0
+            return
+        }
         if (i128.isLong()) {
             this.value = i128.toLong()
             this.scale = scaleAugment

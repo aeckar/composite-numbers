@@ -3,9 +3,21 @@ package io.github.aeckar.kent
 import io.github.aeckar.kent.Rational.Constants.ZERO
 import io.github.aeckar.kent.Rational.Constants.ONE
 import io.github.aeckar.kent.utils.Table
+import java.util.*
 
 /**
  * A 2-dimensional matrix.
+ *
+ * To create a new instance, use the following syntax:
+ * ```kotlin
+ * val myMatrix = Matrix[2,3](
+ *     2, 6, 9
+ *     4, 0, 1
+ * )
+ * ```
+ *
+ * Designed specifically for computation with minimal information loss.
+ * Performance-sensitive applications should use a vector arithmetic library instead.
  *
  * Instances of this class are immutable.
  *
@@ -13,40 +25,74 @@ import io.github.aeckar.kent.utils.Table
  * and should be stored in a variable if used more than once.
  * The exceptions to this are [ref], [toString], and partly [rref].
  */
-class Matrix {
-    private val table: Table<Rational>
+class Matrix private constructor(private val table: Table<Rational>) {
     private var lazyString: String? = null
     private var lazyRowEchelonForm: Matrix? = null
 
-    constructor(vararg rows: Array<Rational>) : this(*rows, isForeign = true)
-
-    private constructor(entries: Table<Rational>) : this(*entries.array(), isForeign = false)
-
-    @Suppress("UNCHECKED_CAST")
-    private constructor(vararg rows: Array<Rational>, isForeign: Boolean) {
-        fun raiseEmpty(): Nothing = raiseUndefined("Matrix cannot be empty")
-
-        val tableRows = if (isForeign) {
+    /*
+            val tableRows = if (isForeign) {
             if (rows.isEmpty()) {
-                raiseEmpty()
+                raiseUndefined("Matrix cannot be empty")
             }
             val initialRowSize = rows[0].size
             if (initialRowSize == 0) {
-                raiseEmpty()
+                raiseUndefined("Matrix cannot be empty")
             }
-            for (i in 1..rows.lastIndex) if (rows[i].size != initialRowSize) {
-                raiseUndefined("Matrix must be rectangular")
+            if (convertEntries) {
+                rows.forEachIndexed { rowIndex, row ->
+                    if (row.size != initialRowSize) {
+                        raiseUndefined("Matrix must be rectangular")
+                    }
+                    repeat(row.size) {
+                        val entry = rows[rowIndex][it] as Number
+                        rows[rowIndex][it] = when (entry) {
+                            is Byte, is Short, is Int, is Long -> entry.toLong() over 1
+                            is Int128 -> entry.toRational()
+                            is Rational -> entry
+                            else -> throw IllegalArgumentException("")
+                        }
+                    }
+                }
+            } else {
+                if (rows.any { it.size != initialRowSize }) {
+                    raiseUndefined("Matrix must be rectangular")
+                }
             }
             (rows.clone() as Array<Array<Rational>>).apply { for (i in indices) this[i] = this[i].clone() }
         } else {
             rows
         }
         this.table = Table(tableRows as Array<Array<Rational?>>)
-    }
+     */
+    /**
+     * Used to create a matrix using the dimensions this instance was given.
+     */
+    class Prototype(private val rowCount: Int, private val columnCount: Int) {
+        /**
+         * Returns a new matrix with the given entries.
+         */
+        operator fun invoke(vararg entries: Int): Matrix {
+            ensureValidSize(entries.size)
+            val entry = entries.iterator()
+            val table = Table(rowCount, columnCount) { _, _ -> entry.nextInt().toRational() }
+            return Matrix(table)
+        }
 
-    private fun ensureSquare(operation: String) {
-        if (countRows() != countColumns()) {
-            raiseUndefined("$operation is only defined for square matrices")
+        /**
+         * Returns a new matrix with the given entries.
+         */
+        operator fun invoke(vararg entries: Rational): Matrix {
+            ensureValidSize(entries.size)
+            val entry = entries.iterator()
+            val table = Table(rowCount, columnCount) { _, _ -> entry.next() }
+            return Matrix(table)
+        }
+
+        private fun ensureValidSize(size: Int) {
+            require (size != 0) { "Matrix cannot be empty" }
+            require (size / rowCount == columnCount && size % columnCount == 0) {
+                "Entries do not conform to matrix dimensions"
+            }
         }
     }
 
@@ -347,6 +393,14 @@ class Matrix {
         return string
     }
 
+    // ------------------------------ miscellaneous --------------------
+
+    private fun ensureSquare(operation: String) {
+        if (countRows() != countColumns()) {
+            raiseUndefined("$operation is only defined for square matrices")
+        }
+    }
+
     companion object Constants {    // Named companion object makes calling from Java more idiomatic
         /**
          * The 2x2 identity matrix.
@@ -372,5 +426,10 @@ class Matrix {
             repeat(sideLength) { table[it, it] = ONE }
             return Matrix(table)
         }
+
+        /**
+         * Returns a new [matrix prototype][Prototype] with the given dimensions.
+         */
+        operator fun get(rowCount: Int, columnCount: Int) = Prototype(rowCount, columnCount)
     }
 }

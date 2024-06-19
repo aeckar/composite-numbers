@@ -31,6 +31,8 @@ infix fun Int.over(other: Int) = Rational.ONE.valueOf(this.toLong(), other.toLon
 
 /**
  * Returns a rational number equal to this value over the other as a fraction after simplification.
+ *
+ * If this value is [Long.MIN_VALUE], the value stored will be equal to −2^63 + 8.
  * @throws ArithmeticException [other] is 0 or the value is too large or small to be represented accurately
  */
 infix fun Long.over(other: Long) = Rational.ONE.valueOf(this, other, 0)
@@ -64,15 +66,18 @@ fun Rational(numer: Long, denom: Long = 1, scaleAugment: Int = 0): Rational {
 /**
  * A rational number.
  *
- * Instances of this class are comprised of:
- * - A 64-bit integer numerator
- * - A 64-bit integer denominator
- * - A 32-bit scalar, n, by which this value is multiplied by 10^n
- * - A sign value, 1 or -1, by which this value is multiplied by
+ * Instances of this class are comprised of the following:
+ * - 64-bit integer numerator
+ * - 64-bit integer denominator
+ * - 32-bit scalar, n, by which this value is multiplied by 10^n
+ * - sign value, 1 or -1, by which this value is multiplied by
  *
- * Designed for minimal information loss,
+ * Avoids the performance impact of arbitrary-precision arithmetic, while
+ * allowing all instances to be readily converted to their fractional form.
  *
- * Conversion from an arbitrary-precision number is currently unsupported.
+ * All 64-bit integer values, aside from [Long.MIN_VALUE], can be stored without losing information.
+ *
+ * Instances of this class are immutable.
  */
 @Suppress("EqualsOrHashCode")
 open class Rational : CompositeNumber<Rational> {
@@ -288,8 +293,8 @@ open class Rational : CompositeNumber<Rational> {
             raiseOverflow()
         }
         scale += scaleAugment
-        val unscaledNumer = numerAbs - tenPow(numerScale)
-        val unscaledDenom = denomAbs - tenPow(denomScale)
+        val unscaledNumer = (numerAbs - tenPow(numerScale)).coerceAtLeast(1)
+        val unscaledDenom = (denomAbs - tenPow(denomScale)).coerceAtLeast(1)
         val gcf = gcf(unscaledNumer, unscaledDenom)
         return valueOf(unscaledNumer / gcf, unscaledDenom / gcf, scale, productSign(numer, denom))
     }

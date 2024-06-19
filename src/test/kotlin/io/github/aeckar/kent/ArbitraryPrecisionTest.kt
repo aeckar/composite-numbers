@@ -4,18 +4,21 @@ import io.github.aeckar.kent.constants.HUGE_STRING
 import io.github.aeckar.kent.constants.random
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import java.math.BigInteger
+import kotlin.random.nextInt
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 
 /*
-    Right now, the work necessary to publish this library to Maven Central is not worth adding multiplatform support.
-    However, if that ever does happen, this file will be moved to "/jvmTest".
+    When multiplatform support is added, this file will be moved to "/jvmTest".
  */
 
+// BigDecimal conversion does not need to be tested, as it depends only on .toBigInteger() conversion
 class ArbitraryPrecisionTest {
-    private val posInt = random.nextInt().toBigInteger()
-    private val negInt = (-random.nextInt()).toBigInteger()
+    private val posInt = random.nextInt(0..Int.MAX_VALUE).toBigInteger()
+    private val negInt = random.nextInt(Int.MIN_VALUE..-1).toBigInteger()
     private val max32Int = Int.MAX_VALUE.toBigInteger()
     private val min32Int = Int.MIN_VALUE.toBigInteger()
     private val max64Int = Long.MAX_VALUE.toBigInteger()
@@ -46,7 +49,19 @@ class ArbitraryPrecisionTest {
     inner class Rational {
         @Test
         fun big_integer_conversion() {
+            val min64Plus1Int = min64Int + BigInteger.ONE
+            assertEquals(posInt, Rational(posInt).toBigInteger())
+            assertEquals(negInt, Rational(negInt).toBigInteger())
+            assertEquals(max32Int, Rational(max32Int).toBigInteger())
+            assertEquals(min32Int, Rational(min32Int).toBigInteger())
+            assertEquals(max64Int, Rational(max64Int).toBigInteger())
+            assertEquals(min64Plus1Int, Rational(min64Plus1Int).toBigInteger())
+            assertNotEquals(min64Int, Rational(min64Int).toBigInteger())
+            assertEquals(oneInt, Rational(oneInt).toBigInteger())
+            assertEquals(zeroInt, Rational(zeroInt).toBigInteger())
+            assertEquals(neg1Int, Rational(neg1Int).toBigInteger())
 
+            assertDoesNotThrow { Rational(BigInteger(HUGE_STRING)) }
         }
     }
 }

@@ -22,15 +22,12 @@ class RationalTest {
 
         @Test
         fun string() {
-            /*
             assertEquals(posStr, Rational(posStr).toString())
             assertEquals(negStr, Rational(negStr).toString())
             assertEquals(max32Str, Rational(max32Str).toString())
             assertEquals(min32Str, Rational(min32Str).toString())
             assertEquals(max64Str, Rational(max64Str).toString())
-            assertEquals(min64Str, Rational(min64Str).toString())
-
-             */
+            assertEquals("-9223372036854775800", Rational(min64Str).toString())
             assertEquals("1", Rational("1").toString())
             assertEquals("0", Rational("0").toString())
             assertEquals("-1", neg1.toString())
@@ -48,6 +45,6 @@ class RationalTest {
 
     @Nested
     inner class Arithmetic {
-
+        // TODO
     }
 }

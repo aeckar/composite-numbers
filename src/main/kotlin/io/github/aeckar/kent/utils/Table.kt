@@ -13,7 +13,7 @@ private class InvalidDimensionsException(
 internal inline fun <E : Any> Table(
     rowCount: Int,
     columnCount: Int,
-    defaultEntry: (Int, Int) -> E
+    defaultEntry: (rowIndex: Int, columnIndex: Int) -> E
 ): Table<E> {
     val table = Table<E>(rowCount, columnCount)
     repeat(rowCount) { rowIndex ->
@@ -38,7 +38,7 @@ internal inline fun <E : Any> Table(
  * Instances are mutable and should be defensively copied when appropriate.
  */
 @JvmInline
-internal value class Table<E : Any>(private val backingArray: Array<Array<E?>>) {
+internal value class Table<E : Any>(val backingArray: Array<Array<E?>>) {
     init {
         if (backingArray.isEmpty() || backingArray[0].isEmpty()) {
             val rowCount = backingArray.size
@@ -118,6 +118,8 @@ internal value class Table<E : Any>(private val backingArray: Array<Array<E?>>) 
 
     // ------------------------------ iteration ------------------------------
 
+    fun indexIterator() = IndexIterator(this)
+
     fun countRows() = backingArray.size
     fun countColumns() = backingArray[0].size
 
@@ -131,14 +133,4 @@ internal value class Table<E : Any>(private val backingArray: Array<Array<E?>>) 
             ++index
         }
     }
-
-    // ------------------------------ miscellaneous ------------------------------
-
-    /**
-     * Returns the 2-dimensional backing array of this table.
-     */
-    @Suppress("UNCHECKED_CAST")
-    fun array() = backingArray as Array<Array<E>>
-
-    fun indexIterator() = IndexIterator(this)
 }
