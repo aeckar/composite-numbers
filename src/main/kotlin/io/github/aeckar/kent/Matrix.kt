@@ -1,7 +1,7 @@
 package io.github.aeckar.kent
 
-import io.github.aeckar.kent.Rational.Constants.ZERO
-import io.github.aeckar.kent.Rational.Constants.ONE
+import io.github.aeckar.kent.Rational.Companion.ZERO
+import io.github.aeckar.kent.Rational.Companion.ONE
 import io.github.aeckar.kent.utils.Table
 import java.util.*
 
@@ -401,7 +401,7 @@ class Matrix private constructor(private val table: Table<Rational>) {
         }
     }
 
-    companion object Constants {    // Named companion object makes calling from Java more idiomatic
+    companion object {
         /**
          * The 2x2 identity matrix.
          *

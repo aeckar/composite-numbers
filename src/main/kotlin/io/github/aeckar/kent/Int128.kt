@@ -567,6 +567,8 @@ open class Int128 : CompositeNumber<Int128> {
 
     /**
      * Returns the result of the [division][div] paired to the result of the [remainder][rem], respectively.
+     *
+     * The returned remainder is always non-negative.
      */
     @Suppress("unused")
     infix fun divAndRem(other: Int128): Pair<Int128, Int128> = divide(other, DivisionType.BOTH)
@@ -575,6 +577,8 @@ open class Int128 : CompositeNumber<Int128> {
 
     /**
      * Returns a new instance equal in value to the remainder of the division.
+     *
+     * The returned value is always non-negative.
      */
     operator fun rem(other: Int128): Int128 = divide(other, DivisionType.REMAINDER)
 
@@ -593,23 +597,6 @@ open class Int128 : CompositeNumber<Int128> {
             }.countLeadingZeroBits()
             return Int.SIZE_BITS * (4 - mag) + i32ZeroBitCount
         }
-
-        /*
-        val mag = magnitude()
-        if (mag <= 2 && other.magnitude() <= 2) {   // Delegate to primitive division
-            val blank = blank(productSign(sign, other.sign))
-            return division.result(
-                quotient = {
-                    val (q3, q4) = toLong() / other.toLong()
-                    valueOf(blank, blank, q3, q4)
-                },
-                remainder = {
-                    val (q3, q4) = toLong() % other.toLong()
-                    valueOf(blank, blank, q3, q4)
-                }
-            )
-        }
-         */
 
         if (other.stateEquals(ONE)) {
             return division.result(
@@ -639,7 +626,6 @@ open class Int128 : CompositeNumber<Int128> {
         val leadingZeros =  dividend.countLeadingZeroBits()
         val leftShift = divisor.countLeadingZeroBits() - leadingZeros
         // TODO speed up division exponentially by compounding left shifts
-        // TODO afterwards, fix ScaledLong()
         val addend = divisor.immutable()
         if (leftShift != 0) {
             divisor/* = */.leftShift(leftShift)
@@ -768,7 +754,7 @@ open class Int128 : CompositeNumber<Int128> {
      */
     final override fun toString() = toString(radix = 10)
 
-    companion object Constants {    // Named companion object makes calling from Java more idiomatic
+    companion object {
         val MIN_VALUE = Int128(Int.MIN_VALUE, 0, 0, 0)
         val NEGATIVE_ONE = Int128(-1, -1, -1, -1)
         val ZERO = Int128(0, 0, 0, 0)

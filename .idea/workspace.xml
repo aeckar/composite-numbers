@@ -4,17 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="12726248-6293-408b-8509-c256c37abb1d" name="Changes" comment="Halfway through Rational tests">
+    <list default="true" id="12726248-6293-408b-8509-c256c37abb1d" name="Changes" comment="Continued development VII">
+      <change afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/utils/IntStack.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/ArbitraryPrecision.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/ArbitraryPrecision.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/Int128.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/Int128.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/Matrix.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/Matrix.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/Rational.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/Rational.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/utils/ScaledLong.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/utils/ScaledLong.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/utils/Table.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/utils/Table.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/kotlin/io/github/aeckar/kent/ArbitraryPrecisionTest.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/kotlin/io/github/aeckar/kent/ArbitraryPrecisionTest.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/kotlin/io/github/aeckar/kent/MatrixTest.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/kotlin/io/github/aeckar/kent/MatrixTest.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/kotlin/io/github/aeckar/kent/RationalTest.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/kotlin/io/github/aeckar/kent/RationalTest.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -103,61 +99,61 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Gradle.ArbitraryPrecisionTest.executor": "Run",
-    "Gradle.Arithmetic.div.executor": "Run",
-    "Gradle.Arithmetic.divide.executor": "Run",
-    "Gradle.Arithmetic.executor": "Run",
-    "Gradle.Arithmetic.minus.executor": "Run",
-    "Gradle.Arithmetic.plus.executor": "Run",
-    "Gradle.Arithmetic.times (1).executor": "Run",
-    "Gradle.Arithmetic.times.executor": "Run",
-    "Gradle.Arithmetic.unaryMinus.executor": "Run",
-    "Gradle.BitwiseOperations.executor": "Run",
-    "Gradle.BitwiseOperations.shr.executor": "Run",
-    "Gradle.Build kanum.executor": "Run",
-    "Gradle.Build matrix.executor": "Run",
-    "Gradle.Conversion.big_integer.executor": "Run",
-    "Gradle.Conversion.executor": "Run",
-    "Gradle.Conversion.string.executor": "Debug",
-    "Gradle.Instantiation.executor": "Run",
-    "Gradle.Int128.executor": "Run",
-    "Gradle.Int128Arithmetic.executor": "Run",
-    "Gradle.Int128Arithmetic.shl.executor": "Run",
-    "Gradle.Int128Bitwise.executor": "Run",
-    "Gradle.Int128Bitwise.shl.executor": "Debug",
-    "Gradle.Int128Instantiation.from_string.executor": "Run",
-    "Gradle.Int128Instantiation.string.executor": "Debug",
-    "Gradle.Int128Test (1).executor": "Run",
-    "Gradle.Int128Test.executor": "Run",
-    "Gradle.Int128Test.fromString.executor": "Run",
-    "Gradle.Int128Test.instantiate_from_string.executor": "Run",
-    "Gradle.Int128Test.unaryMinus.executor": "Run",
-    "Gradle.Rational.big_integer_conversion.executor": "Run",
-    "Gradle.ScalarReturningOperations.s.executor": "Run",
-    "Gradle.kanum [classes].executor": "Run",
-    "Gradle.kanum [clean].executor": "Run",
-    "Kotlin.MainKt (1).executor": "Debug",
-    "Kotlin.MainKt.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "deletionFromPopupRequiresConfirmation": "false",
-    "git-widget-placeholder": "master",
-    "ignore.virus.scanning.warn.message": "true",
-    "kotlin-language-version-configured": "true",
-    "onboarding.tips.debug.path": "C:/Users/eckar/IdeaProjects/matrix/src/main/kotlin/Main.kt",
-    "project.structure.last.edited": "Project",
-    "project.structure.proportion": "0.0",
-    "project.structure.side.proportion": "0.0",
-    "settings.editor.selected.configurable": "configurable.group.appearance"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Gradle.ArbitraryPrecisionTest.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Arithmetic.div.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Arithmetic.divide.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Arithmetic.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Arithmetic.minus.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Arithmetic.plus.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Arithmetic.times (1).executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Arithmetic.times.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Arithmetic.unaryMinus.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.BitwiseOperations.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.BitwiseOperations.shr.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Build kanum.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Build matrix.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Conversion.big_integer.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Conversion.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Conversion.string.executor&quot;: &quot;Debug&quot;,
+    &quot;Gradle.Instantiation.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Int128.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Int128Arithmetic.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Int128Arithmetic.shl.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Int128Bitwise.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Int128Bitwise.shl.executor&quot;: &quot;Debug&quot;,
+    &quot;Gradle.Int128Instantiation.from_string.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Int128Instantiation.string.executor&quot;: &quot;Debug&quot;,
+    &quot;Gradle.Int128Test (1).executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Int128Test.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Int128Test.fromString.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Int128Test.instantiate_from_string.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Int128Test.unaryMinus.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Rational.big_integer_conversion.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.ScalarReturningOperations.s.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.kanum [classes].executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.kanum [clean].executor&quot;: &quot;Run&quot;,
+    &quot;Kotlin.MainKt (1).executor&quot;: &quot;Debug&quot;,
+    &quot;Kotlin.MainKt.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;deletionFromPopupRequiresConfirmation&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;onboarding.tips.debug.path&quot;: &quot;C:/Users/eckar/IdeaProjects/matrix/src/main/kotlin/Main.kt&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;configurable.group.appearance&quot;
   },
-  "keyToStringList": {
-    "kotlin-gradle-user-dirs": [
-      "C:\\Users\\eckar\\.gradle"
+  &quot;keyToStringList&quot;: {
+    &quot;kotlin-gradle-user-dirs&quot;: [
+      &quot;C:\\Users\\eckar\\.gradle&quot;
     ]
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\eckar\IdeaProjects\kent\src\main\kotlin\io\github\aeckar\kent" />
@@ -420,7 +416,15 @@
       <option name="project" value="LOCAL" />
       <updated>1718730589447</updated>
     </task>
-    <option name="localTasksCounter" value="16" />
+    <task id="LOCAL-00016" summary="Continued development VII">
+      <option name="closed" value="true" />
+      <created>1718758963830</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1718758963830</updated>
+    </task>
+    <option name="localTasksCounter" value="17" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -450,7 +454,8 @@
     <MESSAGE value="Implemented Rational from-string constructor" />
     <MESSAGE value="Implemented determinant()" />
     <MESSAGE value="Halfway through Rational tests" />
-    <option name="LAST_COMMIT_MESSAGE" value="Halfway through Rational tests" />
+    <MESSAGE value="Continued development VII" />
+    <option name="LAST_COMMIT_MESSAGE" value="Continued development VII" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -471,11 +476,6 @@
             <option name="lambda-ordinal" value="-1" />
           </properties>
           <option name="timeStamp" value="34" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="kotlin-line">
-          <url>file://$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/Int128.kt</url>
-          <line>613</line>
-          <option name="timeStamp" value="36" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

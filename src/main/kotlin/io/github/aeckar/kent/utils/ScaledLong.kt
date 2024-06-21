@@ -1,7 +1,6 @@
 package io.github.aeckar.kent.utils
 
 import io.github.aeckar.kent.Int128
-import io.github.aeckar.kent.compareTo
 import io.github.aeckar.kent.raiseIncorrectFormat
 
 /**
@@ -30,7 +29,6 @@ internal class ScaledLong {
         val sign = i128.sign.toShort()
         var value = i128.abs()  // May mutate `i128`
         var scale = scaleAugment
-        // TODO if convertible to long, use that instead
         while (value > Int.MAX_VALUE.toLong()) {
             value /= Int128.TEN // Division is not cumulative
             ++scale

@@ -501,7 +501,7 @@ open class Rational : CompositeNumber<Rational> {
         return "$minusSign$open$numer$denom$close$scale".also { lazyString = it }
     }
 
-    companion object Constants {    // Named companion object makes calling from Java more idiomatic
+    companion object {
         val NEGATIVE_ONE = Rational(1, 1, 0, -1)
         val ZERO = Rational(0, 1, 0, 1)
         val ONE = Rational(1, 1, 0, 1)
