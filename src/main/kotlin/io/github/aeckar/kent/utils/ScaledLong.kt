@@ -27,10 +27,10 @@ internal class ScaledLong {
             return
         }
         val sign = i128.sign.toShort()
-        var value = i128.abs()  // May mutate `i128`
+        var value = /* (maybe) i128 = */ i128.abs()
         var scale = scaleAugment
         while (value > Int.MAX_VALUE.toLong()) {
-            value /= Int128.TEN // Division is not cumulative
+            /* (maybe) value = */ value /= Int128.TEN
             ++scale
         }
         this.value = value.toLong() * sign

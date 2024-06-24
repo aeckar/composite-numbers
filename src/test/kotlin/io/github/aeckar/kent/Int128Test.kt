@@ -63,9 +63,6 @@ class Int128Test {
 
         @Test
         fun shl() {
-            println(neg16.toString(2))
-            println((neg16 shl shift16).toString(2))
-            println((Int128(neg16 shl shift16)).twosComplement())
             assertEquals2c(Int128(pos16 shl shift16), Int128(pos16) shl shift16)
             assertEquals2c(Int128(neg16 shl shift16), Int128(neg16) shl shift16)
             assertEquals2c(Int128.ZERO, Int128(random) shl gte128)
@@ -104,22 +101,28 @@ class Int128Test {
 
         @Test
         fun plus() {
-            val i128a = i128()
-            val i128b = i128()
-            val sum = i128a + i128b
-            assertEquals2c(i128a, sum - i128b)
-            assertEquals2c(i128b, sum - i128a)
-            assertThrows<ArithmeticException> { Int128.MAX_VALUE + Int128.ONE }
+            do try {    // Ignore random tests where the result overflows
+                val i128a = i128()
+                val i128b = i128()
+                val sum = i128a + i128b
+                assertEquals2c(i128a, sum - i128b)
+                assertEquals2c(i128b, sum - i128a)
+                assertThrows<ArithmeticException> { Int128.MAX_VALUE + Int128.ONE }
+                break
+            } catch (_: ArithmeticException) { /* no-op */ } while (true)
         }
 
         @Test
         fun minus() {
-            val i128a = i128()
-            val i128b = i128()
-            val difference = i128a - i128b
-            assertEquals2c(i128a, difference + i128b)
-            assertEquals2c(i128b, i128a - difference)
-            assertThrows<ArithmeticException> { Int128.MIN_VALUE - Int128.ONE }
+            do try {    // Ignore random tests where the result overflows
+                val i128a = i128()
+                val i128b = i128()
+                val difference = i128a - i128b
+                assertEquals2c(i128a, difference + i128b)
+                assertEquals2c(i128b, i128a - difference)
+                assertThrows<ArithmeticException> { Int128.MIN_VALUE - Int128.ONE }
+                break
+            } catch (_: ArithmeticException) { /* no-op */ }while (true)
         }
 
         @Test
@@ -140,6 +143,7 @@ class Int128Test {
             val i128b = Int128(1250)
             val quotient = i128a / i128b
 
+            assertEquals2c(Int128(4), quotient)
             assertEquals2c(i128a, quotient * i128b)
             assertEquals2c(i128b, i128a / quotient)
             assertDoesNotThrow { Int128.ONE / Int128.MAX_VALUE }

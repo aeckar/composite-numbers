@@ -1,8 +1,8 @@
 package io.github.aeckar.kent
 
 private fun Any.receiver() = when (this) {
-    is Rational, is Rational.Constants -> "Rational number"
-    is Int128, is Int128.Constants -> "128-bit integer"
+    is Rational, is Rational.Companion -> "Rational number"
+    is Int128, is Int128.Companion -> "128-bit integer"
     else -> "Value"
 }
 

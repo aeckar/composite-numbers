@@ -1,6 +1,6 @@
 package io.github.aeckar.kent.utils
 
-// TODO remove from this repo. This file belongs in io.github.aeckar.karp (Kombinator)
+// Public API used by io.github.aeckar.karp
 
 /**
  * Returns an immutable [integer stack][IntStack] containing the single value.
@@ -12,6 +12,11 @@ fun IntStack(single: Int): IntStack = SingletonIntStack(single)
  * A stack of integers.
  */
 sealed class IntStack {
+    /**
+     * Iterates through the values in the stack in sequential order.
+     */
+    inline fun forEach(action: (Int) -> Unit) = repeat(size) { get(it).apply(action) }
+
     /**
      * The amount of integers that have been appended to this stack.
      */
@@ -29,16 +34,20 @@ sealed class IntStack {
 
     /**
      * Returns the integer at the specified position.
+     *
+     * @throws IndexOutOfBoundsException [index] is negative or is equal or greater than [size]
      */
     abstract operator fun get(index: Int): Int
 
     final override fun toString() = buildString {
         append('[')
         repeat(size) {
-            append(get(it))
+            append(this@IntStack.get(it))
             append(", ")
         }
-        delete(length - 2, length)  // Remove trailing comma
+        if (size != 0) {
+            delete(length - 2, length)  // Remove trailing comma
+        }
         append(']')
     }
 }
@@ -71,9 +80,21 @@ private class SingletonIntStack(val value: Int) : IntStack() {
 /**
  * A mutable stack of integers.
  */
-class MutableIntStack(initialSize: Int = DEFAULT_SIZE) : IntStack() {
-    override var size = initialSize
-    private var data = IntArray(size)
+class MutableIntStack(initialCapacity: Int = DEFAULT_CAPACITY) : IntStack() {
+    override var size = 0
+    private var data = IntArray(initialCapacity)
+
+    /**
+     * Increments the value at the top of the stack by 1.
+     *
+     * @throws NoSuchElementException the stack is empty
+     */
+    fun incTop() {
+        if (size == 0) {
+            throw NoSuchElementException("Stack is empty")
+        }
+        ++data[size - 1]
+    }
 
     /**
      * Appends the [code][Char.code] of this character to the stack.
@@ -108,7 +129,7 @@ class MutableIntStack(initialSize: Int = DEFAULT_SIZE) : IntStack() {
     override fun isEmpty() = data.isEmpty()
     override fun isNotEmpty() = data.isNotEmpty()
 
-    override operator fun get(index: Int) = data[index]
+    override fun get(index: Int) = data[index]
 
     override fun equals(other: Any?): Boolean {
         if (other !is IntStack) {
@@ -131,6 +152,6 @@ class MutableIntStack(initialSize: Int = DEFAULT_SIZE) : IntStack() {
         /**
          * The size of an instance when an initial size is not specified.
          */
-        const val DEFAULT_SIZE = 8
+        const val DEFAULT_CAPACITY = 8
     }
 }

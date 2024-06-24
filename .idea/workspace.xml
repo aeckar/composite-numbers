@@ -5,12 +5,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="12726248-6293-408b-8509-c256c37abb1d" name="Changes" comment="Continued development VII">
-      <change afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/utils/IntStack.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/CompositeNumber.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/CompositeNumber.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/ExceptionHandling.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/ExceptionHandling.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/Int128.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/Int128.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/Matrix.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/Matrix.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/Rational.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/Rational.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/utils/IntStack.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/utils/IntStack.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/utils/ScaledLong.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/utils/ScaledLong.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/kotlin/io/github/aeckar/kent/Int128Test.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/kotlin/io/github/aeckar/kent/Int128Test.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/kotlin/io/github/aeckar/kent/constants/Constants.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/kotlin/io/github/aeckar/kent/constants/Constants.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -74,6 +77,7 @@
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="UPDATE_TYPE" value="REBASE" />
   </component>
   <component name="GitHubPullRequestSearchHistory">{
   &quot;lastFilter&quot;: {
@@ -83,8 +87,8 @@
 }</component>
   <component name="GithubPullRequestsUISettings">{
   &quot;selectedUrlAndAccountId&quot;: {
-    &quot;url&quot;: &quot;https://github.com/aeckar/kanum.git&quot;,
-    &quot;accountId&quot;: &quot;6cba976d-76a2-45c0-97e8-f33b9f7c8fa6&quot;
+    &quot;url&quot;: &quot;https://github.com/aeckar/kent.git&quot;,
+    &quot;accountId&quot;: &quot;ba8afe73-161f-43ca-a709-90b5a866d6eb&quot;
   }
 }</component>
   <component name="ProblemsViewState">
@@ -99,61 +103,69 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Gradle.ArbitraryPrecisionTest.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Arithmetic.div.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Arithmetic.divide.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Arithmetic.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Arithmetic.minus.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Arithmetic.plus.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Arithmetic.times (1).executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Arithmetic.times.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Arithmetic.unaryMinus.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.BitwiseOperations.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.BitwiseOperations.shr.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Build kanum.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Build matrix.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Conversion.big_integer.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Conversion.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Conversion.string.executor&quot;: &quot;Debug&quot;,
-    &quot;Gradle.Instantiation.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Int128.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Int128Arithmetic.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Int128Arithmetic.shl.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Int128Bitwise.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Int128Bitwise.shl.executor&quot;: &quot;Debug&quot;,
-    &quot;Gradle.Int128Instantiation.from_string.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Int128Instantiation.string.executor&quot;: &quot;Debug&quot;,
-    &quot;Gradle.Int128Test (1).executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Int128Test.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Int128Test.fromString.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Int128Test.instantiate_from_string.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Int128Test.unaryMinus.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Rational.big_integer_conversion.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.ScalarReturningOperations.s.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.kanum [classes].executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.kanum [clean].executor&quot;: &quot;Run&quot;,
-    &quot;Kotlin.MainKt (1).executor&quot;: &quot;Debug&quot;,
-    &quot;Kotlin.MainKt.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;deletionFromPopupRequiresConfirmation&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;onboarding.tips.debug.path&quot;: &quot;C:/Users/eckar/IdeaProjects/matrix/src/main/kotlin/Main.kt&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;configurable.group.appearance&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Gradle.ArbitraryPrecisionTest.executor": "Run",
+    "Gradle.Arithmetic.div.executor": "Run",
+    "Gradle.Arithmetic.divide.executor": "Run",
+    "Gradle.Arithmetic.executor": "Run",
+    "Gradle.Arithmetic.minus.executor": "Run",
+    "Gradle.Arithmetic.plus.executor": "Run",
+    "Gradle.Arithmetic.times (1).executor": "Run",
+    "Gradle.Arithmetic.times.executor": "Run",
+    "Gradle.Arithmetic.unaryMinus.executor": "Run",
+    "Gradle.BitwiseOperations.executor": "Run",
+    "Gradle.BitwiseOperations.shr.executor": "Run",
+    "Gradle.BitwiseShift.executor": "Run",
+    "Gradle.Build kanum.executor": "Run",
+    "Gradle.Build matrix.executor": "Run",
+    "Gradle.Conversion.big_integer.executor": "Run",
+    "Gradle.Conversion.executor": "Run",
+    "Gradle.Conversion.string (1).executor": "Run",
+    "Gradle.Conversion.string.executor": "Run",
+    "Gradle.Instantiation.executor": "Run",
+    "Gradle.Int128.executor": "Run",
+    "Gradle.Int128Arithmetic.executor": "Run",
+    "Gradle.Int128Arithmetic.shl.executor": "Run",
+    "Gradle.Int128Bitwise.executor": "Run",
+    "Gradle.Int128Bitwise.shl.executor": "Debug",
+    "Gradle.Int128Instantiation.from_string.executor": "Run",
+    "Gradle.Int128Instantiation.string.executor": "Debug",
+    "Gradle.Int128Test (1).executor": "Run",
+    "Gradle.Int128Test.executor": "Run",
+    "Gradle.Int128Test.fromString.executor": "Run",
+    "Gradle.Int128Test.instantiate_from_string.executor": "Run",
+    "Gradle.Int128Test.unaryMinus.executor": "Run",
+    "Gradle.Rational.big_integer_conversion.executor": "Run",
+    "Gradle.ScalarReturningOperations.s.executor": "Run",
+    "Gradle.kanum [classes].executor": "Run",
+    "Gradle.kanum [clean].executor": "Run",
+    "Kotlin.MainKt (1).executor": "Debug",
+    "Kotlin.MainKt.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "deletionFromPopupRequiresConfirmation": "false",
+    "git-widget-placeholder": "master",
+    "ignore.virus.scanning.warn.message": "true",
+    "kotlin-language-version-configured": "true",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "onboarding.tips.debug.path": "C:/Users/eckar/IdeaProjects/matrix/src/main/kotlin/Main.kt",
+    "project.structure.last.edited": "Project",
+    "project.structure.proportion": "0.0",
+    "project.structure.side.proportion": "0.0",
+    "settings.editor.selected.configurable": "editor.preferences.fonts.default",
+    "vue.rearranger.settings.migration": "true"
   },
-  &quot;keyToStringList&quot;: {
-    &quot;kotlin-gradle-user-dirs&quot;: [
-      &quot;C:\\Users\\eckar\\.gradle&quot;
+  "keyToStringList": {
+    "kotlin-gradle-user-dirs": [
+      "C:\\Users\\eckar\\.gradle"
     ]
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\eckar\IdeaProjects\kent\src\main\kotlin\io\github\aeckar\kent" />
@@ -168,7 +180,116 @@
       <recent name="io.github.aeckar.kanum" />
     </key>
   </component>
-  <component name="RunManager" selected="Gradle.Conversion.string">
+  <component name="RunManager" selected="Gradle.Arithmetic.div">
+    <configuration default="true" type="JetRunConfigurationType">
+      <module name="matrix" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="KotlinStandaloneScriptRunConfigurationType">
+      <module name="matrix" />
+      <option name="filePath" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Arithmetic" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" value="" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value=":test" />
+            <option value="--tests" />
+            <option value="&quot;io.github.aeckar.kent.Int128Test$Arithmetic&quot;" />
+          </list>
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <ExternalSystemDebugServerProcess>false</ExternalSystemDebugServerProcess>
+      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+      <DebugAllEnabled>false</DebugAllEnabled>
+      <RunAsTest>true</RunAsTest>
+      <method v="2" />
+    </configuration>
+    <configuration name="Arithmetic.div" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" value="" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value=":test" />
+            <option value="--tests" />
+            <option value="&quot;io.github.aeckar.kent.Int128Test$Arithmetic.div&quot;" />
+          </list>
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <ExternalSystemDebugServerProcess>false</ExternalSystemDebugServerProcess>
+      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+      <DebugAllEnabled>false</DebugAllEnabled>
+      <RunAsTest>true</RunAsTest>
+      <method v="2" />
+    </configuration>
+    <configuration name="Conversion.string (1)" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" value="" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value=":test" />
+            <option value="--tests" />
+            <option value="&quot;io.github.aeckar.kent.Int128Test$Conversion.string&quot;" />
+          </list>
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <ExternalSystemDebugServerProcess>false</ExternalSystemDebugServerProcess>
+      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+      <DebugAllEnabled>false</DebugAllEnabled>
+      <RunAsTest>true</RunAsTest>
+      <method v="2" />
+    </configuration>
+    <configuration name="Conversion.string" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" value="" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value=":test" />
+            <option value="--tests" />
+            <option value="&quot;io.github.aeckar.kent.RationalTest$Conversion.string&quot;" />
+          </list>
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <ExternalSystemDebugServerProcess>false</ExternalSystemDebugServerProcess>
+      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+      <DebugAllEnabled>false</DebugAllEnabled>
+      <RunAsTest>true</RunAsTest>
+      <method v="2" />
+    </configuration>
     <configuration name="Conversion.string" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
@@ -194,6 +315,30 @@
       <method v="2" />
     </configuration>
     <configuration name="Int128Test (1)" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" value="" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value=":test" />
+            <option value="--tests" />
+            <option value="&quot;io.github.aeckar.kent.Int128Test&quot;" />
+          </list>
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <ExternalSystemDebugServerProcess>false</ExternalSystemDebugServerProcess>
+      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+      <DebugAllEnabled>false</DebugAllEnabled>
+      <RunAsTest>true</RunAsTest>
+      <method v="2" />
+    </configuration>
+    <configuration name="Int128Test" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
@@ -280,12 +425,21 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Gradle.Arithmetic.div" />
         <item itemvalue="Gradle.Conversion.string" />
-        <item itemvalue="Gradle.ScalarReturningOperations.s" />
-        <item itemvalue="Gradle.Rational.big_integer_conversion" />
-        <item itemvalue="Gradle.Int128Test (1)" />
+        <item itemvalue="Gradle.Int128Test" />
+        <item itemvalue="Gradle.Arithmetic" />
+        <item itemvalue="Gradle.Conversion.string (1)" />
       </list>
     </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-9f38398b9061-39b83d9b5494-intellij.indexing.shared.core-IU-241.17890.1" />
+        <option value="bundled-js-predefined-1d06a55b98c1-0b3e54e931b4-JavaScript-IU-241.17890.1" />
+      </set>
+    </attachedChunks>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
@@ -295,6 +449,10 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1717599346279</updated>
+      <workItem from="1719103250288" duration="538000" />
+      <workItem from="1719103822862" duration="293000" />
+      <workItem from="1719104152510" duration="15512000" />
+      <workItem from="1719198021593" duration="9532000" />
     </task>
     <task id="LOCAL-00001" summary="Initial commit">
       <option name="closed" value="true" />
@@ -427,6 +585,9 @@
     <option name="localTasksCounter" value="17" />
     <servers />
   </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">
       <map>
@@ -475,9 +636,18 @@
           <properties>
             <option name="lambda-ordinal" value="-1" />
           </properties>
-          <option name="timeStamp" value="34" />
+          <option name="timeStamp" value="48" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="kotlin-line">
+          <url>file://$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/utils/ScaledLong.kt</url>
+          <line>32</line>
+          <option name="timeStamp" value="52" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
   </component>
 </project>

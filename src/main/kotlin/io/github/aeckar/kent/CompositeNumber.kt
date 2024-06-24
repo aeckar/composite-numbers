@@ -57,6 +57,9 @@ sealed class CompositeNumber<T : CompositeNumber<T>> : Number(), Comparable<T> {
         Operations with argument(s) of type T that utilize mutability will generally reside with the same class.
         Restricting this functionality from the user reduces the chances of mutability
         being used incorrectly by causing unwanted side effects.
+
+        Instances where a value is being mutated should be explicitly stated using comments.
+        Mutable instances should not be declared using `var`, as it may cause aliasing.
      */
 
     /**
@@ -81,10 +84,19 @@ sealed class CompositeNumber<T : CompositeNumber<T>> : Number(), Comparable<T> {
     internal abstract fun mutable(): T
 
     /**
+     * Returns a unique mutable composite number equal in value to this.
+     *
+     * If chained to an operation, this function should be called first.
+     */
+    internal abstract fun uniqueMutable(): T
+
+    /**
      * Returns a new instance with the given value, or if [mutable], the same instance with the value stored.
      *
      * Overrides of this function will typically delegate the responsibility
      * of value creation to another value function.
+     *
+     * Overrides of this function should never be marked final.
      */
     @Cumulative
     internal abstract fun valueOf(other: T): T

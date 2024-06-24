@@ -160,15 +160,14 @@ open class Int128 : CompositeNumber<Int128> {
     private enum class DivisionType {
         QUOTIENT, REMAINDER, BOTH;
 
-        /**
-         * Calls [immutable] for each result.
-         */
         @Suppress("UNCHECKED_CAST")
-        inline fun <T : Any> result(quotient: () -> Int128, remainder: () -> Int128) = when (this) {
-            QUOTIENT -> quotient().immutable()
-            REMAINDER -> remainder().immutable()
-            else -> quotient().immutable() to remainder().immutable()
-        } as T
+        inline fun <T : Any> result(quotient: () -> Int128, remainder: () -> Int128): T {
+            return when (this@DivisionType) {
+                QUOTIENT -> quotient()
+                REMAINDER -> remainder()
+                else -> quotient() to remainder()
+            } as T
+        }
     }
 
     // ---------------------------------------- mutability ----------------------------------------
@@ -176,10 +175,12 @@ open class Int128 : CompositeNumber<Int128> {
     override fun immutable() = this
 
     @Cumulative
-    override fun mutable(): Int128 = MutableInt128(this)
+    override fun mutable() = MutableInt128(this)
+
+    final override fun uniqueMutable() = MutableInt128(this)
 
     @Cumulative
-    override fun valueOf(other: Int128) = with (other) { valueOf(q1, q2, q3, q4) }
+    override fun valueOf(other: Int128) = with (other) { this@Int128.valueOf(q1, q2, q3, q4) }
 
     /**
      * Value function with delegation to by-quarter constructor.
@@ -338,6 +339,13 @@ open class Int128 : CompositeNumber<Int128> {
      */
     infix fun ushr(count: Int): Int128 {
         ensureValidShift(count)
+        return unsignedRightShift(count)
+    }
+
+    /**
+     * Assumes [count] is non-negative.
+     */
+    private fun unsignedRightShift(count: Int): Int128 {
         if (count == 0) {
             return this
         }
@@ -382,35 +390,34 @@ open class Int128 : CompositeNumber<Int128> {
         if (this.stateEquals(MIN_VALUE)) {
             raiseOverflow("-Int128.MIN_VALUE")
         }
-        var q1i = q1.inv()
-        var q2i = q2.inv()
-        var q3i = q3.inv()
-        var q4i = q4.inv()
-        val q4plus1 = q4i + 1
-        if (addOverflowsInt(q4i, 1)) {
-            val q3plus1 = q3i + 1
-            if (addOverflowsInt(q3i, 1)) {
-                val q2plus1 = q2i + 1
-                if (addOverflowsInt(q2i, 1)) {
-                    q1i += 1
-                }
-                q2i = q2plus1
-            }
-            q3i = q3plus1
-        }
-        q4i = q4plus1
-        return valueOf(q1i, q2i, q3i, q4i)
+        return addOne(q1.inv(), q2.inv(), q3.inv(), q4.inv())
     }
 
+    private fun addOne(q1: Int, q2: Int, q3: Int, q4: Int): Int128 {
+        val q4plus1 = q4 + 1
+        var q3plus1 = q3
+        var q2plus1 = q2
+        var q1plus1 = q1
+        if (addOverflowsInt(q4, 1)) {
+            ++q3plus1
+            if (addOverflowsInt(q3, 1)) {
+                ++q2plus1
+                if (addOverflowsInt(q2, 1)) {
+                    ++q1plus1
+                }
+            }
+        }
+        return valueOf(q1plus1, q2plus1, q3plus1, q4plus1)
+    }
     @Cumulative
     final override fun pow(power: Int): Int128 {
-        var result = this.mutable()
+        var result: Int128 = this.mutable()
         if (power < 0) {
             return valueOf(ZERO)
         }
         val pow = power.toInt128()
         try {
-            repeat(power) { result *= pow }
+            repeat(power) { /* (maybe) result = */ result *= pow }
         } catch (e: ArithmeticException) {
             raiseOverflow("$this ^ $power", e)
         }
@@ -582,7 +589,7 @@ open class Int128 : CompositeNumber<Int128> {
      */
     operator fun rem(other: Int128): Int128 = divide(other, DivisionType.REMAINDER)
 
-    // Uses shift-subtract algorithm
+    // Shift-subtract algorithm
     private fun <T : Any> divide(other: Int128, division: DivisionType): T {
         /**
          * Assumes receiver is positive and magnitude is not 0.
@@ -614,72 +621,65 @@ open class Int128 : CompositeNumber<Int128> {
             )
         }
         val sign = productSign(sign, other.sign)
-        val abs = MutableInt128(this)/* = */.abs()
-        val dividend = MutableInt128(this)/* = */.valueOf(abs)
+        val dividend = this.mutable().abs()
         val divisor = other.mutable().abs()
         if (divisor > dividend) {
             return division.result(
                 quotient = { ZERO },
-                remainder = { this.abs() }
+                remainder = { dividend.immutable() }
             )
         }
-        val leadingZeros =  dividend.countLeadingZeroBits()
-        val leftShift = divisor.countLeadingZeroBits() - leadingZeros
-        // TODO speed up division exponentially by compounding left shifts
-        val addend = divisor.immutable()
-        if (leftShift != 0) {
-            divisor/* = */.leftShift(leftShift)
-        }
-        if (dividend.stateEquals(divisor)) {
-            return division.result(
-                quotient = { (divisor/* = */.valueOf(1) shl leftShift) * valueOf(sign) },
-                remainder = { ZERO }
-            )
-        }
-        var additions = 0
+
+        val isMutable = this is MutableInt128
+        var bitAlign = divisor.countLeadingZeroBits() - dividend.countLeadingZeroBits()
+        divisor/* = */.leftShift(bitAlign)
+        val quotient: Int128 = MutableInt128(ZERO)
         do {
-            if (divisor >= dividend) {
-                if (divisor > dividend) {
-                    --additions
-                }
-                val nextMultiple = MutableInt128(divisor)
-                val quotient = MutableInt128(divisor/* = */.valueOf(1) shl leftShift)
-                quotient +/* = */ divisor/* = */.valueOf(additions)
-                return division.result(
-                    quotient = { if (sign == -1) /* quotient = */ -quotient else quotient },
-                    remainder = {
-                        val remainder = nextMultiple -/* = */ this
-                        if (sign == -1) /* remainder = */ -remainder else remainder
-                    }
-                )
+            quotient/* = */.leftShift(1)
+            if (dividend.valueCompareTo(divisor) >= 0) {
+                dividend -/* = */ divisor
+                with (quotient) { addOne(q1, q2, q3, q4) }  // ++quotient
             }
-            divisor +/* = */ addend
-            ++additions
-        } while (true)
+            divisor/* = */.unsignedRightShift(1)
+           --bitAlign
+        } while (bitAlign >= 0)
+        return division.result(
+            quotient = {
+                if (sign == -1) {
+                    /* quotient = */ -quotient
+                }
+                if (isMutable) quotient else quotient.immutable()
+            },
+            remainder = { if (isMutable) dividend else dividend.immutable() }
+        )
     }
 
     // ---------------------------------------- comparison ----------------------------------------
 
+    /**
+     * Assumes that [isPositive]` == other.isPositive`.
+     */
+    private fun valueCompareTo(other: Int128): Int {
+        var difference = q1.compareTo(other.q1)
+        if (difference != 0) {
+            return difference
+        }
+        difference = q2.compareTo(other.q2)
+        if (difference != 0) {
+            return difference
+        }
+        difference = q3.compareTo(other.q3)
+        if (difference != 0) {
+            return difference
+        }
+        return q4.compareTo(other.q4)
+    }
 
     final override fun compareTo(other: Int128): Int {
         return when {
             this.isNegative && other.isPositive -> -1
             this.isPositive && other.isNegative -> 1
-            else -> {
-                var difference = q1.compareTo(other.q1)
-                if (difference != 0) {
-                    return difference
-                }
-                difference = q2.compareTo(other.q2)
-                if (difference != 0) {
-                    return difference
-                }
-                difference = q3.compareTo(other.q3)
-                if (difference != 0) {
-                    return difference
-                }
-                q4.compareTo(other.q4)
-            }
+            else -> valueCompareTo(other)
         }
     }
 

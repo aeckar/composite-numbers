@@ -6,24 +6,6 @@ import io.github.aeckar.kent.utils.productSign
 import kotlin.math.absoluteValue
 
 /**
- * A mutable rational number.
- *
- * See [Cumulative] for details on composite number mutability.
- */
-internal class MutableRational(unique: Rational) : Rational(unique.numer, unique.denom, unique.scale, unique.sign) {
-    override fun immutable() = Rational(numer, denom, scale, sign)
-
-    @Cumulative
-    override fun mutable() = this
-
-    @Cumulative
-    override fun valueOf(numer: Long, denom: Long, scale: Int, sign: Int) = this.also {
-        it.numer = numer;   it.scale = scale
-        it.denom = denom;   it.sign = sign
-    }
-}
-
-/**
  * Returns a rational number equal to this value over the other as a fraction after simplification.
  * @throws ArithmeticException [other] is 0 or the value is too large or small to be represented accurately
  */
@@ -43,6 +25,24 @@ fun Int.toRational() = when (this) {
     1 -> Rational.ONE
     2 -> Rational.TWO
     else -> this over 1
+}
+
+/**
+ * A mutable rational number.
+ *
+ * See [Cumulative] for details on composite number mutability.
+ */
+internal class MutableRational(unique: Rational) : Rational(unique.numer, unique.denom, unique.scale, unique.sign) {
+    override fun immutable() = Rational(numer, denom, scale, sign)
+
+    @Cumulative
+    override fun mutable() = this
+
+    @Cumulative
+    override fun valueOf(numer: Long, denom: Long, scale: Int, sign: Int) = this.also {
+        it.numer = numer;   it.scale = scale
+        it.denom = denom;   it.sign = sign
+    }
 }
 
 /**
@@ -246,7 +246,9 @@ open class Rational : CompositeNumber<Rational> {
 
     override fun immutable() = this
 
-    override fun mutable(): Rational = MutableRational(this)
+    override fun mutable() = MutableRational(this)
+
+    final override fun uniqueMutable() = MutableRational(this)
 
     final override fun valueOf(other: Rational) = with (other) { valueOf(numer, denom, scale, sign) }
 
