@@ -45,6 +45,32 @@ class RationalTest {
 
     @Nested
     inner class Arithmetic {
-        // TODO
+        @Test
+        fun plus() {
+            val a = Rational(1, 2)
+            val b = Rational(1,3 )
+            assertEquals(Rational(5, 6), a + b)
+        }
+
+        @Test
+        fun minus() {
+            val a = Rational(3, 4)
+            val b = Rational(1, 4)
+            assertEquals(Rational(1, 2), a - b)
+        }
+
+        @Test
+        fun times() {
+            val a = Rational(2, 3)
+            val b = Rational(3, 4)
+            assertEquals(Rational(1, 2), a * b)
+        }
+
+        @Test
+        fun div() {
+            val a = Rational(2, 3)
+            val b = Rational(3, 4)
+            assertEquals(Rational(8, 9), a / b)
+        }
     }
 }

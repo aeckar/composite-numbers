@@ -185,30 +185,42 @@ class Matrix private constructor(private val table: Table<Rational>) {
      */
     fun determinant(): Rational {
         ensureSquare(operation = "Determinant")
-        return determinant(0, 0, sideLength = countRows()).immutable()
+        return determinant(0, -1).immutable()
     }
 
     /**
      * Assumes this matrix is square.
      */
-    private fun determinant(rowIndex: Int, columnIndex: Int, sideLength: Int): Rational {
+    private fun determinant(rowPivot: Int, columnPivot: Int): Rational {
+        val sideLength = countRows() - rowPivot
         if (sideLength == 2) {
             /*
                     | a b |
                 A = | c d |
              */
-            val ad = table[rowIndex, columnIndex] * table[rowIndex + 1, columnIndex + 1]
-            val bc = table[rowIndex, columnIndex + 1] * table[rowIndex + 1, columnIndex]
+            val column = if (columnPivot == 0) 1 else 0
+            val nextColumn = column + if (columnPivot == column + 1) 2 else 1
+            val ad = table[rowPivot, column] * table[rowPivot + 1, nextColumn]
+            val bc = table[rowPivot, nextColumn] * table[rowPivot + 1, column]
             return ad - bc
         }
-        var sign = 1
-        val value = MutableRational(ZERO)
+        var negateTerm = false
+        var skippedColumn = false
+        val result = MutableRational(ZERO)
         repeat(sideLength) {
-            val cofactorTarget = table[rowIndex, it % sideLength]
-            value +/* = */ (cofactorTarget * determinant(rowIndex + 1, it + 1, sideLength - 1) * sign.toRational())
-            sign = -sign
+            if (it == columnPivot) {
+                skippedColumn = true
+            }
+            val column = if (skippedColumn) it + 1 else it
+            val term = table[rowPivot, column] * determinant(rowPivot + 1, column)
+            if (negateTerm) {
+                result -/* = */ term
+            } else {
+                result +/* = */ term
+            }
+            negateTerm = !negateTerm
         }
-        return value
+        return result
     }
 
     /**
@@ -371,18 +383,18 @@ class Matrix private constructor(private val table: Table<Rational>) {
     override fun toString(): String {
         lazyString?.let { return it }
         val columnCount = countColumns()
-        val entryStrings = Table<String>(countRows(), columnCount)
-        val colMaxLengths = IntArray(columnCount)
-        table.byEntryIndexed { rowIndex, columnIndex, entry ->
-            val entryString = entry.toString()
-            entryStrings[rowIndex, columnIndex] = entryString
-            colMaxLengths[columnIndex].coerceAtLeast(entryString.length)
+        val entries = Table<String>(countRows(), columnCount)
+        val maxLengths = IntArray(columnCount)
+        table.byEntryIndexed { rowIndex, columnIndex, value ->
+            val entry = value.toString()
+            entries[rowIndex, columnIndex] = entry
+            maxLengths[columnIndex] = maxLengths[columnIndex].coerceAtLeast(entry.length)
         }
         val string = buildString {
-            entryStrings.byRow {
-                append("| ")
+            entries.byRow {
+                append("|")
                 byColumnIndexed { columnIndex, entryString ->
-                    repeat(colMaxLengths[columnIndex] - entryString.lastIndex) { append(' ') }  // Right-justify
+                    repeat(maxLengths[columnIndex] - entryString.lastIndex) { append(' ') }  // Right-justify
                     append(entryString)
                 }
                 append(" |\n")

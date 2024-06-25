@@ -9,7 +9,7 @@ import kotlin.math.absoluteValue
  * Returns a rational number equal to this value over the other as a fraction after simplification.
  * @throws ArithmeticException [other] is 0 or the value is too large or small to be represented accurately
  */
-infix fun Int.over(other: Int) = Rational.ONE.valueOf(this.toLong(), other.toLong(), 0)
+infix fun Int.over(other: Int) = Rational(this.toLong(), other.toLong(), 0)
 
 /**
  * Returns a rational number equal to this value over the other as a fraction after simplification.
@@ -17,7 +17,8 @@ infix fun Int.over(other: Int) = Rational.ONE.valueOf(this.toLong(), other.toLon
  * If this value is [Long.MIN_VALUE], the value stored will be equal to −2^63 + 8.
  * @throws ArithmeticException [other] is 0 or the value is too large or small to be represented accurately
  */
-infix fun Long.over(other: Long) = Rational.ONE.valueOf(this, other, 0)
+@Suppress("unused")
+infix fun Long.over(other: Long) = Rational(this, other, 0)
 
 fun Int.toRational() = when (this) {
     -1 -> Rational.NEGATIVE_ONE
@@ -295,8 +296,8 @@ open class Rational : CompositeNumber<Rational> {
             raiseOverflow()
         }
         scale += scaleAugment
-        val unscaledNumer = (numerAbs - tenPow(numerScale)).coerceAtLeast(1)
-        val unscaledDenom = (denomAbs - tenPow(denomScale)).coerceAtLeast(1)
+        val unscaledNumer = (numerAbs / tenPow(numerScale))
+        val unscaledDenom = (denomAbs / tenPow(denomScale))
         val gcf = gcf(unscaledNumer, unscaledDenom)
         return valueOf(unscaledNumer / gcf, unscaledDenom / gcf, scale, productSign(numer, denom))
     }
@@ -314,8 +315,8 @@ open class Rational : CompositeNumber<Rational> {
         additionalInfo: () -> String
     ): Rational {
         val gcf = gcf(numer, denom)
-        val (unscaledNumer, numerScale) = ScaledLong(numer / gcf)
-        val (unscaledDenom, denomScale) = ScaledLong(denom / gcf)
+        val (unscaledNumer, numerScale) = ScaledLong(numer / gcf)   // consume `numer`
+        val (unscaledDenom, denomScale) = ScaledLong(denom / gcf)   // consume `denom`
         try {
             if (addOverflowsValue(numerScale, denomScale)) {
                 raiseOverflow()
@@ -347,17 +348,34 @@ open class Rational : CompositeNumber<Rational> {
     // a/b + c/d = (ad + bc)/bd
     @Cumulative
     final override fun plus(other: Rational): Rational {
-        val ad: Int128 = numer times other.denom
-        val bc: Int128 = other.numer times denom
+        // TODO verify through experimentation that the max scale difference to make a difference, n, is the largest number 10^n that fits in a Long
+        val scaleDifference = this.scale - other.scale
+        val alignedNumer = MutableInt128(numer)
+        val otherAlignedNumer = MutableInt128(other.numer)
+        var scale = this.scale
+        if (scaleDifference < 0) {
+            if (scaleDifference < -19) { // 10^n is not representable as Long, addition is negligible
+                return valueOf(other)
+            }
+            otherAlignedNumer */* = */ tenPow(-scaleDifference).toInt128()
+        } else if (scaleDifference > 0) {
+            if (scaleDifference > 19) {
+                return this
+            }
+            alignedNumer */* = */ tenPow(scaleDifference).toInt128()
+            scale = other.scale
+        }
+        val ad = alignedNumer */* = */ other.denom.toInt128()
+        val bc = otherAlignedNumer */* = */ denom.toInt128()
         val sign: Int
         val numer = if (this.sign == other.sign) {
             sign = if (this.isNegative) -1 else 1
             ad +/* = */ bc
-        } else {    // (positive addend) - (abs. value of negative addend)
-            val isNegative = this.isNegative
-            val minuend = if (isNegative) bc else ad
-            val subtrahend = if (isNegative) ad else bc
-            (minuend -/* = */ subtrahend).also { sign = if (it.isNegative) -1 else 1 }/* = */.abs()
+        } else {
+            val minuend = if (this.isNegative) bc else ad
+            minuend -/* = */ if (minuend === bc) ad else bc
+            sign = if (minuend.isNegative) -1 else 1
+            minuend/* = */.abs()
         }
         val bd = denom times other.denom
         return valueOf(numer/* = */.abs(), bd/* = */.abs(), scale, sign) { "$this + $other" }
@@ -493,14 +511,14 @@ open class Rational : CompositeNumber<Rational> {
         val denom = if (denom != 1L) "/$denom" else ""
         val open: String
         val close: String
-        if (denom.isNotEmpty() || scale.isNotEmpty()) {
+        if (denom.isNotEmpty() && scale.isNotEmpty()) {
             open = "("
             close = ")"
         } else {
             open = ""
             close = ""
         }
-        return "$minusSign$open$numer$denom$close$scale".also { lazyString = it }
+        return "$open$minusSign$numer$denom$close$scale".also { lazyString = it }
     }
 
     companion object {
@@ -554,15 +572,23 @@ open class Rational : CompositeNumber<Rational> {
             return result
         }
 
+        /**
+         * Preserves the state of the supplied arguments.
+         *
+         * The returned value is mutable and does not alias either argument.
+         */
         private fun gcf(x: Int128, y: Int128): Int128 {
             tailrec fun euclideanGCF(max: Int128, min: Int128): Int128 {
-                val rem = max % min
+                val rem = max %/* = */ min.immutable()
                 return if (rem == Int128.ZERO) min else euclideanGCF(min, rem)
             }
 
             val max = maxOf(x, y)
             val min = if (max === x) y else x
-            return euclideanGCF(max, min)
+            if (min.stateEquals(Int128.ZERO)) {
+                return max.immutable()
+            }
+            return euclideanGCF(max.uniqueMutable(), min.uniqueMutable())
         }
 
         /**

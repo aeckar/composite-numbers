@@ -59,6 +59,19 @@ fun Int.toInt128() = when (this) {
 }
 
 /**
+ * See [toInt128] for details.
+ */
+fun Long.toInt128() = when (this) {
+    -1L -> Int128.NEGATIVE_ONE
+    0L -> Int128.ZERO
+    1L -> Int128.ONE
+    2L -> Int128.TWO
+    10L -> Int128.TEN
+    16L -> Int128.SIXTEEN
+    else -> Int128(this)
+}
+
+/**
  * A mutable 128-bit integer.
  *
  * See [Cumulative] for details on composite number mutability.
@@ -77,6 +90,8 @@ internal class MutableInt128 : Int128 {
         it.q1 = q1; it.q3 = q3
         it.q2 = q2; it.q4 = q4
     }
+
+    override fun out(operationResult: Int128) = operationResult
 }
 
 /**
@@ -180,13 +195,20 @@ open class Int128 : CompositeNumber<Int128> {
     final override fun uniqueMutable() = MutableInt128(this)
 
     @Cumulative
-    override fun valueOf(other: Int128) = with (other) { this@Int128.valueOf(q1, q2, q3, q4) }
+    final override fun valueOf(other: Int128) = with (other) { this@Int128.valueOf(q1, q2, q3, q4) }
 
     /**
      * Value function with delegation to by-quarter constructor.
      */
     @Cumulative
     protected open fun valueOf(q1: Int, q2: Int, q3: Int, q4: Int) = Int128(q1, q2, q3, q4)
+
+    /**
+     * If this is mutable, returns this instance. Else, returns an immutable copy.
+     *
+     * Avoids defensive copying to an immutable instance for receivers performing intermediate operations.
+     */
+    protected open fun out(operationResult: Int128) = operationResult.immutable()
 
     /**
      * Value function with delegation to fourth-quarter constructor.
@@ -409,19 +431,25 @@ open class Int128 : CompositeNumber<Int128> {
         }
         return valueOf(q1plus1, q2plus1, q3plus1, q4plus1)
     }
-    @Cumulative
+
+    // TODO test
     final override fun pow(power: Int): Int128 {
-        var result: Int128 = this.mutable()
-        if (power < 0) {
-            return valueOf(ZERO)
+        when {
+            power < 0 -> return ZERO
+            power == 1 -> return this
+            power == 0 -> return ONE
         }
-        val pow = power.toInt128()
-        try {
-            repeat(power) { /* (maybe) result = */ result *= pow }
-        } catch (e: ArithmeticException) {
-            raiseOverflow("$this ^ $power", e)
+        var pow = power
+        val result = ONE.mutable()
+        val product = this.mutable()
+        while (pow != 0) {
+            if (pow and 1 == 1) {
+                result */* = */ product
+            }
+            product */* = */ product
+            pow = pow ushr 1
         }
-        return result
+        return out(result)
     }
 
     final override fun signum() = if (q4 == 0 && q3 == 0 && q2 == 0 && q1 == 0) 0 else sign
@@ -448,7 +476,7 @@ open class Int128 : CompositeNumber<Int128> {
     }
 
     /*
-        Multiplication of 128-Bit Integers
+        0(1) Multiplication of 128-Bit Integers
         See https://web.archive.org/web/20240609155726/https://cs.stackexchange.com/questions/140881/how-do-computers-perform-operations-on-numbers-that-are-larger-than-64-bits/140950#140950
 
         Definitions:
@@ -630,14 +658,14 @@ open class Int128 : CompositeNumber<Int128> {
             )
         }
 
-        val isMutable = this is MutableInt128
+
         var bitAlign = divisor.countLeadingZeroBits() - dividend.countLeadingZeroBits()
         divisor/* = */.leftShift(bitAlign)
         val quotient: Int128 = MutableInt128(ZERO)
         do {
             quotient/* = */.leftShift(1)
             if (dividend.valueCompareTo(divisor) >= 0) {
-                dividend -/* = */ divisor
+                dividend -/* = */ divisor.immutable()   // Ensure divisor state does not change
                 with (quotient) { addOne(q1, q2, q3, q4) }  // ++quotient
             }
             divisor/* = */.unsignedRightShift(1)
@@ -648,9 +676,9 @@ open class Int128 : CompositeNumber<Int128> {
                 if (sign == -1) {
                     /* quotient = */ -quotient
                 }
-                if (isMutable) quotient else quotient.immutable()
+                out(quotient)
             },
-            remainder = { if (isMutable) dividend else dividend.immutable() }
+            remainder = { out(dividend) }
         )
     }
 

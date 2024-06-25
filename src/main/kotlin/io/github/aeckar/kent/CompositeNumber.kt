@@ -136,6 +136,8 @@ sealed class CompositeNumber<T : CompositeNumber<T>> : Number(), Comparable<T> {
 
     /**
      * Returns a new instance equal in value to the product.
+     *
+     * This function is [cumulative][Cumulative] when neither argument is 0 nor 1.
      */
     abstract operator fun times(other: T): T
 
@@ -147,7 +149,6 @@ sealed class CompositeNumber<T : CompositeNumber<T>> : Number(), Comparable<T> {
     /**
      * Returns an instance equal in value to this raised to [power].
      */
-    @Cumulative
     abstract fun pow(power: Int): T
 
     // ------------------------------ comparison ------------------------------

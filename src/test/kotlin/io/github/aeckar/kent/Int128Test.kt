@@ -152,5 +152,12 @@ class Int128Test {
             assertEquals(Int128.TEN, Int128(101) / Int128.TEN)
             assertEquals(Int128.TEN, Int128(109) / Int128.TEN)
         }
+
+        @Test
+        fun pow() {
+            val i128a = Int128(19)
+            assertEquals2c(Int128(130321), i128a.pow(4))
+            assertThrows<ArithmeticException> { i128a.pow(Int.MAX_VALUE) }
+        }
     }
 }
