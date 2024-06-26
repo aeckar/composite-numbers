@@ -1,6 +1,10 @@
-package io.github.aeckar.kent
+package io.github.aeckar.kent.functions
 
+import io.github.aeckar.kent.Cumulative
+import io.github.aeckar.kent.Int128
+import io.github.aeckar.kent.Rational
 import io.github.aeckar.kent.Rational.Companion.TWO_PI
+import io.github.aeckar.kent.toInt128
 
 // TODO test all
 

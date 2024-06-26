@@ -1,5 +1,9 @@
-package io.github.aeckar.kent
+package io.github.aeckar.kent.functions
 
+import io.github.aeckar.kent.Int128
+import io.github.aeckar.kent.raiseOverflow
+import io.github.aeckar.kent.raiseUndefined
+import io.github.aeckar.kent.toInt128
 import kotlinx.atomicfu.atomic
 import kotlinx.atomicfu.atomicArrayOfNulls
 import kotlinx.atomicfu.update

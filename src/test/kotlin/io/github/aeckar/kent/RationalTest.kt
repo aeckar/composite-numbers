@@ -2,6 +2,7 @@ package io.github.aeckar.kent
 
 import io.github.aeckar.kent.constants.HUGE_STRING
 import io.github.aeckar.kent.constants.random
+import io.github.aeckar.kent.functions.cos
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow

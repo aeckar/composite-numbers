@@ -1,4 +1,6 @@
-package io.github.aeckar.kent
+package io.github.aeckar.kent.functions
+
+import io.github.aeckar.kent.Rational
 
 /**
  * Returns an instance equal to this value with its decimal part [truncated][Rational.toWhole].

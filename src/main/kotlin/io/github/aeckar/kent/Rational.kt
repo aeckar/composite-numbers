@@ -1,5 +1,6 @@
 package io.github.aeckar.kent
 
+import io.github.aeckar.kent.functions.floor
 import io.github.aeckar.kent.utils.*
 import io.github.aeckar.kent.utils.StringIndexIterator
 import io.github.aeckar.kent.utils.productSign
