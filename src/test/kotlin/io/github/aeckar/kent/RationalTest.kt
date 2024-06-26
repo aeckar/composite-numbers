@@ -46,6 +46,10 @@ class RationalTest {
     @Nested
     inner class Arithmetic {
         @Test
+        fun s() {
+            println(Rational.PI / Rational.TWO)
+        }
+        @Test
         fun plus() {
             val a = Rational(1, 2)
             val b = Rational(1,3 )
@@ -72,5 +76,16 @@ class RationalTest {
             val b = Rational(3, 4)
             assertEquals(Rational(8, 9), a / b)
         }
+    }
+
+    @Nested
+    inner class Miscellaneous {
+        @Test
+        fun comparison() {
+            
+        }
+    }
+    @Test fun TODO() {
+        println(cos(Rational.TWO))
     }
 }

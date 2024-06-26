@@ -111,7 +111,7 @@ sealed class CompositeNumber<T : CompositeNumber<T>> : Number(), Comparable<T> {
     fun abs(): T = if (sign < 0) -this else this as T
 
     /**
-     * Returns a new instance equal in value to the difference.
+     * Returns an instance equal in value to the difference.
      */
     @Cumulative
     operator fun minus(other: T) = this + (-other)
@@ -123,31 +123,40 @@ sealed class CompositeNumber<T : CompositeNumber<T>> : Number(), Comparable<T> {
     abstract fun signum(): Int
 
     /**
-     * Returns a new instance equal in value to this, negated.
+     * Returns an instance equal in value to this, negated.
      */
     @Cumulative
     abstract operator fun unaryMinus(): T
 
     /**
-     * Returns a new instance equal in value to the sum.
+     * Returns an instance equal in value to the sum.
      */
     @Cumulative
     abstract operator fun plus(other: T): T
 
     /**
-     * Returns a new instance equal in value to the product.
+     * Returns an instance equal in value to the product.
      *
      * This function is [cumulative][Cumulative] when neither argument is 0 nor 1.
      */
     abstract operator fun times(other: T): T
 
     /**
-     * Returns a new instance equal in value to the quotient.
+     * Returns an instance equal in value to the quotient.
      */
     abstract operator fun div(other: T): T
 
     /**
+     * Returns an instance equal in value to the remainder of the division.
+     *
+     * The returned value is always non-negative.
+     */
+    abstract operator fun rem(other: T): T
+
+    /**
      * Returns an instance equal in value to this raised to [power].
+     *
+     * When this and `power` are both 0, this function returns a value equal to 1.
      */
     abstract fun pow(power: Int): T
 

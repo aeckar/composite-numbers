@@ -231,9 +231,9 @@ class Matrix private constructor(private val table: Table<Rational>) {
      */
     fun trace(): Rational {
         ensureSquare(operation = "Trace")
-        var result = ZERO
-        repeat(countRows()) { result += table[it, it] }
-        return result
+        val result = ZERO.mutable()
+        repeat(countRows()) { result +/* = */ table[it, it] }
+        return result.immutable()
     }
 
     /**

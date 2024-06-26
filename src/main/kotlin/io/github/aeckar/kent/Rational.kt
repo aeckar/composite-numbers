@@ -57,13 +57,22 @@ fun Rational(x: Int128): Rational {
 }
 
 /**
- * Returns a ratio with the given [numerator][numer] and [denominator][denom] after simplification.
+ * Returns a rational number with the given [numerator][numer] and [denominator][denom] after simplification.
  * @throws ArithmeticException [denom] is 0 or the value is too large or small to be represented accurately
  */
 fun Rational(numer: Long, denom: Long = 1, scaleAugment: Int = 0): Rational {
-    return Rational.ONE.valueOf(numer, denom, scaleAugment)
+    return Rational(numer, denom, scaleAugment, productSign(numer.toInt(), denom.toInt()))
 }
 
+/**
+ * Returns a rational number with the [numerator][numer] and [denominator][denom] after simplification.
+ *
+ * Some information may be lost during conversion.
+ * @throws ArithmeticException [denom] is 0 or the value is too large or small to be represented accurately
+ */
+fun Rational(numer: Int128, denom: Int128, scaleAugment: Int = 0): Rational {
+    return Rational.ONE.valueOf(numer, denom, scaleAugment, productSign(numer.sign, denom.sign)) { "Instantiation" }
+}
 /**
  * A rational number.
  *
@@ -307,13 +316,16 @@ open class Rational : CompositeNumber<Rational> {
      * @throws ArithmeticException [denom] is 0 or the value is too large or small to be represented accurately
      */
     // Accessed only by raiseTo(), plus(), and times()
-    private inline fun valueOf(
+    internal inline fun valueOf(
         numer: Int128,
         denom: Int128,
         scaleAugment: Int,
         sign: Int,
         additionalInfo: () -> String
     ): Rational {
+        if (denom.stateEquals(Int128.ZERO)) {
+            raiseUndefined("Denominator cannot be zero (numer = $numer)")
+        }
         val gcf = gcf(numer, denom)
         val (unscaledNumer, numerScale) = ScaledLong(numer / gcf)   // consume `numer`
         val (unscaledDenom, denomScale) = ScaledLong(denom / gcf)   // consume `denom`
@@ -335,7 +347,16 @@ open class Rational : CompositeNumber<Rational> {
     // ---------------------------------------- arithmetic ----------------------------------------
 
     /**
-     * Returns a new instance equal to this when the numerator and denominator are swapped.
+     * Returns an instance equal to this value with its decimal part truncated.
+     */
+    fun toWhole() = when {
+        scale < LONG_MIN_SCALE -> ZERO
+        scale > LONG_MAX_SCALE || denom == 1L && scale >= 0 -> this
+        else -> valueOf(numer / tenPow(-scale), 1, 0, sign)
+    }
+
+    /**
+     * Returns an instance equal to this when the numerator and denominator are swapped.
      */
     @Cumulative
     fun reciprocal() = valueOf(denom, numer, -scale, sign)
@@ -348,22 +369,26 @@ open class Rational : CompositeNumber<Rational> {
     // a/b + c/d = (ad + bc)/bd
     @Cumulative
     final override fun plus(other: Rational): Rational {
-        // TODO verify through experimentation that the max scale difference to make a difference, n, is the largest number 10^n that fits in a Long
-        val scaleDifference = this.scale - other.scale
-        val alignedNumer = MutableInt128(numer)
-        val otherAlignedNumer = MutableInt128(other.numer)
+        val scaleDiff = this.scale - other.scale
+        val alignedNumer: Int128
+        val otherAlignedNumer: Int128
         var scale = this.scale
-        if (scaleDifference < 0) {
-            if (scaleDifference < -19) { // 10^n is not representable as Long, addition is negligible
+        if (scaleDiff < 0) {
+            if (scaleDiff < LONG_MIN_SCALE) { // 10^n is not representable as Long, addition is negligible
                 return valueOf(other)
             }
-            otherAlignedNumer */* = */ tenPow(-scaleDifference).toInt128()
-        } else if (scaleDifference > 0) {
-            if (scaleDifference > 19) {
+            alignedNumer = MutableInt128(numer)
+            otherAlignedNumer = MutableInt128(other.numer) */* = */ tenPow(-scaleDiff).toInt128()
+        } else if (scaleDiff > 0) {
+            if (scaleDiff > LONG_MAX_SCALE) {
                 return this
             }
-            alignedNumer */* = */ tenPow(scaleDifference).toInt128()
+            alignedNumer = MutableInt128(numer) */* = */ tenPow(scaleDiff).toInt128()
+            otherAlignedNumer = MutableInt128(other.numer)
             scale = other.scale
+        } else {
+            alignedNumer = MutableInt128(numer)
+            otherAlignedNumer = MutableInt128(other.numer)
         }
         val ad = alignedNumer */* = */ other.denom.toInt128()
         val bc = otherAlignedNumer */* = */ denom.toInt128()
@@ -401,22 +426,31 @@ open class Rational : CompositeNumber<Rational> {
     // a/b / c/d = a/b * d/c
     final override fun div(other: Rational) = this * other.reciprocal()
 
+    // a/b % c/d = floor(ad/bc) * c/d
+    final override fun rem(other: Rational): Rational {
+        if (this <= other) {
+            return this
+        }
+        return floor(this / other) * other
+    }
+
     // (a/b)^k = a^k/b^k
-    @Cumulative
     final override fun pow(power: Int): Rational {
         if (power == Int.MIN_VALUE) {
             raiseOverflow("$this ^ Int.MIN_VALUE")
         }
-        return if (power < 0) raiseTo(-power)/* = */.reciprocal() else raiseTo(power)
+        return if (power < 0) powUnchecked(-power)/* = */.reciprocal() else powUnchecked(power)
     }
 
-    @Cumulative
-    private fun raiseTo(power: Int): Rational {
+    /**
+     * Assumes [power] is not [Int.MIN_VALUE].
+     */
+    private fun powUnchecked(power: Int): Rational {
+        if (power == 0 || this.stateEquals(ONE)) {
+            return ONE
+        }
         if (power == 1) {
             return this
-        }
-        if (power == 0) {
-            return valueOf(ONE)
         }
         val pow = power.absoluteValue
         var numer = numer
@@ -428,8 +462,8 @@ open class Rational : CompositeNumber<Rational> {
             denom *= denom
             if (numer < lastNumer || denom < lastDenom) {   // Product overflows, perform widening
                 return valueOf(
-                    MutableInt128(lastNumer)/* = */.pow(pow),
-                    MutableInt128(lastDenom)/* = */.pow(pow),
+                    MutableInt128(lastNumer).pow(pow),
+                    MutableInt128(lastDenom).pow(pow),
                     scale,
                     sign
                 ) { "$this ^ $power" }
@@ -442,14 +476,18 @@ open class Rational : CompositeNumber<Rational> {
         }
     }
 
-    // ---------------------------------------- elementary functions ----------------------------------------
-
-    // TODO implement elementary functions using taylor series expansion
-
     // ---------------------------------------- comparison ----------------------------------------
 
     final override fun compareTo(other: Rational): Int {
-        return if (sign != other.sign) sign.compareTo(other.sign) else toBigDecimal().compareTo(other.toBigDecimal())
+        val scaleDiff = this.sign - other.sign
+        when {
+            sign != other.sign -> return sign.compareTo(other.sign)
+            scaleDiff < LONG_MIN_SCALE -> return -1
+            scaleDiff > LONG_MAX_SCALE -> return 1
+            this.stateEquals(other) -> return 0
+        }
+        // ...the digits (radix 10) of the two values may overlap
+        return (this.immutable() - other).sign
     }
 
     final override fun hashCode(): Int {
@@ -497,28 +535,34 @@ open class Rational : CompositeNumber<Rational> {
      *
      * If the value of any component would otherwise have no effect on the value of
      * this composite numer as a whole, it is omitted from the returned string
-     * (for example, if the denominator is 1).
+     * (for example, if the [denominator][denom] is 1).
+     * If the denominator is 1, the returned string will be in scientific notation.
      *
      * For details on what instances of this class are composed of, see [Rational].
      *
-     * On the JVM, to get a string representation of this value when the returned string is evaluated,
+     * On the JVM, to get a string representation of this value after the division is evaluated,
      * call `.toBigDecimal().toString()`.
      */
     final override fun toString(): String {
         lazyString?.let { return it }
+        val string: String
+        if (denom == 1L) {  // Print in scientific notation
+            string = buildString {
+                val numer = numer.toString()
+                val scale = scale - (numer.length - 1)
+                append(numer)
+                insert(1, '.')
+                if (scale != 0) {
+                    append('e')
+                    append(scale)
+                }
+            }
+            return string.also { lazyString = it }
+        }
         val minusSign = if (this.isNegative) "-" else ""
         val scale = if (scale != 0) "e$scale" else ""
-        val denom = if (denom != 1L) "/$denom" else ""
-        val open: String
-        val close: String
-        if (denom.isNotEmpty() && scale.isNotEmpty()) {
-            open = "("
-            close = ")"
-        } else {
-            open = ""
-            close = ""
-        }
-        return "$open$minusSign$numer$denom$close$scale".also { lazyString = it }
+        string = if (scale.isNotEmpty()) "($minusSign$numer/$denom)$scale" else "$minusSign$numer/$denom$scale"
+        return string.also { lazyString = it }
     }
 
     companion object {
@@ -526,6 +570,26 @@ open class Rational : CompositeNumber<Rational> {
         val ZERO = Rational(0, 1, 0, 1)
         val ONE = Rational(1, 1, 0, 1)
         val TWO = Rational(2, 1, 0, 1)
+        val E = Rational(2718281828459045235, 1, -18, 1)
+        val HALF_PI = Rational(1570796326794896619, 1, -18, 1)
+        val PI = Rational(3141592653589793238, 1, -18, 1)
+        val TWO_PI = Rational(6283185307179586477, 1, -18, 1)
+
+        /**
+         * The largest integer k where n * 10^k can fit within a 64-bit integer.
+         *
+         * Equal in value to `-`[LONG_MIN_SCALE]` + 2`.
+         */
+        private const val LONG_MAX_SCALE = 19
+
+
+        /**
+         * The smallest integer k where n * 10^k is not equal to 0,
+         * where n is a 64-bit integer.
+         *
+         * Equal in value to `-`[LONG_MAX_SCALE]` - 2`.
+         */
+        private const val LONG_MIN_SCALE = -17
 
         // ------------------------------ helper functions ------------------------------
 

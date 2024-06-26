@@ -47,6 +47,9 @@ fun Int128(s: String, radix: Int = 10, start: Int = 0, endExclusive: Int = s.len
  * Performs the same widening conversion as a primitive type would.
  * As such, the sign of the original value is preserved.
  * If this value is associated with a reusable constant, that instance is returned instead.
+ *
+ * For numbers that are odd or known to be smaller than -1 or larger than 16,
+ * the int-arg constructor should be used instead.
  */
 fun Int.toInt128() = when (this) {
     -1 -> Int128.NEGATIVE_ONE
@@ -153,6 +156,7 @@ open class Int128 : CompositeNumber<Int128> {
      * Returns a 128-bit integer with the specified bits.
      *
      * Each quarter consists of 32 bits.
+     * If the highest bit of [q1] is 1, the returned value is [negative][isNegative].
      */
     constructor(q1: Int, q2: Int, q3: Int, q4: Int) {
         this.q1 = q1
@@ -313,7 +317,8 @@ open class Int128 : CompositeNumber<Int128> {
     /**
      * Assumes [count] is non-negative.
      */
-    private fun leftShift(count: Int): Int128 {
+    // Accessed by seriesApprox()
+    internal fun leftShift(count: Int): Int128 {
         /**
          * Returns the quarter at the current position after a left shift.
          */
@@ -610,12 +615,7 @@ open class Int128 : CompositeNumber<Int128> {
 
     final override fun div(other: Int128): Int128 = divide(other, DivisionType.QUOTIENT)
 
-    /**
-     * Returns a new instance equal in value to the remainder of the division.
-     *
-     * The returned value is always non-negative.
-     */
-    operator fun rem(other: Int128): Int128 = divide(other, DivisionType.REMAINDER)
+    final override fun rem(other: Int128): Int128 = divide(other, DivisionType.REMAINDER)
 
     // Shift-subtract algorithm
     private fun <T : Any> divide(other: Int128, division: DivisionType): T {
@@ -856,26 +856,6 @@ open class Int128 : CompositeNumber<Int128> {
         private fun Boolean.toInt() = if (this) 1 else 0
 
         private fun Int.widen() = this.toUInt().toLong()
-
-        /**
-         * The most significant 32 bits of this value.
-         */
-        private val Long.high inline get() = (this ushr 32).toInt()
-
-        /**
-         * The least significant 32 bits of this value.
-         */
-        private val Long.low inline get() = this.toInt()
-
-        /**
-         * The [upper half][high] of this value.
-         */
-        private operator fun Long.component1() = high
-
-        /**
-         * The [lower half][low] of this value.
-         */
-        private operator fun Long.component2() = low
 
         private fun ensureValidShift(count: Int) = require(count >= 0) { "Shift argument cannot be negative" }
 

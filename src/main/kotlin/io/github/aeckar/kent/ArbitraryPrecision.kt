@@ -1,9 +1,12 @@
+@file:JvmName("ArbitraryPrecision")
 package io.github.aeckar.kent
 
 import io.github.aeckar.kent.utils.ScaledLong
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.nio.ByteBuffer
+
+// TODO test all
 
 /*
     When multiplatform support is added, this file will be moved to "/jvmMain".
@@ -36,6 +39,7 @@ private fun ScaledLong(value: BigInteger): ScaledLong {
  *
  * See [compareTo][Comparable.compareTo] for details.
  */
+@JvmName("compare")
 operator fun Int128.compareTo(value: BigDecimal) = toBigDecimal().compareTo(value)
 
 /**
@@ -43,6 +47,7 @@ operator fun Int128.compareTo(value: BigDecimal) = toBigDecimal().compareTo(valu
  *
  * See [compareTo][Comparable.compareTo] for details.
  */
+@JvmName("compare")
 operator fun Int128.compareTo(value: BigInteger) = toBigInteger().compareTo(value)
 
 /**
@@ -64,6 +69,7 @@ fun Int128.toBigInteger(): BigInteger {
  * Any decimal digits are truncated during conversion.
  * @throws ArithmeticException [value] is too large to be represented as an Int128
  */
+@JvmName("toInt128")
 @Suppress("unused")
 fun Int128(value: BigDecimal) = Int128(value.toBigInteger())
 
@@ -72,6 +78,7 @@ fun Int128(value: BigDecimal) = Int128(value.toBigInteger())
  *
  * @throws ArithmeticException [value] is too large to be represented as an Int128
  */
+@JvmName("toInt128")
 fun Int128(value: BigInteger): Int128 {
     var bytes = value.toByteArray()
     val maxBytes = Int128.SIZE_BYTES
@@ -95,6 +102,7 @@ fun Int128(value: BigInteger): Int128 {
  *
  * See [compareTo][Comparable.compareTo] for details.
  */
+@JvmName("compare")
 operator fun Rational.compareTo(value: BigDecimal) = toBigDecimal().compareTo(value)
 
 /**
@@ -102,6 +110,7 @@ operator fun Rational.compareTo(value: BigDecimal) = toBigDecimal().compareTo(va
  *
  * See [compareTo][Comparable.compareTo] for details.
  */
+@JvmName("compare")
 operator fun Rational.compareTo(value: BigInteger) = toBigInteger().compareTo(value)
 
 /**
@@ -123,6 +132,7 @@ fun Rational.toBigInteger() = numer.toBigInteger() * BigInteger.TEN.pow(scale) *
  *
  * Some information may be lost on conversion.
  */
+@JvmName("toRational")
 fun Rational(value: BigDecimal): Rational {
     val whole = value.toBigInteger()
     val (unscaledWhole, wholeScale) = ScaledLong(whole)
@@ -139,6 +149,7 @@ fun Rational(value: BigDecimal): Rational {
  *
  * Some information may be lost on conversion.
  */
+@JvmName("toRational")
 fun Rational(value: BigInteger): Rational {
     val (numer, scale) = ScaledLong(value)
     return Rational(numer, 1L, scale, value.signum() or 1)

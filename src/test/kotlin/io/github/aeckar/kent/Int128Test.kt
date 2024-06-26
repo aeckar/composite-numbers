@@ -159,5 +159,23 @@ class Int128Test {
             assertEquals2c(Int128(130321), i128a.pow(4))
             assertThrows<ArithmeticException> { i128a.pow(Int.MAX_VALUE) }
         }
+
+        @Test
+        fun factorial() {
+            assertEquals2c(Int128.ONE, factorial(0))
+            assertEquals2c(Int128.ONE, factorial(1))
+
+            val factorial37 = Int128("13763753091226345046315979581580902400000000")
+            assertEquals2c(factorial37, factorial(37))
+            assertThrows<ArithmeticException> { factorial(38) }
+        }
+    }
+
+    @Nested
+    inner class Miscellaneous {
+        @Test
+        fun comparison() {
+            // TODO
+        }
     }
 }
