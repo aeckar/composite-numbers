@@ -1,10 +1,9 @@
 package io.github.aeckar.kent.functions
 
+import io.github.aeckar.kent.*
 import io.github.aeckar.kent.Cumulative
-import io.github.aeckar.kent.Int128
-import io.github.aeckar.kent.Rational
+import io.github.aeckar.kent.MutableRational
 import io.github.aeckar.kent.Rational.Companion.TWO_PI
-import io.github.aeckar.kent.toInt128
 
 // TODO test all
 
@@ -52,13 +51,17 @@ private /* noinline */ fun seriesApprox(    // FIXME
             denomFactor = x.denom^powConstant
             
          Proof:
+            term =
+
              termNumer()     x.numer^(powCoefficient(n) + powConstant)
             ------------- * ------------------------------------------- =>
              termDenom()     x.denom^(powCoefficient(n) + powConstant)
-         
-             numerBase^n  * numerFactor * termNumer() 
+
+            term =
+
+             numerFactor * termNumer() * numerBase^n
             ------------------------------------------
-             denomBase^n  * denomFactor * termDenom()
+             denomFactor * termDenom() * denomBase^n
      */
 
     val numerBase = Int128(x.numer).pow(powCoefficient)
@@ -68,25 +71,25 @@ private /* noinline */ fun seriesApprox(    // FIXME
     if (powConstant == 0) {
         numerFactor = Int128.ONE
         denomFactor = Int128.ONE
-    } else {
-        numerFactor = Int128(x.numer).pow(powConstant)
-        denomFactor = Int128(x.denom).pow(powConstant)
+    } else {    // powConstant == 1
+        numerFactor = Int128(x.numer)
+        denomFactor = Int128(x.denom)
     }
 
     // n = 0
     var numer = numerFactor * termNumer(0)
     var denom = denomFactor * termDenom(0)
-    var result = Rational(numer, denom)
-    var lastResult: Rational
+    val result: Rational = MutableRational(numer, denom)
+    val lastResult: Rational = MutableRational(Rational.ZERO)
 
     var n = 1   // Since 38! overflows a 128-bit integer, may not exceed 37.
     do try {
-        lastResult = result
-        numer = numerBase.mutable().pow(n) */* = */ numerFactor */* = */ termNumer(n)
-        denom = denomBase.mutable().pow(n) */* = */ denomFactor */* = */ termDenom(n)
-        result = Rational(numer, denom) // Reduces 128-bit integers to scaled Longs whose values determine convergence
+        lastResult/* = */.valueOf(result)
+        numer = numerFactor.mutable() */* = */ termNumer(n) */* = */ numerBase.pow(n)
+        denom = denomFactor.mutable() */* = */ termDenom(n) */* = */ denomBase.pow(n)
+        result +/* = */ Rational(numer, denom)  // Reduces 128-bit integers to scaled Longs whose values determine convergence
         ++n
-    } catch (_: ArithmeticException) {  // Multiplication overflows
+    } catch (_: ArithmeticException) {  // Result is close enough
         break
     } while (!result.stateEquals(lastResult))
     return result

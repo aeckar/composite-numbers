@@ -2,7 +2,7 @@ package io.github.aeckar.kent
 
 import io.github.aeckar.kent.constants.HUGE_STRING
 import io.github.aeckar.kent.constants.random
-import io.github.aeckar.kent.functions.cos
+import io.github.aeckar.kent.functions.sin
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
@@ -87,6 +87,6 @@ class RationalTest {
         }
     }
     @Test fun TODO() {
-        println(cos(Rational.TWO))
+        println(sin(Rational.TWO))
     }
 }

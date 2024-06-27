@@ -35,7 +35,7 @@ fun factorial(x: Int): Int128 {
     var result = cache[largestCached].value!!
     repeat (x - largestCached) {
         try {
-            result *= (cache.size + 1).toInt128()
+            result *= (largestCached + 1).toInt128()
         } catch (e: ArithmeticException) {  // x > 42
             Int128.raiseOverflow("$x!", e)
         }

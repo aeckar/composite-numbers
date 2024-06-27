@@ -29,6 +29,10 @@ fun Int.toRational() = when (this) {
     else -> this over 1
 }
 
+internal fun MutableRational(numer: Int128, denom: Int128): MutableRational {
+    val sign = productSign(numer.sign, denom.sign)  // May be mutated by abs()
+    return Rational.ONE.mutable().valueOf(numer.abs(), denom.abs(), 0, sign) { "Instantiation" } as MutableRational
+}
 /**
  * A mutable rational number.
  *
@@ -45,6 +49,8 @@ internal class MutableRational(unique: Rational) : Rational(unique.numer, unique
         it.numer = numer;   it.scale = scale
         it.denom = denom;   it.sign = sign
     }
+
+    override fun toString() = stringValue() // Cannot be cached
 }
 
 /**
@@ -72,7 +78,8 @@ fun Rational(numer: Long, denom: Long = 1, scaleAugment: Int = 0): Rational {
  * @throws ArithmeticException [denom] is 0 or the value is too large or small to be represented accurately
  */
 fun Rational(numer: Int128, denom: Int128, scaleAugment: Int = 0): Rational {
-    return Rational.ONE.valueOf(numer, denom, scaleAugment, productSign(numer.sign, denom.sign)) { "Instantiation" }
+    val sign = productSign(numer.sign, denom.sign)  // May be mutated by abs()
+    return Rational.ONE.valueOf(numer.abs(), denom.abs(), scaleAugment, sign) { "Instantiation" }
 }
 /**
  * A rational number.
@@ -261,7 +268,7 @@ open class Rational : CompositeNumber<Rational> {
 
     final override fun uniqueMutable() = MutableRational(this)
 
-    final override fun valueOf(other: Rational) = with (other) { valueOf(numer, denom, scale, sign) }
+    final override fun valueOf(other: Rational) = with (other) { this@Rational.valueOf(numer, denom, scale, sign) }
 
     /**
      * Value function with delegation to by-property constructor.
@@ -544,26 +551,25 @@ open class Rational : CompositeNumber<Rational> {
      * On the JVM, to get a string representation of this value after the division is evaluated,
      * call `.toBigDecimal().toString()`.
      */
-    final override fun toString(): String {
-        lazyString?.let { return it }
-        val string: String
-        if (denom == 1L) {  // Print in scientific notation
-            string = buildString {
-                val numer = numer.toString()
-                val scale = scale - (numer.length - 1)
-                append(numer)
+    @Suppress("RedundantOverride")
+    override fun toString() = super.toString()
+
+    final override fun stringValue(): String {
+        if (denom == 1L) return buildString {    // Print in scientific notation
+            val numer = numer.toString()
+            val scale = scale - (numer.length - 1)
+            append(numer)
+            if (scale < 0) {
                 insert(1, '.')
-                if (scale != 0) {
-                    append('e')
-                    append(scale)
-                }
             }
-            return string.also { lazyString = it }
+            if (scale != 0) {   // FIXME fractional values
+                append('e')
+                append(scale)
+            }
         }
         val minusSign = if (this.isNegative) "-" else ""
         val scale = if (scale != 0) "e$scale" else ""
-        string = if (scale.isNotEmpty()) "($minusSign$numer/$denom)$scale" else "$minusSign$numer/$denom$scale"
-        return string.also { lazyString = it }
+        return if (scale.isNotEmpty()) "($minusSign$numer/$denom)$scale" else "$minusSign$numer/$denom$scale"
     }
 
     companion object {
@@ -640,12 +646,12 @@ open class Rational : CompositeNumber<Rational> {
         /**
          * Preserves the state of the supplied arguments.
          *
-         * The returned value is mutable and does not alias either argument.
+         * The returned value is immutable and does not alias either argument.
          */
         private fun gcf(x: Int128, y: Int128): Int128 {
             tailrec fun euclideanGCF(max: Int128, min: Int128): Int128 {
-                val rem = max %/* = */ min.immutable()
-                return if (rem == Int128.ZERO) min else euclideanGCF(min, rem)
+                val rem = max % min
+                return if (rem == Int128.ZERO) min else euclideanGCF(min, rem.immutable())
             }
 
             val max = maxOf(x, y)
@@ -653,7 +659,7 @@ open class Rational : CompositeNumber<Rational> {
             if (min.stateEquals(Int128.ZERO)) {
                 return max.immutable()
             }
-            return euclideanGCF(max.uniqueMutable(), min.uniqueMutable())
+            return euclideanGCF(max.uniqueMutable(), min.immutable())
         }
 
         /**

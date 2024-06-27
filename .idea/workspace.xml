@@ -4,12 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="12726248-6293-408b-8509-c256c37abb1d" name="Changes" comment="Implemented elementary functions for Rational.">
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/ElementaryFunctions.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/rational/ElementaryFunctions.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/Factorial.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/int128/Factorial.kt" afterDir="false" />
+    <list default="true" id="12726248-6293-408b-8509-c256c37abb1d" name="Changes" comment="Moved top-level functions to their own package">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/CompositeNumber.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/CompositeNumber.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/Int128.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/Int128.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/Rational.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/Rational.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/Rounding.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/rational/Rounding.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/kotlin/io/github/aeckar/kent/Int128Test.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/kotlin/io/github/aeckar/kent/Int128Test.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/functions/ElementaryFunctions.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/functions/ElementaryFunctions.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/functions/Factorial.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/functions/Factorial.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/test/kotlin/io/github/aeckar/kent/RationalTest.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/kotlin/io/github/aeckar/kent/RationalTest.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -102,76 +103,76 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Gradle.ArbitraryPrecisionTest.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Arithmetic (1).executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Arithmetic.add.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Arithmetic.div.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Arithmetic.divide.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Arithmetic.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Arithmetic.factorial.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Arithmetic.minus.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Arithmetic.plus.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Arithmetic.pow.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Arithmetic.s.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Arithmetic.times (1).executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Arithmetic.times.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Arithmetic.unaryMinus.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.BitwiseOperations.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.BitwiseOperations.shr.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.BitwiseShift.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Build kanum.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Build matrix.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Conversion.big_integer.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Conversion.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Conversion.string (1).executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Conversion.string.executor&quot;: &quot;Debug&quot;,
-    &quot;Gradle.Instantiation.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Int128.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Int128Arithmetic.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Int128Arithmetic.shl.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Int128Bitwise.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Int128Bitwise.shl.executor&quot;: &quot;Debug&quot;,
-    &quot;Gradle.Int128Instantiation.from_string.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Int128Instantiation.string.executor&quot;: &quot;Debug&quot;,
-    &quot;Gradle.Int128Test (1).executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Int128Test.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Int128Test.fromString.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Int128Test.instantiate_from_string.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Int128Test.unaryMinus.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Rational.big_integer_conversion.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.RationalTest.TODO.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.ScalarReturningOperations.determinant.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.ScalarReturningOperations.s.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.kanum [classes].executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.kanum [clean].executor&quot;: &quot;Run&quot;,
-    &quot;Kotlin.MainKt (1).executor&quot;: &quot;Debug&quot;,
-    &quot;Kotlin.MainKt.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;deletionFromPopupRequiresConfirmation&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;onboarding.tips.debug.path&quot;: &quot;C:/Users/eckar/IdeaProjects/matrix/src/main/kotlin/Main.kt&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.lookFeel&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Gradle.ArbitraryPrecisionTest.executor": "Run",
+    "Gradle.Arithmetic (1).executor": "Run",
+    "Gradle.Arithmetic.add.executor": "Run",
+    "Gradle.Arithmetic.div.executor": "Run",
+    "Gradle.Arithmetic.divide.executor": "Run",
+    "Gradle.Arithmetic.executor": "Run",
+    "Gradle.Arithmetic.factorial.executor": "Run",
+    "Gradle.Arithmetic.minus.executor": "Run",
+    "Gradle.Arithmetic.plus.executor": "Run",
+    "Gradle.Arithmetic.pow.executor": "Run",
+    "Gradle.Arithmetic.s.executor": "Run",
+    "Gradle.Arithmetic.times (1).executor": "Run",
+    "Gradle.Arithmetic.times.executor": "Run",
+    "Gradle.Arithmetic.unaryMinus.executor": "Run",
+    "Gradle.BitwiseOperations.executor": "Run",
+    "Gradle.BitwiseOperations.shr.executor": "Run",
+    "Gradle.BitwiseShift.executor": "Run",
+    "Gradle.Build kanum.executor": "Run",
+    "Gradle.Build matrix.executor": "Run",
+    "Gradle.Conversion.big_integer.executor": "Run",
+    "Gradle.Conversion.executor": "Run",
+    "Gradle.Conversion.string (1).executor": "Run",
+    "Gradle.Conversion.string.executor": "Debug",
+    "Gradle.Instantiation.executor": "Run",
+    "Gradle.Int128.executor": "Run",
+    "Gradle.Int128Arithmetic.executor": "Run",
+    "Gradle.Int128Arithmetic.shl.executor": "Run",
+    "Gradle.Int128Bitwise.executor": "Run",
+    "Gradle.Int128Bitwise.shl.executor": "Debug",
+    "Gradle.Int128Instantiation.from_string.executor": "Run",
+    "Gradle.Int128Instantiation.string.executor": "Debug",
+    "Gradle.Int128Test (1).executor": "Run",
+    "Gradle.Int128Test.executor": "Run",
+    "Gradle.Int128Test.fromString.executor": "Run",
+    "Gradle.Int128Test.instantiate_from_string.executor": "Run",
+    "Gradle.Int128Test.unaryMinus.executor": "Run",
+    "Gradle.Rational.big_integer_conversion.executor": "Run",
+    "Gradle.RationalTest.TODO.executor": "Run",
+    "Gradle.ScalarReturningOperations.determinant.executor": "Run",
+    "Gradle.ScalarReturningOperations.s.executor": "Run",
+    "Gradle.kanum [classes].executor": "Run",
+    "Gradle.kanum [clean].executor": "Run",
+    "Kotlin.MainKt (1).executor": "Debug",
+    "Kotlin.MainKt.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "deletionFromPopupRequiresConfirmation": "false",
+    "git-widget-placeholder": "master",
+    "ignore.virus.scanning.warn.message": "true",
+    "kotlin-language-version-configured": "true",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "onboarding.tips.debug.path": "C:/Users/eckar/IdeaProjects/matrix/src/main/kotlin/Main.kt",
+    "project.structure.last.edited": "Project",
+    "project.structure.proportion": "0.0",
+    "project.structure.side.proportion": "0.0",
+    "settings.editor.selected.configurable": "preferences.lookFeel",
+    "vue.rearranger.settings.migration": "true"
   },
-  &quot;keyToStringList&quot;: {
-    &quot;kotlin-gradle-user-dirs&quot;: [
-      &quot;C:\\Users\\eckar\\.gradle&quot;
+  "keyToStringList": {
+    "kotlin-gradle-user-dirs": [
+      "C:\\Users\\eckar\\.gradle"
     ]
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\eckar\IdeaProjects\kent\src\main\kotlin\io\github\aeckar\kent\rational" />
@@ -392,7 +393,8 @@
       <workItem from="1719339353997" duration="5581000" />
       <workItem from="1719356805311" duration="5372000" />
       <workItem from="1719362734474" duration="24930000" />
-      <workItem from="1719442727057" duration="626000" />
+      <workItem from="1719442727057" duration="4804000" />
+      <workItem from="1719448140350" duration="4668000" />
     </task>
     <task id="LOCAL-00001" summary="Initial commit">
       <option name="closed" value="true" />
@@ -546,7 +548,15 @@
       <option name="project" value="LOCAL" />
       <updated>1719442821662</updated>
     </task>
-    <option name="localTasksCounter" value="20" />
+    <task id="LOCAL-00020" summary="Moved top-level functions to their own package">
+      <option name="closed" value="true" />
+      <created>1719443477666</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1719443477666</updated>
+    </task>
+    <option name="localTasksCounter" value="21" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -583,7 +593,8 @@
     <MESSAGE value="Implemented shift-subtract algorithm for integer division" />
     <MESSAGE value="Successfully implemented the determinant" />
     <MESSAGE value="Implemented elementary functions for Rational." />
-    <option name="LAST_COMMIT_MESSAGE" value="Implemented elementary functions for Rational." />
+    <MESSAGE value="Moved top-level functions to their own package" />
+    <option name="LAST_COMMIT_MESSAGE" value="Moved top-level functions to their own package" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -600,6 +611,21 @@
           <url>file://$PROJECT_DIR$/src/test/kotlin/io/github/aeckar/kent/MatrixTest.kt</url>
           <line>21</line>
           <option name="timeStamp" value="65" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="kotlin-line">
+          <url>file://$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/functions/ElementaryFunctions.kt</url>
+          <line>66</line>
+          <option name="timeStamp" value="72" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="kotlin-line">
+          <url>file://$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/functions/ElementaryFunctions.kt</url>
+          <line>87</line>
+          <option name="timeStamp" value="81" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="kotlin-line">
+          <url>file://$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/Int128.kt</url>
+          <line>660</line>
+          <option name="timeStamp" value="87" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

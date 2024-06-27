@@ -228,5 +228,10 @@ sealed class CompositeNumber<T : CompositeNumber<T>> : Number(), Comparable<T> {
      *
      * When passed to the string constructor of the inheritor, creates an instance equal in value to this.
      */
-    abstract override fun toString(): String
+    override fun toString(): String {
+        lazyString?.let { return it }
+        return stringValue().also { lazyString = it }
+    }
+
+    protected abstract fun stringValue(): String
 }

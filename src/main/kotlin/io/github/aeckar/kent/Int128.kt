@@ -95,6 +95,9 @@ internal class MutableInt128 : Int128 {
     }
 
     override fun out(operationResult: Int128) = operationResult
+
+    override fun toString() = stringValue()                 // Neither can be cached
+    override fun toString(radix: Int) = stringValue(radix)
 }
 
 /**
@@ -251,19 +254,15 @@ open class Int128 : CompositeNumber<Int128> {
     private fun blank() = blank(this.sign)
 
     /**
-     * Returns the number of consecutive least significant quarters which are not [blank].
-     *
+     * Returns the number of consecutive least significant quarters which are not 0.
      * @return a value from 0 to 4
      */
-    private fun magnitude(): Int {
-        val blank = blank()
-        return when {
-            q1 != blank -> 4
-            q2 != blank -> 3
-            q3 != blank -> 2
-            q4 != blank -> 1
-            else -> 0
-        }
+    private fun magnitude() = when {
+        q1 != 0 -> 4
+        q2 != 0 -> 3
+        q3 != 0 -> 2
+        q4 != 0 -> 1
+        else -> 0
     }
 
     /**
@@ -525,6 +524,8 @@ open class Int128 : CompositeNumber<Int128> {
             - a, b & e must be zero and the most significant 32 bits must not carry over a bit
      */
     final override fun times(other: Int128): Int128 {
+        infix fun Int128.with(sign: Int) = if (sign == -1) -this else this
+
         fun addMultiply(q1q2partial: Long, q2q3partial: Long, q3q4partial: Long): Int128 {
             val (q1summand, q2summand1) = q1q2partial
             val (q2summand2, q3summand1) = q2q3partial
@@ -582,27 +583,33 @@ open class Int128 : CompositeNumber<Int128> {
             return addMultiply(c * f, (d * f) + (c * g), (d * g) + (c * h), d * h)
         }
 
-        val mag = magnitude()
-        val otherMag = other.magnitude()
+        val sign = productSign(sign, other.sign)
+        val abs = abs()
+        val mag = abs.magnitude()
+        val otherAbs = other.abs()
+        val otherMag = otherAbs.magnitude()
         try {
             if (otherMag <= 2) when {
-                otherMag == 1 -> return if (mag == 1) int32TimesInt32(this, other) else int32TimesInt128(other, this)
-                mag == 2 -> return int64TimesInt64(this, other)
-                mag == 3 -> return int64TimesInt96(other, this)
-                other.stateEquals(ONE) -> return this
+                otherMag == 1 -> {
+                    val product = if (mag == 1) int32TimesInt32(abs, otherAbs) else int32TimesInt128(otherAbs, abs)
+                    return product with sign
+                }
+                mag == 2 -> return int64TimesInt64(abs, otherAbs) with sign
+                mag == 3 -> return int64TimesInt96(otherAbs, abs) with sign
+                otherAbs.stateEquals(ONE) -> return abs with sign
                 otherMag == 0 -> return ZERO
             }
             // ...otherMag == 3 || otherMag == 4
             if (mag <= 2) when {
-                mag == 1 -> return int32TimesInt128(this, other)
-                otherMag == 3 -> return int64TimesInt96(this, other)
-                this.stateEquals(ONE) -> return other
+                mag == 1 -> return int32TimesInt128(abs, otherAbs) with sign
+                otherMag == 3 -> return int64TimesInt96(abs, otherAbs) with sign
+                abs.stateEquals(ONE) -> return otherAbs with sign
                 mag == 0 -> return ZERO
             }
         } catch (e: ArithmeticException) {
-            raiseOverflow("$this * $other", e)
+            raiseOverflow("$this * $otherAbs", e)
         }
-        raiseOverflow("$this * $other")
+        raiseOverflow("$this * $otherAbs")
     }
 
     /**
@@ -657,8 +664,6 @@ open class Int128 : CompositeNumber<Int128> {
                 remainder = { dividend.immutable() }
             )
         }
-
-
         var bitAlign = divisor.countLeadingZeroBits() - dividend.countLeadingZeroBits()
         divisor/* = */.leftShift(bitAlign)
         val quotient: Int128 = MutableInt128(ZERO)
@@ -692,15 +697,15 @@ open class Int128 : CompositeNumber<Int128> {
         if (difference != 0) {
             return difference
         }
-        difference = q2.compareTo(other.q2)
+        difference = q2.toUInt().compareTo(other.q2.toUInt())
         if (difference != 0) {
             return difference
         }
-        difference = q3.compareTo(other.q3)
+        difference = q3.toUInt().compareTo(other.q3.toUInt())
         if (difference != 0) {
             return difference
         }
-        return q4.compareTo(other.q4)
+        return q4.toUInt().compareTo(other.q4.toUInt())
     }
 
     final override fun compareTo(other: Int128): Int {
@@ -754,10 +759,12 @@ open class Int128 : CompositeNumber<Int128> {
      * To get a binary representation in two's complement form, use [twosComplement].
      */
     @Suppress("MemberVisibilityCanBePrivate")
-    fun toString(radix: Int): String {
-        lazyString?.takeIf { this !is MutableInt128 }?.let { return it }
-        return toBigInteger().toString(radix).also { this.lazyString = it }
+    open fun toString(radix: Int): String {
+        lazyString?.let { return it }
+        return stringValue(radix)
     }
+
+    protected fun stringValue(radix: Int) = toBigInteger().toString(radix).also { this.lazyString = it }
 
     final override fun toInt() = q4
 
@@ -780,7 +787,10 @@ open class Int128 : CompositeNumber<Int128> {
      * When passed to the string constructor of the inheritor, creates an instance equal in value to this.
      * The returned string is equivalent to that of `toString(radix = 10)`.
      */
-    final override fun toString() = toString(radix = 10)
+    @Suppress("RedundantOverride")
+    override fun toString() = super.toString()
+
+    final override fun stringValue() = toString(radix = 10)
 
     companion object {
         val MIN_VALUE = Int128(Int.MIN_VALUE, 0, 0, 0)
