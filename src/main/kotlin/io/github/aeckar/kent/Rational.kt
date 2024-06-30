@@ -355,12 +355,14 @@ public open class Rational internal constructor(
     // a/b / c/d = a/b * d/c
     final override fun div(other: Rational): Rational = this * other.reciprocal()
 
-    // a/b % c/d = floor(ad/bc) * c/d
+    // a/b % c/d = a/b - floor(ad/bc) * c/d
     final override fun rem(other: Rational): Rational {
-        if (this <= other) {
-            return this
+        val abs = abs()
+        val otherAbs = other.abs()
+        if (abs <= otherAbs) {
+            return if (abs.stateEquals(otherAbs)) ZERO else abs
         }
-        return floor(this / other) * other
+        return abs - floor(abs / otherAbs) * otherAbs
     }
 
     // (a/b)^k = a^k/b^k
@@ -382,13 +384,15 @@ public open class Rational internal constructor(
             return this
         }
         val pow = power.absoluteValue
+        val startingNumer = numer
+        val startingDenom = denom
         var numer = numer
         var denom = denom
-        repeat(pow) {     // Since both fractional components are positive or zero, sign is not an issue
+        repeat(pow - 1) {   // Since both fractional components are positive or zero, sign is not an issue
             val lastNumer = numer
             val lastDenom = denom
-            numer *= numer
-            denom *= denom
+            numer *= startingNumer
+            denom *= startingDenom
             if (numer < lastNumer || denom < lastDenom) {   // Product overflows, perform widening
                 return valueOf(
                     MutableInt128(lastNumer).pow(pow),
@@ -399,7 +403,7 @@ public open class Rational internal constructor(
             }
         }
         return try {
-            valueOf(numer * sign, denom, scale)
+            valueOf(numer * sign, denom, scale) // Long.MIN_VALUE is not power of 10, so negation can never overflow
         } catch (e: CompositeArithmeticException) {
             raiseOverflow("$this ^ $power", e)
         }
@@ -486,10 +490,14 @@ public open class Rational internal constructor(
     // TODO remove public
     public final override fun stringValue(): String {
         if (denom == 1L) return buildString {    // Print in scientific notation
-            val numer = numer.toString()
+            val numerDigits = numer.toString()
             val negativeScale = scale < 0
-            append(numer)
+            append(numerDigits)
             if (negativeScale) {
+                if (numerDigits.length == 1) {
+                    insert(0, '0')
+                    ++scale
+                }
                 insert(1, '.')
             }
             if (sign == -1) {
@@ -497,7 +505,7 @@ public open class Rational internal constructor(
             }
             if (scale != 0) {
                 append('e')
-                val exponent = if (negativeScale) scale.toLong() - numer.length + 1 else scale.toLong()
+                val exponent = if (negativeScale) scale.toLong() - numerDigits.length + 1 else scale.toLong()
                 append(exponent)
             }
         }
