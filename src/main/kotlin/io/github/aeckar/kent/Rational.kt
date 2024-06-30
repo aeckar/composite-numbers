@@ -223,8 +223,8 @@ public open class Rational internal constructor(
             raiseUndefined("Denominator cannot be zero (numer = $numer)")
         }
         val gcf = gcf(numer, denom)
-        val (unscaledNumer, numerScale) = ScaledLong(numer / gcf)   // consume `numer`
-        val (unscaledDenom, denomScale) = ScaledLong(denom / gcf)   // consume `denom`
+        val (unscaledNumer, numerScale) = ScaledLong(numer / gcf)   // Consume `numer`
+        val (unscaledDenom, denomScale) = ScaledLong(denom / gcf)   // Consume `denom`
         try {
             if (addOverflowsValue(numerScale, denomScale)) {
                 raiseOverflow()
@@ -298,23 +298,23 @@ public open class Rational internal constructor(
     // a/b + c/d = (ad + bc)/bd
     @Cumulative
     final override fun plus(other: Rational): Rational {
-        val scaleDiff = this.scale - other.scale
+        val scaleDiff = this.scale.toLong() - other.scale
         val alignedNumer: Int128
         val otherAlignedNumer: Int128
-        var scale = this.scale
-        if (scaleDiff < 0) {
+        var scaleAugment = this.scale
+        if (scaleDiff < 0) {    // Must be compared separately since LONG_MIN_SCALE != -LONG_MAX_SCALE
             if (scaleDiff < LONG_MIN_SCALE) { // 10^n is not representable as Long, addition is negligible
-                return valueOf(other)
+                return if (sign == -1) this else valueOf(other)
             }
             alignedNumer = MutableInt128(numer)
-            otherAlignedNumer = MutableInt128(other.numer) */* = */ tenPow(-scaleDiff).toInt128()
+            otherAlignedNumer = MutableInt128(other.numer) */* = */ tenPow(-scaleDiff.toInt()).toInt128()
         } else if (scaleDiff > 0) {
             if (scaleDiff > LONG_MAX_SCALE) {
-                return this
+                return if (sign == -1) valueOf(other) else this
             }
-            alignedNumer = MutableInt128(numer) */* = */ tenPow(scaleDiff).toInt128()
+            alignedNumer = MutableInt128(numer) */* = */ tenPow(scaleDiff.toInt()).toInt128()
             otherAlignedNumer = MutableInt128(other.numer)
-            scale = other.scale
+            scaleAugment = other.scale
         } else {
             alignedNumer = MutableInt128(numer)
             otherAlignedNumer = MutableInt128(other.numer)
@@ -332,7 +332,7 @@ public open class Rational internal constructor(
             minuend/* = */.abs()
         }
         val bd = denom times other.denom
-        return valueOf(numer/* = */.abs(), bd/* = */.abs(), scale, sign) { "$this + $other" }
+        return valueOf(numer/* = */.abs(), bd/* = */.abs(), scaleAugment, sign) { "$this + $other" }
     }
 
     // a/b * c/d = ac/cd
@@ -483,7 +483,8 @@ public open class Rational internal constructor(
     @Suppress("RedundantOverride")
     override fun toString(): String = super.toString()
 
-    final override fun stringValue(): String {
+    // TODO remove public
+    public final override fun stringValue(): String {
         if (denom == 1L) return buildString {    // Print in scientific notation
             val numer = numer.toString()
             val negativeScale = scale < 0
@@ -495,8 +496,8 @@ public open class Rational internal constructor(
                 insert(0, '-')
             }
             if (scale != 0) {
-                append('e') // FIXME flips sign for edge cases
-                val exponent = if (negativeScale) scale - numer.length + 1 else scale
+                append('e')
+                val exponent = if (negativeScale) scale.toLong() - numer.length + 1 else scale.toLong()
                 append(exponent)
             }
         }
@@ -520,9 +521,9 @@ public open class Rational internal constructor(
                 = ConstantRational(6283185307179586477, 1, -18, 1, "6.283185307179586477")
 
         @JvmStatic public val MIN_VALUE: Rational
-            = ConstantRational(Long.MAX_VALUE, 1, Int.MIN_VALUE, -1, "-9223372036854775807e-2147483648")
+            = ConstantRational(Long.MAX_VALUE, 1, Int.MAX_VALUE, -1, "-9.223372036854775807e2147483665")
         @JvmStatic public val MAX_VALUE: Rational
-            = ConstantRational(Long.MAX_VALUE, 1, Int.MAX_VALUE, 1, "9223372036854775807e2147483647")
+            = ConstantRational(Long.MAX_VALUE, 1, Int.MAX_VALUE, 1, "9.223372036854775807e2147483665")
 
         /**
          * The largest integer k where n * 10^k can fit within a 64-bit integer.
@@ -575,7 +576,6 @@ public open class Rational internal constructor(
          * @throws CompositeFormatException [s] is in an incorrect format
          * @throws CompositeArithmeticException the value cannot be represented accurately as a rational number
          */
-        // TODO LATER assign s to lazyString if possible
         internal fun parse(s: String): Rational {
             fun parseExponent(view: StringView): Int {
                 val sign = if (view.char() == '-') {
@@ -649,7 +649,9 @@ public open class Rational internal constructor(
             var denom = 1L
             var denomScale = 0
             if (view.satisfies { it == '/' }) {
-                // TODO NOW skip leading zeroes
+                while (view.satisfies { it == '0' }) {
+                    view.move(1)
+                }
                 val denomWithScale = ScaledLong.parse(view, stop = "eE)")
                 denom = denomWithScale.component1()
                 denomScale = denomWithScale.component2()
@@ -747,9 +749,6 @@ public open class Rational internal constructor(
          * If a result of multiple additions must be checked, this function must be called for each intermediate sum.
          * Also checks for the case [Int.MIN_VALUE] - 1.
          */
-        private fun addOverflowsValue(x: Int, y: Int): Boolean {
-            val sum = x.toLong() + y
-            return if (sum < 0L) sum < Int.MIN_VALUE else sum > Int.MAX_VALUE
-        }
+        private fun addOverflowsValue(x: Int, y: Int) = (x.toLong() + y) !in Int.MIN_VALUE..Int.MAX_VALUE
     }
 }

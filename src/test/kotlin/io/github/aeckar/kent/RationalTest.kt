@@ -75,7 +75,7 @@ class RationalTest {
             assertEquals(a, sum - b)
             assertDoesNotThrow { MAX_VALUE + ZERO }
             assertDoesNotThrow { MAX_VALUE + ONE }
-            assertThrows<CompositeArithmeticException> { MAX_VALUE + (MAX_VALUE - ONE) }
+            assertThrows<CompositeArithmeticException> { MAX_VALUE + MAX_VALUE }
         }
 
         @Test
@@ -83,12 +83,14 @@ class RationalTest {
             val a = 3 over 4
             val b = 1 over 4
             val difference = a - b
+            val hugeNeg = Rational(Long.MIN_VALUE + 1, 1, Int.MAX_VALUE)
             assertEquals(1 over 2, difference)
             assertEquals(a, b + difference)
             assertEquals(b, a - difference)
             assertDoesNotThrow { MIN_VALUE - ZERO }
             assertDoesNotThrow { MIN_VALUE - ONE }
-            assertThrows<CompositeArithmeticException> { MIN_VALUE + (MIN_VALUE - ONE) }    // FIXME
+            assertThrows<CompositeArithmeticException> { MIN_VALUE + MIN_VALUE }    // Long.MIN_VALUE is scaled up by 1
+            assertThrows<CompositeArithmeticException> { hugeNeg + hugeNeg }
         }
 
         @Test
