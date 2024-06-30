@@ -9,7 +9,7 @@ import kotlin.math.absoluteValue
 
 /**
  * Returns a rational number equal to this value over the other as a fraction after simplification.
- * @throws ArithmeticException [other] is 0 or the value is too large or small to be represented accurately
+ * @throws CompositeArithmeticException [other] is 0 or the value is too large or small to be represented accurately
  */
 @JvmName("toRational")
 public infix fun Int.over(other: Int): Rational = Rational(this.toLong(), other.toLong(), 0)
@@ -18,7 +18,7 @@ public infix fun Int.over(other: Int): Rational = Rational(this.toLong(), other.
  * Returns a rational number equal to this value over the other as a fraction after simplification.
  *
  * If this value is [Long.MIN_VALUE], the value stored will be equal to −2^63 + 8.
- * @throws ArithmeticException [other] is 0 or the value is too large or small to be represented accurately
+ * @throws CompositeArithmeticException [other] is 0 or the value is too large or small to be represented accurately
  */
 @JvmName("toRational")
 @Suppress("unused")
@@ -87,7 +87,7 @@ public fun Rational(x: Int128): Rational {
 
 /**
  * Returns a rational number with the given [numerator][numer] and [denominator][denom] after simplification.
- * @throws ArithmeticException [denom] is 0 or the value is too large or small to be represented accurately
+ * @throws CompositeArithmeticException [denom] is 0 or the value is too large or small to be represented accurately
  */
 @JvmName("toRational")
 public fun Rational(numer: Long, denom: Long = 1, scaleAugment: Int = 0): Rational {
@@ -98,13 +98,17 @@ public fun Rational(numer: Long, denom: Long = 1, scaleAugment: Int = 0): Ration
  * Returns a rational number with the [numerator][numer] and [denominator][denom] after simplification.
  *
  * Some information may be lost during conversion.
- * @throws ArithmeticException [denom] is 0 or the value is too large or small to be represented accurately
+ * @throws CompositeArithmeticException [denom] is 0 or the value is too large or small to be represented accurately
  */
 @JvmName("toRational")
 public fun Rational(numer: Int128, denom: Int128, scaleAugment: Int = 0): Rational {
     val sign = productSign(numer.sign, denom.sign)  // May be mutated by abs()
     return Rational.ONE.valueOf(numer.abs(), denom.abs(), scaleAugment, sign) { "Instantiation" }
 }
+
+@JvmName("toRational")
+public fun Rational(s: String): Rational = Rational.parse(s)
+
 /**
  * A rational number.
  *
@@ -118,19 +122,25 @@ public fun Rational(numer: Int128, denom: Int128, scaleAugment: Int = 0): Ration
  * allowing all instances to be readily converted to their fractional form.
  *
  * All 64-bit integer values, aside from [Long.MIN_VALUE], can be stored without losing information.
+ * Furthermore, all values are guaranteed to be accurate to at least TODO digits.
  */
 @Suppress("EqualsOrHashCode")
-public open class Rational : CompositeNumber<Rational> {
+public open class Rational internal constructor(
+    numer: Long,
+    denom: Long,
+    scale: Int,
+    sign: Int
+) : CompositeNumber<Rational>() {
     /**
      * The numerator of this value as a fraction.
      */
-    public var numer: Long
+    public var numer: Long = numer
         protected set
 
     /**
      * The denominator of this value as a fraction.
      */
-    public var denom: Long
+    public var denom: Long = denom
         protected set
 
     /**
@@ -139,147 +149,14 @@ public open class Rational : CompositeNumber<Rational> {
      * Validation should be used to ensure this value never holds the value
      * of [Int.MIN_VALUE] to prevent incorrect operation results.
      */
-    public var scale: Int
+    public var scale: Int = scale
+        protected set
+
+    final override var sign: Int = sign
         protected set
 
     final override val isNegative: Boolean get() = sign == -1
     final override val isPositive: Boolean get() = sign == 1
-    final override var sign: Int
-        protected set
-
-    /**
-     * Returns a rational number equal in value to the given string.
-     *
-     * A string is considered acceptable if it contains:
-     * 1. Negative/positive sign *(optional)*
-     *    - May be placed inside or outside parentheses
-     * 2. Decimal numerator
-     *    - A sequence of digits, `'0'..'9'`, optionally containing `'.'`
-     *    - Leading and trailing zeros are allowed, but a single dot is not
-     * 3. Denominator *(optional)*
-     *    - `'/'`, followed by a decimal denominator in the same format as the numerator
-     * 4. Exponent in scientific notation *(optional)*
-     *    - `'e'` or `'E'`, followed by a signed integer
-     *    - Value must be able to fit within 32 bits
-     *
-     * The decimal numerator and denominator may optionally be surrounded by a single pair of parentheses.
-     * However, if an exponent is provided, parentheses are mandatory.
-     *
-     * The given string must be small enough to be representable and
-     * not contain any extraneous characters (for example, whitespace).
-     *
-     * @throws NumberFormatException [s] is in an incorrect format
-     * @throws ArithmeticException the value cannot be represented accurately as a rational number
-     */
-    // TODO LATER convert to factory function so it matches Int128
-    public constructor(s: String) {
-        fun parseExponent(view: StringView): Int {
-            val sign = if (view.char() == '-') {
-                view.move(1)
-                -1
-            } else {
-                1
-            }
-            var exponent = 0L
-            do {
-                exponent *= 10
-                exponent += try {
-                    view.char().digitToInt()
-                } catch (e: IndexOutOfBoundsException) {    // Caught on first iteration
-                    raiseIncorrectFormat("missing exponent value", e)
-                } catch (e: IllegalArgumentException) {
-                    raiseIncorrectFormat("illegal character embedded in exponent value", e)
-                }
-                if (exponent > Int.MAX_VALUE) {
-                    raiseOverflow()
-                }
-                view.move(1)
-            } while (view.isWithinBounds())
-            return exponent.toInt() * sign
-        }
-
-        // FIXME scale = -16?
-        if (s.isEmpty()) {
-            raiseIncorrectFormat("empty string")
-        }
-        val view = StringView(s)
-        var hasExplicitPositive = false
-        var insideParentheses = false
-        this.sign = 1
-        while (true) try {
-            when (view.char()) {
-                '-' -> {
-                    if (sign == -1 || hasExplicitPositive) {
-                        raiseIncorrectFormat("illegal embedded sign character")
-                    }
-                    sign = -1
-                    view.move(1)
-                }
-                '+' -> {
-                    if (sign == -1 || hasExplicitPositive) {
-                        raiseIncorrectFormat("illegal embedded sign character")
-                    }
-                    hasExplicitPositive = true
-                    view.move(1)
-                }
-                '(' -> {
-                    if (insideParentheses) {
-                        raiseIncorrectFormat("illegal embedded open parenthesis")
-                    }
-                    insideParentheses = true
-                    view.move(1)
-                }
-                '0' -> {
-                    view.move(1)
-                    if (view.satisfies { it != '0' }) {
-                        view.move(-1)
-                        break
-                    }
-                }
-                '1', '2', '3', '4', '5', '6', '7', '8', '9', '.' -> break
-                else -> raiseIncorrectFormat("illegal embedded character")
-            }
-        } catch (e: StringIndexOutOfBoundsException) {
-            raiseIncorrectFormat("character expected", e)
-        }
-        val (unscaledNumer, numerScale) = ScaledLong.parse(view, stop = "/eE)")
-        var unscaledDenom = 1L
-        var denomScale = 0
-        if (view.satisfies { it == '/' }) {
-            val denom = ScaledLong.parse(view, stop = "eE)")
-            unscaledDenom = denom.component1()
-            denomScale = denom.component2()
-        }
-        if (insideParentheses) {
-            if (view.satisfies { it != ')' }) {
-                raiseIncorrectFormat("missing closing parenthesis")
-            }
-            view.move(1)
-        }
-        this.numer = unscaledNumer
-        this.denom = unscaledDenom
-        this.scale = if (view.satisfies { it == 'e' || it == 'E' }) {
-            view.move(1)
-            parseExponent(view)
-        } else {
-            0
-        }
-        if (addOverflowsValue(scale, numerScale)) {
-            raiseOverflow()
-        }
-        scale += numerScale
-        if (addOverflowsValue(scale, denomScale)) {
-            raiseOverflow()
-        }
-        scale += denomScale
-    }
-
-    internal constructor(numer: Long, denom: Long, scale: Int, sign: Int) {
-        this.numer = numer
-        this.denom = denom
-        this.scale = scale
-        this.sign = sign
-    }
 
     // ---------------------------------------- mutability ----------------------------------------
 
@@ -300,7 +177,7 @@ public open class Rational : CompositeNumber<Rational> {
 
     /**
      * Value function with delegation to by-property constructor.
-     * @throws ArithmeticException [denom] is 0 or the value is too large or small to be represented accurately
+     * @throws CompositeArithmeticException [denom] is 0 or the value is too large or small to be represented accurately
      */
     internal inline fun valueOf(
         numer: Int128,
@@ -325,7 +202,7 @@ public open class Rational : CompositeNumber<Rational> {
             }
             scale += scaleAugment
             return valueOf(unscaledNumer, unscaledDenom, scale, sign)
-        } catch (e: ArithmeticException) {
+        } catch (e: CompositeArithmeticException) {
             raiseOverflow(additionalInfo())
         }
     }
@@ -334,7 +211,7 @@ public open class Rational : CompositeNumber<Rational> {
      * Value function with delegation to by-property constructor.
      *
      * Returns a ratio with the given [numerator][numer] and [denominator][denom] after simplification.
-     * @throws ArithmeticException [denom] is 0 or the value is too large or small to be represented accurately
+     * @throws CompositeArithmeticException [denom] is 0 or the value is too large or small to be represented accurately
      */
     private fun valueOf(numer: Long, denom: Long, scaleAugment: Int): Rational {
         fun gcf(x: Long, y: Long): Long {
@@ -499,7 +376,7 @@ public open class Rational : CompositeNumber<Rational> {
         }
         return try {
             valueOf(numer * sign, denom, scale)
-        } catch (e: ArithmeticException) {
+        } catch (e: CompositeArithmeticException) {
             raiseOverflow("$this ^ $power", e)
         }
     }
@@ -577,8 +454,9 @@ public open class Rational : CompositeNumber<Rational> {
     final override fun stringValue(): String {
         if (denom == 1L) return buildString {    // Print in scientific notation
             val numer = numer.toString()
+            val negativeScale = scale < 0
             append(numer)
-            if (scale < 0) {
+            if (negativeScale) {
                 insert(1, '.')
             }
             if (sign == -1) {
@@ -586,7 +464,8 @@ public open class Rational : CompositeNumber<Rational> {
             }
             if (scale != 0) {
                 append('e')
-                append(scale - numer.length + 1)
+                val exponent = if (negativeScale) scale - numer.length + 1 else scale
+                append(exponent)
             }
         }
         val minusSign = if (this.isNegative) "-" else ""
@@ -594,16 +473,24 @@ public open class Rational : CompositeNumber<Rational> {
     }
 
     public companion object {
-        @JvmStatic public val NEGATIVE_ONE: Rational = Rational(1, 1, 0, -1)
-        @JvmStatic public val ZERO: Rational = Rational(0, 1, 0, 1)
-        @JvmStatic public val ONE: Rational = Rational(1, 1, 0, 1)
-        @JvmStatic public val TWO: Rational = Rational(2, 1, 0, 1)
-        @JvmStatic public val E: Rational = Rational(2718281828459045235, 1, -18, 1)
-        @JvmStatic public val HALF_PI: Rational = Rational(1570796326794896619, 1, -18, 1)
-        @JvmStatic public val PI: Rational = Rational(3141592653589793238, 1, -18, 1)
-        @JvmStatic public val TWO_PI: Rational = Rational(6283185307179586477, 1, -18, 1)
-        @JvmStatic public val MIN_VALUE: Rational = Rational(Long.MAX_VALUE, 1, Int.MIN_VALUE, -1)
-        @JvmStatic public val MAX_VALUE: Rational = Rational(1, Long.MAX_VALUE, Int.MAX_VALUE, 1)
+        @JvmStatic public val NEGATIVE_ONE: Rational = ConstantRational(1, 1, 0, -1, "-1")
+        @JvmStatic public val ZERO: Rational = ConstantRational(0, 1, 0, 1, "0")
+        @JvmStatic public val ONE: Rational = ConstantRational(1, 1, 0, 1, "1")
+        @JvmStatic public val TWO: Rational = ConstantRational(2, 1, 0, 1, "2")
+
+        @JvmStatic public val E: Rational
+                = ConstantRational(2718281828459045235, 1, -18, 1, "2.718281828459045235")
+        @JvmStatic public val HALF_PI: Rational
+                = ConstantRational(1570796326794896619, 1, -18, 1, "1.570796326794896619")
+        @JvmStatic public val PI: Rational
+                = ConstantRational(3141592653589793238, 1, -18, 1, "3.141592653589793238")
+        @JvmStatic public val TWO_PI: Rational
+                = ConstantRational(6283185307179586477, 1, -18, 1, "6.283185307179586477")
+
+        @JvmStatic public val MIN_VALUE: Rational
+            = ConstantRational(Long.MAX_VALUE, 1, Int.MIN_VALUE, -1, "-9223372036854775807e-2147483648")
+        @JvmStatic public val MAX_VALUE: Rational
+            = ConstantRational(Long.MAX_VALUE, 1, Int.MAX_VALUE, 1, "$9223372036854775807e2147483647")
 
         /**
          * The largest integer k where n * 10^k can fit within a 64-bit integer.
@@ -611,7 +498,6 @@ public open class Rational : CompositeNumber<Rational> {
          * Equal in value to `-`[LONG_MIN_SCALE]` + 2`.
          */
         private const val LONG_MAX_SCALE = 19
-
 
         /**
          * The smallest integer k where n * 10^k is not equal to 0,
@@ -621,10 +507,148 @@ public open class Rational : CompositeNumber<Rational> {
          */
         private const val LONG_MIN_SCALE = -17
 
-        // ------------------------------ helper functions ------------------------------
+        private class ConstantRational(
+            numer: Long,
+            denom: Long,
+            scale: Int,
+            sign: Int,
+            override val stringValue: String
+        ) : Rational(numer, denom, scale, sign), Constant {
+            override fun toString() = stringValue
+        }
+
+        // ------------------------------ string conversion ------------------------------
 
         /**
-         * If the exponentiation causes signed integer overflow, throws [ArithmeticException].
+         * Returns a rational number equal in value to the given string.
+         *
+         * A string is considered acceptable if it contains:
+         * 1. Negative/positive sign *(optional)*
+         *    - May be placed inside or outside parentheses
+         * 2. Decimal numerator
+         *    - A sequence of digits, `'0'..'9'`, optionally containing `'.'`
+         *    - Leading and trailing zeros are allowed, but a single dot is not
+         * 3. Denominator *(optional)*
+         *    - `'/'`, followed by a decimal denominator in the same format as the numerator
+         * 4. Exponent in scientific notation *(optional)*
+         *    - `'e'` or `'E'`, followed by a signed integer
+         *    - Value must be able to fit within 32 bits
+         *
+         * The decimal numerator and denominator may optionally be surrounded by a single pair of parentheses.
+         * However, if an exponent is provided, parentheses are mandatory.
+         *
+         * The given string must be small enough to be representable and
+         * not contain any extraneous characters (for example, whitespace).
+         *
+         * @throws CompositeFormatException [s] is in an incorrect format
+         * @throws CompositeArithmeticException the value cannot be represented accurately as a rational number
+         */
+        // TODO LATER assign s to lazyString if possible
+        internal fun parse(s: String): Rational {
+            fun parseExponent(view: StringView): Int {
+                val sign = if (view.char() == '-') {
+                    view.move(1)
+                    -1
+                } else {
+                    1
+                }
+                var exponent = 0L
+                do {
+                    exponent *= 10
+                    exponent += try {
+                        view.char().digitToInt()
+                    } catch (e: StringIndexOutOfBoundsException) {  // Caught on first iteration
+                        raiseIncorrectFormat("missing exponent value", e)
+                    } catch (e: IllegalArgumentException) {
+                        raiseIncorrectFormat("illegal character embedded in exponent value", e)
+                    }
+                    if (exponent > Int.MAX_VALUE) {
+                        raiseOverflow()
+                    }
+                    view.move(1)
+                } while (view.isWithinBounds())
+                return exponent.toInt() * sign
+            }
+
+            if (s.isEmpty()) {
+                raiseIncorrectFormat("empty string")
+            }
+            val view = StringView(s)
+            var hasExplicitPositive = false
+            var insideParentheses = false
+            var sign = 1
+            while (true) try {
+                when (view.char()) {
+                    '-' -> {
+                        if (sign == -1 || hasExplicitPositive) {
+                            raiseIncorrectFormat("illegal embedded sign character")
+                        }
+                        sign = -1
+                        view.move(1)
+                    }
+                    '+' -> {
+                        if (sign == -1 || hasExplicitPositive) {
+                            raiseIncorrectFormat("illegal embedded sign character")
+                        }
+                        hasExplicitPositive = true
+                        view.move(1)
+                    }
+                    '(' -> {
+                        if (insideParentheses) {
+                            raiseIncorrectFormat("illegal embedded open parenthesis")
+                        }
+                        insideParentheses = true
+                        view.move(1)
+                    }
+                    '0' -> {
+                        view.move(1)
+                        if (view.isNotWithinBounds()) {
+                            return ZERO
+                        }
+                        view.move(-1)
+                    }
+                    '1', '2', '3', '4', '5', '6', '7', '8', '9', '.' -> break
+                    else -> raiseIncorrectFormat("illegal embedded character")
+                }
+            } catch (e: StringIndexOutOfBoundsException) {
+                raiseIncorrectFormat("character expected", e)
+            }
+            val (numer, numerScale) = ScaledLong.parse(view, stop = "/eE)")
+            var denom = 1L
+            var denomScale = 0
+            if (view.satisfies { it == '/' }) {
+                // TODO skip leading zeroes
+                val denomWithScale = ScaledLong.parse(view, stop = "eE)")
+                denom = denomWithScale.component1()
+                denomScale = denomWithScale.component2()
+            }
+            if (insideParentheses) {
+                if (!view.satisfies { it == ')' }) {
+                    raiseIncorrectFormat("missing closing parenthesis")
+                }
+                view.move(1)
+            }
+            var scale = if (view.satisfies { it == 'e' || it == 'E' }) {
+                view.move(1)
+                parseExponent(view)
+            } else {
+                0
+            }
+            if (addOverflowsValue(scale, numerScale)) {
+                raiseOverflow()
+            }
+            scale += numerScale
+            if (addOverflowsValue(scale, denomScale)) {
+                raiseOverflow()
+            }
+            scale += denomScale
+            return Rational(numer, denom, scale, sign)
+        }
+
+        // ------------------------------ helpers ------------------------------
+
+        /**
+         * If the exponentiation causes signed integer overflow, throws [CompositeArithmeticException].
          */
         private fun tenPowExact(scale: Int): Long {
             if (scale > 62) {   // log10(10^n) >= log10(2^63 - 1)

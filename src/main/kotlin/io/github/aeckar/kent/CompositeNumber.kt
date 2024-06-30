@@ -16,7 +16,7 @@ package io.github.aeckar.kent
  * - Limited precision: Precision is fixed to a given number of binary digits (however, they may be scaled)
  * - Efficient: Fixed-precision allows for certain key optimizations to be made.
  * - Accurate: If the result of an operation is too large or small to be represented accurately
- * as a composite number, such as in the event of an integer overflow, an [ArithmeticException] will be thrown
+ * as a composite number, such as in the event of an integer overflow, a [CompositeArithmeticException] is thrown
  *
  * Results of computationally expensive operations are not cached,
  * and should be stored in a variable if used more than once.
@@ -42,13 +42,21 @@ public sealed class CompositeNumber<T : CompositeNumber<T>> : Number(), Comparab
     /**
      * True if this value is negative.
      */
-    public abstract val isNegative: Boolean
+    public abstract val isNegative: Boolean // Int128 uses special implementation
 
     /**
      * True if this value is positive.
      */
-    public abstract val isPositive: Boolean
+    public abstract val isPositive: Boolean // Int128 uses special implementation
 
+    /**
+     * Implemented by constants present within the companion object of [T].
+     *
+     * Overrides [toString] to avoid unnecessary cache validation.
+     */
+    protected interface Constant {
+        public val stringValue: String
+    }
 
     // ------------------------------ mutability --------------------
 

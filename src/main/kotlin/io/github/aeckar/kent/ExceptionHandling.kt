@@ -9,7 +9,7 @@ private fun Any.receiver() = when (this) {
 /**
  * @throws ArithmeticException always
  */
-internal fun raiseUndefined(message: String): Nothing = throw ArithmeticException(message)
+internal fun raiseUndefined(message: String): Nothing = throw CompositeArithmeticException(message)
 
 /**
  * The name of the expected result may be inferred from the composite number receiver type or companion.
@@ -19,8 +19,7 @@ internal fun Any.raiseOverflow(
     additionalInfo: String? = null,
     cause: Throwable? = null
 ): Nothing {
-    val info = additionalInfo?.let { " ($it)" } ?: ""
-    throw ArithmeticException("${receiver()} overflows$info").initCause(cause)
+    throw CompositeArithmeticException("${receiver()} overflows${additionalInfo?.let { " ($it)" }.orEmpty()}", cause)
 }
 
 /**
@@ -31,6 +30,23 @@ internal fun Any.raiseIncorrectFormat(
     reason: String,
     cause: Throwable? = null
 ): Nothing {
-    val e = NumberFormatException("String does not contain a ${receiver().lowercase()} in the correct format ($reason)")
-    throw e.initCause(cause)
+    throw CompositeFormatException(
+            "String does not contain a ${receiver().lowercase()} in the correct format ($reason)", cause)
 }
+
+/**
+ * Thrown when an operation involving [composite numbers][CompositeNumber] cannot proceed due to overflow or an undefined result.
+ */
+public class CompositeArithmeticException internal constructor(
+    message: String,
+    cause: Throwable? = null
+) : Exception(message, cause)
+
+/**
+ * Thrown from a `String`-arg pseudo-constructor for a [composite number][CompositeNumber] class,
+ * indicating that the given string is malformed.
+ */
+public class CompositeFormatException internal constructor(
+    message: String,
+    cause: Throwable? = null
+) : Exception(message, cause)

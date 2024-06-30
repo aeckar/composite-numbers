@@ -46,7 +46,7 @@ private val int128Factorials = arrayOf(
 /**
  * Returns the factorial of [x] as a 128-bit integer.
  *
- * @throws ArithmeticException x is non-negative or the resultant value overflows
+ * @throws ArithmeticException x is non-negative or the result overflows
  */
 public fun factorial(x: Int): Int128 {
     if (x < 0) {
@@ -61,6 +61,8 @@ public fun factorial(x: Int): Int128 {
 
 /**
  * Assumes [x] is non-negative.
+ *
+ * @throws FactorialOverflowSignal the result overflows
  */
 internal fun exhaustiveFactorial(x: Int): Int128 {
     if (x > int128Factorials.lastIndex) {
@@ -69,5 +71,8 @@ internal fun exhaustiveFactorial(x: Int): Int128 {
     return int128Factorials[x]
 }
 
+/**
+ * Avoids the overhead of creating a new exception every time this happens.
+ */
 @Suppress("JavaIoSerializableObjectMustHaveReadResolve")
 internal object FactorialOverflowSignal : Throwable()

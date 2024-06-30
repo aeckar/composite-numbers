@@ -97,8 +97,8 @@ internal class MutableInt128 : Int128 {
  * not contain any extraneous characters (for example, whitespace).
  * It may optionally be prefixed by a negative sign.
  *
- * @throws NumberFormatException [s] is in an incorrect format
- * @throws ArithmeticException the value cannot be represented accurately as a 128-bit integer
+ * @throws CompositeFormatException [s] is in an incorrect format
+ * @throws CompositeArithmeticException the value cannot be represented accurately as a 128-bit integer
  * @throws IllegalArgumentException [radix] is negative or over 36
  */
 @JvmName("toInt128")
@@ -115,7 +115,7 @@ public fun Int128(s: String, radix: Int = 10, start: Int = 0, endExclusive: Int 
  * - The most significant bit (of the [upper half][high]) determines the sign
  * - Result of division and remainder are truncated
  *
- * Contrary to the behavior of primitive types, operations will throw [ArithmeticException] on overflow or underflow.
+ * Contrary to the behavior of primitive types, operations will throw [CompositeArithmeticException] on overflow or underflow.
  */
 @Suppress("EqualsOrHashCode")
 public open class Int128 : CompositeNumber<Int128> {
@@ -128,9 +128,10 @@ public open class Int128 : CompositeNumber<Int128> {
     public var q4: Int
         protected set
 
+    final override val sign: Int get() = if (isNegative) -1 else 1
+
     final override val isNegative: Boolean get() = q1 < 0
     final override val isPositive: Boolean get() = q1 >= 0
-    final override val sign: Int get() = if (isNegative) -1 else 1
 
     /**
      * Returns a 128-bit integer with its lowest 64 bits equivalent to the given value.
@@ -627,7 +628,7 @@ public open class Int128 : CompositeNumber<Int128> {
                 abs.stateEquals(ONE) -> return otherAbs with sign
                 mag == 0 -> return ZERO
             }
-        } catch (e: ArithmeticException) {
+        } catch (e: CompositeArithmeticException) {
             raiseOverflow("$this * $otherAbs", e)
         }
         raiseOverflow("$this * $otherAbs")
@@ -841,16 +842,29 @@ public open class Int128 : CompositeNumber<Int128> {
     final override fun stringValue(): String = stringValue(radix = 10)
 
     public companion object {
-        @JvmStatic public val NEGATIVE_ONE: Int128 = Int128(-1, -1, -1, -1)
-        @JvmStatic public val ZERO: Int128 = Int128(0, 0, 0, 0)
-        @JvmStatic public val ONE: Int128 = Int128(0, 0, 0, 1)
-        @JvmStatic public val TWO: Int128 = Int128(0, 0, 0, 2)
-        @JvmStatic public val TEN: Int128 = Int128(0, 0, 0, 10)
-        @JvmStatic public val SIXTEEN: Int128 = Int128(0, 0, 0, 16)
-        @JvmStatic public val MIN_VALUE: Int128 = Int128(Int.MIN_VALUE, 0, 0, 0)
-        @JvmStatic public val MAX_VALUE: Int128 = Int128(Int.MAX_VALUE, -1, -1, -1)
+        @JvmStatic public val NEGATIVE_ONE: Int128 = ConstantInt128(-1, -1, -1, -1, "-1")
+        @JvmStatic public val ZERO: Int128 = ConstantInt128(0, 0, 0, 0, "0")
+        @JvmStatic public val ONE: Int128 = ConstantInt128(0, 0, 0, 1, "1")
+        @JvmStatic public val TWO: Int128 = ConstantInt128(0, 0, 0, 2, "2")
+        @JvmStatic public val TEN: Int128 = ConstantInt128(0, 0, 0, 10, "10")
+        @JvmStatic public val SIXTEEN: Int128 = ConstantInt128(0, 0, 0, 16, "16")
+
+        @JvmStatic public val MIN_VALUE: Int128
+                = ConstantInt128(Int.MIN_VALUE, 0, 0, 0, "−170141183460469231731687303715884105728")
+        @JvmStatic public val MAX_VALUE: Int128
+                = ConstantInt128(Int.MAX_VALUE, -1, -1, -1, "170141183460469231731687303715884105727")
 
         public const val SIZE_BYTES: Int = 128 / Byte.SIZE_BITS
+
+        private class ConstantInt128(
+            q1: Int,
+            q2: Int,
+            q3: Int,
+            q4: Int,
+            override val stringValue: String
+        ) : Int128(q1, q2, q3, q4), Constant {
+            override fun toString() = stringValue
+        }
 
         // ---------------------------------------- destructuring ----------------------------------------
 
@@ -876,8 +890,7 @@ public open class Int128 : CompositeNumber<Int128> {
             s: String,
             radix: Int,
             start: Int,
-            endExclusive: Int,
-            ignoreDot: Boolean = false
+            endExclusive: Int
         ): MutableInt128 {
             val first = try {
                 s[start]
@@ -891,27 +904,23 @@ public open class Int128 : CompositeNumber<Int128> {
             var pow = ONE
             val increment = radix.toInt128()
             while (cursor >= startIndex) try {
-                if (s[cursor] != '.' || ignoreDot) {
-                    digit/* = */.valueOf(s[cursor].digitToInt(radix))
-                    value +/* = */ (digit */* (maybe) = */ pow)
-                    pow *= increment
+                if (s[cursor] !in '0'..'9') {
+                    raiseIncorrectFormat("illegal embedded character")
                 }
+                digit/* = */.valueOf(s[cursor].digitToInt(radix))
+                value +/* = */ (digit */* (maybe) = */ pow)
+                pow *= increment
                 --cursor
             } catch (e: IllegalArgumentException) {
                 raiseIncorrectFormat("illegal digit", cause = e)
-            } catch (e: ArithmeticException) {
+            } catch (e: CompositeArithmeticException) {
                 raiseOverflow(s.substring(start, endExclusive), cause = e)
             }
             val result = if (startIndex != start) /* value = */ -value else value
             return result as MutableInt128
         }
 
-        // ---------------------------------------- helper functions ----------------------------------------
-
-        /**
-         * C-style boolean-to-integer conversion. 1 if true, 0 if false.
-         */
-        private fun Boolean.toInt() = if (this) 1 else 0
+        // ---------------------------------------- helpers ----------------------------------------
 
         private fun Int.widen() = this.toUInt().toLong()
 

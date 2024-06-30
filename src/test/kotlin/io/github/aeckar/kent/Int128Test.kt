@@ -59,9 +59,9 @@ class Int128Test {
 
             assertEquals(NEGATIVE_ONE, neg1)
 
-            assertThrows<NumberFormatException> { Int128("") }
-            assertThrows<NumberFormatException> { Int128("3.14") }
-            assertThrows<ArithmeticException> { Int128(HUGE_STRING) }
+            assertThrows<CompositeFormatException> { Int128("") }
+            assertThrows<CompositeFormatException> { Int128("3.14") }
+            assertThrows<CompositeArithmeticException> { Int128(HUGE_STRING) }
         }
 
         @Test
@@ -112,7 +112,7 @@ class Int128Test {
         fun unaryMinus() {
             assertEquals2c(Int128(-int64), -Int128(int64))
             assertEquals(-int64, -Int128(int64).toLong())
-            assertThrows<ArithmeticException> { -MIN_VALUE }
+            assertThrows<CompositeArithmeticException> { -MIN_VALUE }
         }
 
         @Test
@@ -125,9 +125,9 @@ class Int128Test {
                 assertEquals2c(b, sum - a)
                 assertDoesNotThrow { MAX_VALUE + ZERO }
                 assertDoesNotThrow { MAX_VALUE + NEGATIVE_ONE }
-                assertThrows<ArithmeticException> { MAX_VALUE + ONE }
+                assertThrows<CompositeArithmeticException> { MAX_VALUE + ONE }
                 break
-            } catch (_: ArithmeticException) { /* no-op */ } while (true)
+            } catch (_: CompositeArithmeticException) { /* no-op */ } while (true)
         }
 
         @Test
@@ -140,9 +140,9 @@ class Int128Test {
                 assertEquals2c(b, a - difference)
                 assertDoesNotThrow { MIN_VALUE - ZERO }
                 assertDoesNotThrow { MIN_VALUE - NEGATIVE_ONE }
-                assertThrows<ArithmeticException> { MIN_VALUE - ONE }
+                assertThrows<CompositeArithmeticException> { MIN_VALUE - ONE }
                 break
-            } catch (_: ArithmeticException) { /* no-op */ }while (true)
+            } catch (_: CompositeArithmeticException) { /* no-op */ }while (true)
         }
 
         @Test
@@ -153,7 +153,7 @@ class Int128Test {
 
             assertEquals2c(a, product / b)
             assertEquals2c(b, product / a)
-            assertThrows<ArithmeticException> { MAX_VALUE * TWO }
+            assertThrows<CompositeArithmeticException> { MAX_VALUE * TWO }
             assertDoesNotThrow { MAX_VALUE * ONE }
         }
 
@@ -166,7 +166,7 @@ class Int128Test {
             assertEquals2c(a, quotient * b)
             assertEquals2c(b, a / quotient)
             assertDoesNotThrow { ONE / MAX_VALUE }
-            assertThrows<ArithmeticException> { ONE / ZERO }
+            assertThrows<CompositeArithmeticException> { ONE / ZERO }
 
             // Inexact results
             assertEquals(TEN, Int128(101) / TEN)
@@ -183,7 +183,7 @@ class Int128Test {
             assertEquals2c(a, (b * quotientWholePart) + remainder)
             assertEquals2c(b, (a - remainder) / quotientWholePart)
             assertDoesNotThrow { ONE % MAX_VALUE }
-            assertThrows<ArithmeticException> { ONE % ZERO }
+            assertThrows<CompositeArithmeticException> { ONE % ZERO }
 
             // Inexact results
             assertEquals(ONE, Int128(101) % TEN)
@@ -194,7 +194,7 @@ class Int128Test {
         fun pow() {
             val a = Int128(19)
             assertEquals2c(Int128(130321), a.pow(4))
-            assertThrows<ArithmeticException> { a.pow(Int.MAX_VALUE) }
+            assertThrows<CompositeArithmeticException> { a.pow(Int.MAX_VALUE) }
         }
 
         @Test
@@ -204,7 +204,7 @@ class Int128Test {
 
             val factorial33 = Int128("8683317618811886495518194401280000000")
             assertEquals2c(factorial33, factorial(33))
-            assertThrows<ArithmeticException> { factorial(34) }
+            assertThrows<CompositeArithmeticException> { factorial(34) }
         }
     }
 }

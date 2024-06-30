@@ -48,18 +48,18 @@ class RationalTest {
         assertEquals(max32Str, Rational(max32Str).toString())
         assertEquals(min32Str, Rational(min32Str).toString())
         assertEquals(max64Str, Rational(max64Str).toString())
-        assertEquals("-9223372036854775800", Rational(min64Str).toString()) // Lossy
+        assertEquals("-922337203685477580e1", Rational(min64Str).toString()) // Lossy
         assertEquals("1", Rational("1").toString())
         assertEquals("0", Rational("0").toString())
         assertEquals("-1", neg1.toString())
 // todo test e's, fracs
         assertEquals(NEGATIVE_ONE, neg1)
 
-        assertThrows<NumberFormatException> { Rational("") }
-        assertThrows<NumberFormatException> { Rational("3.1.4") }
-        assertThrows<NumberFormatException> { Rational("--3.14") }
-        assertThrows<NumberFormatException> { Rational("((3.14))") }
-        assertThrows<NumberFormatException> { Rational("(3.14") }
+        assertThrows<CompositeFormatException> { Rational("") }
+        assertThrows<CompositeFormatException> { Rational("3.1.4") }
+        assertThrows<CompositeFormatException> { Rational("--3.14") }
+        assertThrows<CompositeFormatException> { Rational("((3.14))") }
+        assertThrows<CompositeFormatException> { Rational("(3.14") }
         assertDoesNotThrow { Rational(HUGE_STRING) }
     }
 
@@ -75,7 +75,7 @@ class RationalTest {
             assertEquals(a, sum - b)
             assertDoesNotThrow { MAX_VALUE + ZERO }
             assertDoesNotThrow { MAX_VALUE + NEGATIVE_ONE }
-            assertThrows<ArithmeticException> { MAX_VALUE + ONE }
+            assertThrows<CompositeArithmeticException> { MAX_VALUE + ONE }
         }
 
         @Test
@@ -88,7 +88,7 @@ class RationalTest {
             assertEquals(b, a - difference)
             assertDoesNotThrow { MIN_VALUE - ZERO }
             assertDoesNotThrow { MIN_VALUE - NEGATIVE_ONE }
-            assertThrows<ArithmeticException> { MIN_VALUE - ONE }
+            assertThrows<CompositeArithmeticException> { MIN_VALUE - ONE }
         }
 
         @Test
@@ -100,7 +100,7 @@ class RationalTest {
             assertEquals(a, product / b)
             assertEquals(b, product / a)
             assertDoesNotThrow { MAX_VALUE * ONE }
-            assertThrows<ArithmeticException> { MAX_VALUE * TWO }
+            assertThrows<CompositeArithmeticException> { MAX_VALUE * TWO }
         }
 
         @Test
@@ -110,7 +110,7 @@ class RationalTest {
             val quotient = a / b
             assertEquals(8 over 9, quotient)
             assertEquals(a, quotient * b)
-            assertThrows<ArithmeticException> { a / ZERO }
+            assertThrows<CompositeArithmeticException> { a / ZERO }
         }
 
         @Test
@@ -119,7 +119,7 @@ class RationalTest {
             val b = 2 over 3
             assertEquals(1 over 3, a % b)
             assertEquals(0 over 1, a % a)
-            assertThrows<ArithmeticException> { a % ZERO }
+            assertThrows<CompositeArithmeticException> { a % ZERO }
         }
 
         @Test

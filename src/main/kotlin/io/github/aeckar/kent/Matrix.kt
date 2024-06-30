@@ -306,7 +306,7 @@ public class Matrix private constructor(private val table: Table<Rational>) {
     /**
      * Returns the result of this matrix added to the other.
      *
-     * The addition is done by-entry, with the resultant matrix having the same dimensions as the arguments.
+     * The addition is done by-entry, with the result having the same dimensions as the arguments.
      * @throws ArithmeticException the two matrices are of different sizes
      */
     public operator fun plus(other: Matrix): Matrix = add(other, Rational::plus)
@@ -314,7 +314,7 @@ public class Matrix private constructor(private val table: Table<Rational>) {
     /**
      * Returns the result of this matrix subtracted by the other.
      *
-     * The subtraction is done by-entry, with the resultant matrix having the same dimensions as the arguments.
+     * The subtraction is done by-entry, with the result having the same dimensions as the arguments.
      * @throws ArithmeticException the two matrices are of different sizes
      */
     public operator fun minus(other: Matrix): Matrix = add(other, Rational::minus)

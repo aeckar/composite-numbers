@@ -3,6 +3,8 @@ package io.github.aeckar.kent.utils
 import io.github.aeckar.kent.Int128
 import io.github.aeckar.kent.raiseIncorrectFormat
 
+private const val LONG_MAX = "9223372036854775807"
+
 /**
  * Destructuring of a value into the closest scaled 64-bit integer to this and its scale.
  */
@@ -38,7 +40,7 @@ internal class ScaledLong {
     }
 
     /**
-     * Intended for access by `BigInteger` pseudo-constructor only.
+     * Intended for external access by `BigInteger`-arg pseudo-constructor (JVM) only.
      */
     constructor(value: Long, scale: Int) {
         this.value = value
@@ -61,58 +63,96 @@ internal class ScaledLong {
         private val ZERO = ScaledLong(0, 0)
 
         /**
-         * Assumes that [view] is within bounds and all trailing `0`s have been skipped over.
+         * Assumes that [view] is within bounds and all leading `0`s have been skipped over.
          *
          * Intended for access by `String`-arg constructor of Rational only.
          */
         fun parse(view: StringView, stop: String): ScaledLong = with(view) {
-            val start = index()
-            var stopIndex: Int
+            fun parseLong(start: Int, rightmostDigitOrDot: Int, scale: Int): ScaledLong {
+                move(start - index())
+                var value = 0L
+                val totalChars = (rightmostDigitOrDot - start) + 1
+                var parsedChars = 0
+                do {
+                    if (char() != '.') {
+                        value *= 10
+                        value += char().digitToInt()
+                    }
+                    ++parsedChars
+                    move(1)
+                } while (parsedChars < totalChars)
+                return ScaledLong(value, scale)
+            }
 
-            // Whole part
-            while (satisfies { it != '.' && it !in stop }) {
-                if (char() !in '0'..'9') {
+            val start = index()
+            while (satisfies { it != '.' && it !in stop }) {  // Iterate until end of whole part...
+                if (char() !in '0'..'9') {              // ...ensuring every whole digit is valid
                     raiseIncorrectFormat("illegal embedded character")
                 }
                 move(1)
             }
-
-            // Fractional part
-            var scaleAugment = 0
-            if (satisfies { it == '.' }) {
+            var scale = 0
+            val lacksDot = if (satisfies { it == '.' }) {   // If value has a fractional part...
                 val dotIndex = index()
                 do {
                     move(1)
                     if (isWithinBounds()) {
-                        if (char() !in '0'..'9') {
+                        if (char() !in '0'..'9') {  // ...ensure every fractional digit is valid...
                             raiseIncorrectFormat("illegal embedded character")
                         }
-                        if (char() != '0') {
-                            scaleAugment = dotIndex - index()
+                        if (char() != '0') {    // ...and set scale according to rightmost non-zero fractional digit...
+                            scale = dotIndex - index()
                         }
                     }
-                } while (satisfies { it !in stop })
-                stopIndex = index()
-                if (scaleAugment == 0) {
-                    move(dotIndex - index())
-                    do {
-                        move(-1)
-                    } while(satisfies { it == '0' })
-                    scaleAugment += dotIndex - index() + 1
-                }
-                move(stopIndex - index())
+                } while (satisfies { it !in stop }) // ...while the end of the value is not reached
+                false
+            } else {    // char() is rightmost whole digit
+                true
             }
-            stopIndex = index()
+            val stopIndex: Int = index()
             do {
                 move(-1)
-            } while(satisfies { it == '0' || it == '.' })
+            } while (satisfies { it == '0' || it == '.' })
+            // char() is rightmost non-zero digit
             if (isNotWithinBounds()) {
                 return ZERO
             }
-            // FIXME NOW doesn't work for values that overflow Int128
-            val value = ScaledLong(Int128.parse(string, 10, start, index() + 1, ignoreDot = true), scaleAugment)
-            move(stopIndex - index())
-            value
+            var length = index() - start + lacksDot.toInt()
+            if (length >= LONG_MAX.length) {
+                val startingLength = length
+                while (length != LONG_MAX.length) { // Scale down to a length that can possibly fit a Long
+                    if (char() == '.') {            // Skip digit to the left
+                        move(-2)                    // Always within bounds
+                    } else {
+                        move(-1)
+                    }
+                    --length
+                }
+                var rightmostDigitOrDot = index()
+                move(start - index())
+                do {    // Ensure possible Long value does not overflow
+                    if (char() == '.') {
+                        move(1) // Always within bounds
+                        if (isNotWithinBounds()) {
+                            break
+                        }
+                    }
+                    if (char() > LONG_MAX[index() - start]) {   // Value overflows, scale down by 1
+                        --rightmostDigitOrDot
+                        --length
+                        break
+                    }
+                    if (index() == rightmostDigitOrDot) {
+                        break
+                    }
+                    move(1)
+                } while (true)
+                scale += startingLength - length
+                move(rightmostDigitOrDot - index())
+            }
+            parseLong(start, index(), scale).also {
+                move(stopIndex - index())   // Ensure characters are only parsed once
+            }
         }
     }
 }
