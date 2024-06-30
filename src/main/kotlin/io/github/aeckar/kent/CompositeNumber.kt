@@ -29,7 +29,7 @@ package io.github.aeckar.kent
  * @see Rational
  */
 @Suppress("EqualsOrHashCode")
-sealed class CompositeNumber<T : CompositeNumber<T>> : Number(), Comparable<T> {
+public sealed class CompositeNumber<T : CompositeNumber<T>> : Number(), Comparable<T> {
     protected var lazyString: String? = null
 
     /**
@@ -37,17 +37,17 @@ sealed class CompositeNumber<T : CompositeNumber<T>> : Number(), Comparable<T> {
      *
      * Should be used instead of [signum] when equality to 0 is irrelevant.
      */
-    abstract val sign: Int
+    public abstract val sign: Int
 
     /**
      * True if this value is negative.
      */
-    abstract val isNegative: Boolean
+    public abstract val isNegative: Boolean
 
     /**
      * True if this value is positive.
      */
-    abstract val isPositive: Boolean
+    public abstract val isPositive: Boolean
 
 
     // ------------------------------ mutability --------------------
@@ -108,57 +108,57 @@ sealed class CompositeNumber<T : CompositeNumber<T>> : Number(), Comparable<T> {
      */
     @Suppress("UNCHECKED_CAST")
     @Cumulative
-    fun abs(): T = if (sign < 0) -this else this as T
+    public fun abs(): T = if (sign < 0) -this else this as T
 
     /**
      * Returns an instance equal in value to the difference.
      */
     @Cumulative
-    operator fun minus(other: T) = this + (-other)
+    public operator fun minus(other: T): T = this + (-other)
 
     /**
      * Returns -1 if this is negative, 0 if zero, or 1 if positive.
      * @see sign
      */
-    abstract fun signum(): Int
+    public abstract fun signum(): Int
 
     /**
      * Returns an instance equal in value to this, negated.
      */
     @Cumulative
-    abstract operator fun unaryMinus(): T
+    public abstract operator fun unaryMinus(): T
 
     /**
      * Returns an instance equal in value to the sum.
      */
     @Cumulative
-    abstract operator fun plus(other: T): T
+    public abstract operator fun plus(other: T): T
 
     /**
      * Returns an instance equal in value to the product.
      *
      * This function is [cumulative][Cumulative] when neither argument is 0 nor 1.
      */
-    abstract operator fun times(other: T): T
+    public abstract operator fun times(other: T): T
 
     /**
      * Returns an instance equal in value to the quotient.
      */
-    abstract operator fun div(other: T): T
+    public abstract operator fun div(other: T): T
 
     /**
      * Returns an instance equal in value to the remainder of the division.
      *
      * The returned value is always non-negative.
      */
-    abstract operator fun rem(other: T): T
+    public abstract operator fun rem(other: T): T
 
     /**
      * Returns an instance equal in value to this raised to [power].
      *
      * When this and `power` are both 0, this function returns a value equal to 1.
      */
-    abstract fun pow(power: Int): T
+    public abstract fun pow(power: Int): T
 
     // ------------------------------ comparison ------------------------------
 
@@ -167,14 +167,14 @@ sealed class CompositeNumber<T : CompositeNumber<T>> : Number(), Comparable<T> {
      *
      * See [compareTo][Comparable.compareTo] for details.
      */
-    operator fun compareTo(value: Int) = compareTo(value.toLong())
+    public operator fun compareTo(value: Int): Int = compareTo(value.toLong())
 
     /**
      * Compares this value to the other.
      *
      * See [compareTo][Comparable.compareTo] for details.
      */
-    operator fun compareTo(value: Long) = if (!this.isLong()) sign else toLong().compareTo(value)
+    public operator fun compareTo(value: Long): Int = if (!this.isLong()) sign else toLong().compareTo(value)
 
     /**
      * Comparison to composite numbers, built-in [numbers][Number], and
@@ -209,19 +209,19 @@ sealed class CompositeNumber<T : CompositeNumber<T>> : Number(), Comparable<T> {
 
     // ------------------------------ conversions ------------------------------
 
-    final override fun toByte() = toInt().toByte()
-    final override fun toShort() = toInt().toShort()
-    final override fun toFloat() = toDouble().toFloat()
+    final override fun toByte(): Byte = toInt().toByte()
+    final override fun toShort(): Short = toInt().toShort()
+    final override fun toFloat(): Float = toDouble().toFloat()
 
     /**
      * Returns a rational number equal in value to this.
      */
-    abstract fun toRational(): Rational
+    public abstract fun toRational(): Rational
 
     /**
      * Returns a 128-bit integer equal in value to this.
      */
-    abstract fun toInt128(): Int128
+    public abstract fun toInt128(): Int128
 
     /**
      * Returns a string representation of this value in base 10.

@@ -6,8 +6,6 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import java.nio.ByteBuffer
 
-// TODO test all
-
 /*
     When multiplatform support is added, this file will be moved to "/jvmMain".
 
@@ -40,7 +38,7 @@ private fun ScaledLong(value: BigInteger): ScaledLong {
  * See [compareTo][Comparable.compareTo] for details.
  */
 @JvmName("compare")
-operator fun Int128.compareTo(value: BigDecimal) = toBigDecimal().compareTo(value)
+public operator fun Int128.compareTo(value: BigDecimal): Int = toBigDecimal().compareTo(value)
 
 /**
  * Compares this value to the other.
@@ -48,17 +46,17 @@ operator fun Int128.compareTo(value: BigDecimal) = toBigDecimal().compareTo(valu
  * See [compareTo][Comparable.compareTo] for details.
  */
 @JvmName("compare")
-operator fun Int128.compareTo(value: BigInteger) = toBigInteger().compareTo(value)
+public operator fun Int128.compareTo(value: BigInteger): Int = toBigInteger().compareTo(value)
 
 /**
  * Returns an arbitrary-precision decimal equal in value to this.
  */
-fun Int128.toBigDecimal() = toBigInteger().toBigDecimal()
+public fun Int128.toBigDecimal(): BigDecimal = toBigInteger().toBigDecimal()
 
 /**
  * Returns an arbitrary-precision integer equal in value to this.
  */
-fun Int128.toBigInteger(): BigInteger {
+public fun Int128.toBigInteger(): BigInteger {
     val value = ByteBuffer.allocate(Int128.SIZE_BYTES).apply { putInt(q1); putInt(q2); putInt(q3); putInt(q4) }.array()
     return BigInteger(value)
 }
@@ -71,7 +69,7 @@ fun Int128.toBigInteger(): BigInteger {
  */
 @JvmName("toInt128")
 @Suppress("unused")
-fun Int128(value: BigDecimal) = Int128(value.toBigInteger())
+public fun Int128(value: BigDecimal): Int128 = Int128(value.toBigInteger())
 
 /**
  * Returns a 128-bit integer equal to the given arbitrary-precision integer.
@@ -79,7 +77,7 @@ fun Int128(value: BigDecimal) = Int128(value.toBigInteger())
  * @throws ArithmeticException [value] is too large to be represented as an Int128
  */
 @JvmName("toInt128")
-fun Int128(value: BigInteger): Int128 {
+public fun Int128(value: BigInteger): Int128 {
     var bytes = value.toByteArray()
     val maxBytes = Int128.SIZE_BYTES
     if (bytes.size > maxBytes) {
@@ -103,7 +101,7 @@ fun Int128(value: BigInteger): Int128 {
  * See [compareTo][Comparable.compareTo] for details.
  */
 @JvmName("compare")
-operator fun Rational.compareTo(value: BigDecimal) = toBigDecimal().compareTo(value)
+public operator fun Rational.compareTo(value: BigDecimal): Int = toBigDecimal().compareTo(value)
 
 /**
  * Compares this value to the other.
@@ -111,21 +109,23 @@ operator fun Rational.compareTo(value: BigDecimal) = toBigDecimal().compareTo(va
  * See [compareTo][Comparable.compareTo] for details.
  */
 @JvmName("compare")
-operator fun Rational.compareTo(value: BigInteger) = toBigInteger().compareTo(value)
+public operator fun Rational.compareTo(value: BigInteger): Int = toBigInteger().compareTo(value)
 
 /**
  * Returns an arbitrary-precision decimal equal in value to this.
  *
  * Information may be lost during conversion.
  */
-fun Rational.toBigDecimal() = numer.toBigDecimal().setScale(-scale) / denom.toBigDecimal() * sign.toBigDecimal()
+public fun Rational.toBigDecimal(): BigDecimal {
+    return numer.toBigDecimal().setScale(-scale) / denom.toBigDecimal() * sign.toBigDecimal()
+}
 
 /**
  * Returns an arbitrary-precision integer equal in value to this.
  *
  * Information may be lost during conversion.
  */
-fun Rational.toBigInteger() = numer.toBigInteger() * BigInteger.TEN.pow(scale) * sign.toBigInteger()
+public fun Rational.toBigInteger(): BigInteger = numer.toBigInteger() * BigInteger.TEN.pow(scale) * sign.toBigInteger()
 
 /**
  * Returns a rational number equal to the given arbitrary-precision number.
@@ -133,7 +133,7 @@ fun Rational.toBigInteger() = numer.toBigInteger() * BigInteger.TEN.pow(scale) *
  * Some information may be lost on conversion.
  */
 @JvmName("toRational")
-fun Rational(value: BigDecimal): Rational {
+public fun Rational(value: BigDecimal): Rational {
     val whole = value.toBigInteger()
     val (unscaledWhole, wholeScale) = ScaledLong(whole)
     val rawFracScale: Int
@@ -150,7 +150,7 @@ fun Rational(value: BigDecimal): Rational {
  * Some information may be lost on conversion.
  */
 @JvmName("toRational")
-fun Rational(value: BigInteger): Rational {
+public fun Rational(value: BigInteger): Rational {
     val (numer, scale) = ScaledLong(value)
     return Rational(numer, 1L, scale, value.signum() or 1)
 }

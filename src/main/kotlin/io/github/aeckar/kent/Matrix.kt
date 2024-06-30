@@ -25,7 +25,7 @@ import java.util.*
  * and should be stored in a variable if used more than once.
  * The exceptions to this are [ref], [toString], and partly [rref].
  */
-class Matrix private constructor(private val table: Table<Rational>) {
+public class Matrix private constructor(private val table: Table<Rational>) {
     private var lazyString: String? = null
     private var lazyRowEchelonForm: Matrix? = null
 
@@ -67,11 +67,12 @@ class Matrix private constructor(private val table: Table<Rational>) {
     /**
      * Used to create a matrix using the dimensions this instance was given.
      */
-    class Prototype(private val rowCount: Int, private val columnCount: Int) {
+    public class Prototype(private val rowCount: Int, private val columnCount: Int) {
         /**
          * Returns a new matrix with the given entries.
          */
-        operator fun invoke(vararg entries: Int): Matrix {
+        @JvmName("of")
+        public operator fun invoke(vararg entries: Int): Matrix {
             ensureValidSize(entries.size)
             val entry = entries.iterator()
             val table = Table(rowCount, columnCount) { _, _ -> entry.nextInt().toRational() }
@@ -81,7 +82,8 @@ class Matrix private constructor(private val table: Table<Rational>) {
         /**
          * Returns a new matrix with the given entries.
          */
-        operator fun invoke(vararg entries: Rational): Matrix {
+        @JvmName("of")
+        public operator fun invoke(vararg entries: Rational): Matrix {
             ensureValidSize(entries.size)
             val entry = entries.iterator()
             val table = Table(rowCount, columnCount) { _, _ -> entry.next() }
@@ -101,18 +103,20 @@ class Matrix private constructor(private val table: Table<Rational>) {
     /**
      * Returns the total number of rows.
      */
-    fun countRows() = table.countRows()
+    @Suppress("MemberVisibilityCanBePrivate")
+    public fun countRows(): Int = table.countRows()
 
     /**
      * Returns the total number of columns.
      */
-    fun countColumns() = table.countColumns()
+    @Suppress("MemberVisibilityCanBePrivate")
+    public fun countColumns(): Int = table.countColumns()
 
     /**
      * Returns the entry at the current index.
      * @throws NoSuchElementException the specified index lies outside the bounds of the matrix
      */
-    operator fun get(rowIndex: Int, columnIndex: Int) = table[rowIndex, columnIndex]
+    public operator fun get(rowIndex: Int, columnIndex: Int): Rational = table[rowIndex, columnIndex]
 
     // ------------------------------ transformations ------------------------------
 
@@ -121,7 +125,7 @@ class Matrix private constructor(private val table: Table<Rational>) {
      *
      * The transpose is the matrix where the rows and columns are swapped.
      */
-    fun transpose(): Matrix {
+    public fun transpose(): Matrix {
         val table = Table(countColumns(), countRows()) { rowIndex, columnIndex -> table[columnIndex, rowIndex] }
         return Matrix(table)
     }
@@ -132,7 +136,7 @@ class Matrix private constructor(private val table: Table<Rational>) {
      * The inverse is the matrix, when multiplied by this matrix, results in an identity matrix.
      * @throws ArithmeticException this matrix is not a square matrix
      */
-    fun inverse(): Matrix {
+    public fun inverse(): Matrix {
         ensureSquare("Inverse")
 
         TODO("Not implemented yet")
@@ -152,7 +156,7 @@ class Matrix private constructor(private val table: Table<Rational>) {
      * - Swap with another row
      * @see rref
      */
-    fun ref(): Matrix {
+    public fun ref(): Matrix {
         lazyRowEchelonForm?.let { return it }
 
         TODO("Not implemented yet")
@@ -169,7 +173,7 @@ class Matrix private constructor(private val table: Table<Rational>) {
      *
      * For an explanation of elementary row operations, see [ref].
      */
-    fun rref(): Matrix {
+    public fun rref(): Matrix {
         val rowEchelonForm = ref()
 
         TODO("Not implemented yet")
@@ -183,7 +187,7 @@ class Matrix private constructor(private val table: Table<Rational>) {
      * The determinant can be defined recursively as
      * @throws ArithmeticException this matrix is not square
      */
-    fun determinant(): Rational {
+    public fun determinant(): Rational {
         ensureSquare(operation = "Determinant")
         return determinant(0, -1).immutable()
     }
@@ -229,7 +233,7 @@ class Matrix private constructor(private val table: Table<Rational>) {
      * The trace is the sum of all entries on the main diagonal.
      * @throws ArithmeticException this matrix is not square
      */
-    fun trace(): Rational {
+    public fun trace(): Rational {
         ensureSquare(operation = "Trace")
         val result = ZERO.mutable()
         repeat(countRows()) { result +/* = */ table[it, it] }
@@ -241,7 +245,7 @@ class Matrix private constructor(private val table: Table<Rational>) {
      *
      * The rank, informally, is the number of zero rows when a matrix is in [row echelon form][ref].
      */
-    fun rank(): Int {
+    public fun rank(): Int {
         val rowEchelon = ref().table
         var zeroRows = 0
         rowEchelon.byRow {
@@ -261,7 +265,7 @@ class Matrix private constructor(private val table: Table<Rational>) {
      * Since this implementation of the minor is by entry, the matrix must be square.
      * @throws ArithmeticException this matrix is not square
      */
-    fun minor(rowIndex: Int, columnIndex: Int): Matrix {
+    public fun minor(rowIndex: Int, columnIndex: Int): Matrix {
         ensureSquare(operation = "Minor")
         return getMinor(rowIndex, columnIndex)
     }
@@ -272,7 +276,7 @@ class Matrix private constructor(private val table: Table<Rational>) {
      * For the specific properties that are required in order to return a cofactor, see [minor].
      * @throws ArithmeticException this matrix is not square
      */
-    fun cofactor(rowIndex: Int, columnIndex: Int): Matrix {
+    public fun cofactor(rowIndex: Int, columnIndex: Int): Matrix {
         ensureSquare(operation = "Cofactor")
         val minor = getMinor(rowIndex, columnIndex)
         return if ((rowIndex % 2 == 0) xor (columnIndex % 2 == 0)) -minor else minor
@@ -297,7 +301,7 @@ class Matrix private constructor(private val table: Table<Rational>) {
     /**
      * Returns the result of this matrix when multiplied by -1.
      */
-    operator fun unaryMinus() = this * Rational.NEGATIVE_ONE
+    public operator fun unaryMinus(): Matrix = this * Rational.NEGATIVE_ONE
 
     /**
      * Returns the result of this matrix added to the other.
@@ -305,7 +309,7 @@ class Matrix private constructor(private val table: Table<Rational>) {
      * The addition is done by-entry, with the resultant matrix having the same dimensions as the arguments.
      * @throws ArithmeticException the two matrices are of different sizes
      */
-    operator fun plus(other: Matrix) = add(other, Rational::plus)
+    public operator fun plus(other: Matrix): Matrix = add(other, Rational::plus)
 
     /**
      * Returns the result of this matrix subtracted by the other.
@@ -313,7 +317,7 @@ class Matrix private constructor(private val table: Table<Rational>) {
      * The subtraction is done by-entry, with the resultant matrix having the same dimensions as the arguments.
      * @throws ArithmeticException the two matrices are of different sizes
      */
-    operator fun minus(other: Matrix) = add(other, Rational::minus)
+    public operator fun minus(other: Matrix): Matrix = add(other, Rational::minus)
 
     private inline fun add(other: Matrix, entryOperator: (Rational, Rational) -> Rational): Matrix {
         val rowCount = countRows()
@@ -337,7 +341,7 @@ class Matrix private constructor(private val table: Table<Rational>) {
      *
      * This operation is not commutative.
      */
-    operator fun times(other: Matrix): Matrix {
+    public operator fun times(other: Matrix): Matrix {
         val columnCount = countColumns()
         val otherRowCount = other.countRows()
         if (columnCount != otherRowCount) {
@@ -367,7 +371,7 @@ class Matrix private constructor(private val table: Table<Rational>) {
      *
      * The multiplication is done by-entry, with each entry being multiplied by the scalar value.
      */
-    operator fun times(scalar: Rational): Matrix {
+    public operator fun times(scalar: Rational): Matrix {
         val table = Table(countRows(), countColumns()) { rowIndex, columnIndex ->
             table[rowIndex, columnIndex] * scalar
         }
@@ -385,10 +389,10 @@ class Matrix private constructor(private val table: Table<Rational>) {
         val columnCount = countColumns()
         val entries = Table<String>(countRows(), columnCount)
         val maxLengths = IntArray(columnCount)
-        table.byEntryIndexed { rowIndex, columnIndex, value ->
-            val entry = value.toString()
-            entries[rowIndex, columnIndex] = entry
-            maxLengths[columnIndex] = maxLengths[columnIndex].coerceAtLeast(entry.length)
+        table.byEntryIndexed { row, column, entry ->
+            val stringValue = entry.toString()
+            entries[row, column] = stringValue
+            maxLengths[column] = maxLengths[column].coerceAtLeast(stringValue.length)
         }
         val string = buildString {
             entries.byRow {
@@ -413,27 +417,28 @@ class Matrix private constructor(private val table: Table<Rational>) {
         }
     }
 
-    companion object {
+    public companion object {
         /**
          * The 2x2 identity matrix.
          *
          * All entries are zero except for those on the main diagonal, which are all one.
          */
-        val I2 = identity(2)
+        @JvmStatic public val I2: Matrix = identity(2)
 
         /**
          * The 3x3 identity matrix.
          *
          * All entries are zero except for those on the main diagonal, which are all one.
          */
-        val I3 = identity(3)
+        @JvmStatic public val I3: Matrix = identity(3)
 
         /**
          * Returns the identity matrix with the given number of rows and columns.
          * @see I2
          * @see I3
          */
-        fun identity(sideLength: Int): Matrix {
+        @JvmStatic
+        public fun identity(sideLength: Int): Matrix {
             val table = Table(sideLength, sideLength, defaultEntry = ZERO)
             repeat(sideLength) { table[it, it] = ONE }
             return Matrix(table)
@@ -442,6 +447,7 @@ class Matrix private constructor(private val table: Table<Rational>) {
         /**
          * Returns a new [matrix prototype][Prototype] with the given dimensions.
          */
-        operator fun get(rowCount: Int, columnCount: Int) = Prototype(rowCount, columnCount)
+        @JvmName("matrix")
+        public operator fun get(rowCount: Int, columnCount: Int): Prototype = Prototype(rowCount, columnCount)
     }
 }

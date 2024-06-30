@@ -1,8 +1,9 @@
+@file:JvmName("Conversions")
+@file:JvmMultifileClass
 package io.github.aeckar.kent
 
 import io.github.aeckar.kent.functions.floor
 import io.github.aeckar.kent.utils.*
-import io.github.aeckar.kent.utils.StringIndexIterator
 import io.github.aeckar.kent.utils.productSign
 import kotlin.math.absoluteValue
 
@@ -10,7 +11,8 @@ import kotlin.math.absoluteValue
  * Returns a rational number equal to this value over the other as a fraction after simplification.
  * @throws ArithmeticException [other] is 0 or the value is too large or small to be represented accurately
  */
-infix fun Int.over(other: Int) = Rational(this.toLong(), other.toLong(), 0)
+@JvmName("toRational")
+public infix fun Int.over(other: Int): Rational = Rational(this.toLong(), other.toLong(), 0)
 
 /**
  * Returns a rational number equal to this value over the other as a fraction after simplification.
@@ -18,10 +20,17 @@ infix fun Int.over(other: Int) = Rational(this.toLong(), other.toLong(), 0)
  * If this value is [Long.MIN_VALUE], the value stored will be equal to −2^63 + 8.
  * @throws ArithmeticException [other] is 0 or the value is too large or small to be represented accurately
  */
+@JvmName("toRational")
 @Suppress("unused")
-infix fun Long.over(other: Long) = Rational(this, other, 0)
+public infix fun Long.over(other: Long): Rational = Rational(this, other, 0)
 
-fun Int.toRational() = when (this) {
+/**
+ * Returns a rational number equal to this value.
+ *
+ * For numbers that are known to be smaller than -1 or larger than 16,
+ * the `Long`-args constructor should be used instead.
+ */
+public fun Int.toRational(): Rational = when (this) {
     -1 -> Rational.NEGATIVE_ONE
     0 -> Rational.ZERO
     1 -> Rational.ONE
@@ -29,10 +38,22 @@ fun Int.toRational() = when (this) {
     else -> this over 1
 }
 
+/**
+ * See [toRational] for details.
+ */
+public fun Long.toRational(): Rational = when (this) {
+    -1L -> Rational.NEGATIVE_ONE
+    0L -> Rational.ZERO
+    1L -> Rational.ONE
+    2L -> Rational.TWO
+    else -> this over 1
+}
+
 internal fun MutableRational(numer: Int128, denom: Int128): MutableRational {
     val sign = productSign(numer.sign, denom.sign)  // May be mutated by abs()
     return Rational.ONE.mutable().valueOf(numer.abs(), denom.abs(), 0, sign) { "Instantiation" } as MutableRational
 }
+
 /**
  * A mutable rational number.
  *
@@ -58,7 +79,8 @@ internal class MutableRational(unique: Rational) : Rational(unique.numer, unique
  *
  * Some information may be lost after conversion.
  */
-fun Rational(x: Int128): Rational {
+@JvmName("toRational")
+public fun Rational(x: Int128): Rational {
     val (numer, scale) = ScaledLong(x)
     return Rational(numer, 1, scale, x.sign)
 }
@@ -67,7 +89,8 @@ fun Rational(x: Int128): Rational {
  * Returns a rational number with the given [numerator][numer] and [denominator][denom] after simplification.
  * @throws ArithmeticException [denom] is 0 or the value is too large or small to be represented accurately
  */
-fun Rational(numer: Long, denom: Long = 1, scaleAugment: Int = 0): Rational {
+@JvmName("toRational")
+public fun Rational(numer: Long, denom: Long = 1, scaleAugment: Int = 0): Rational {
     return Rational(numer, denom, scaleAugment, productSign(numer.toInt(), denom.toInt()))
 }
 
@@ -77,7 +100,8 @@ fun Rational(numer: Long, denom: Long = 1, scaleAugment: Int = 0): Rational {
  * Some information may be lost during conversion.
  * @throws ArithmeticException [denom] is 0 or the value is too large or small to be represented accurately
  */
-fun Rational(numer: Int128, denom: Int128, scaleAugment: Int = 0): Rational {
+@JvmName("toRational")
+public fun Rational(numer: Int128, denom: Int128, scaleAugment: Int = 0): Rational {
     val sign = productSign(numer.sign, denom.sign)  // May be mutated by abs()
     return Rational.ONE.valueOf(numer.abs(), denom.abs(), scaleAugment, sign) { "Instantiation" }
 }
@@ -94,23 +118,19 @@ fun Rational(numer: Int128, denom: Int128, scaleAugment: Int = 0): Rational {
  * allowing all instances to be readily converted to their fractional form.
  *
  * All 64-bit integer values, aside from [Long.MIN_VALUE], can be stored without losing information.
- *
- * Instances of this class are immutable.
  */
 @Suppress("EqualsOrHashCode")
-open class Rational : CompositeNumber<Rational> {
-    // super.lazyString used to cache toString() only
-
+public open class Rational : CompositeNumber<Rational> {
     /**
      * The numerator of this value as a fraction.
      */
-    var numer: Long
+    public var numer: Long
         protected set
 
     /**
      * The denominator of this value as a fraction.
      */
-    var denom: Long
+    public var denom: Long
         protected set
 
     /**
@@ -119,11 +139,11 @@ open class Rational : CompositeNumber<Rational> {
      * Validation should be used to ensure this value never holds the value
      * of [Int.MIN_VALUE] to prevent incorrect operation results.
      */
-    var scale: Int
+    public var scale: Int
         protected set
 
-    final override val isNegative get() = sign == -1
-    final override val isPositive get() = sign == 1
+    final override val isNegative: Boolean get() = sign == -1
+    final override val isPositive: Boolean get() = sign == 1
     final override var sign: Int
         protected set
 
@@ -151,11 +171,11 @@ open class Rational : CompositeNumber<Rational> {
      * @throws NumberFormatException [s] is in an incorrect format
      * @throws ArithmeticException the value cannot be represented accurately as a rational number
      */
-    constructor(s: String) {
-        fun exponentAt(iterator: StringIndexIterator): Int {
-            var curIndex = iterator
-            val sign = if (curIndex.char() == '-') {
-                ++curIndex
+    // TODO LATER convert to factory function so it matches Int128
+    public constructor(s: String) {
+        fun parseExponent(view: StringView): Int {
+            val sign = if (view.char() == '-') {
+                view.move(1)
                 -1
             } else {
                 1
@@ -164,8 +184,8 @@ open class Rational : CompositeNumber<Rational> {
             do {
                 exponent *= 10
                 exponent += try {
-                    curIndex.char().digitToInt()
-                } catch (e: NoSuchElementException) {   // Caught on first iteration
+                    view.char().digitToInt()
+                } catch (e: IndexOutOfBoundsException) {    // Caught on first iteration
                     raiseIncorrectFormat("missing exponent value", e)
                 } catch (e: IllegalArgumentException) {
                     raiseIncorrectFormat("illegal character embedded in exponent value", e)
@@ -173,73 +193,74 @@ open class Rational : CompositeNumber<Rational> {
                 if (exponent > Int.MAX_VALUE) {
                     raiseOverflow()
                 }
-                ++curIndex
-            } while (curIndex.exists())
+                view.move(1)
+            } while (view.isWithinBounds())
             return exponent.toInt() * sign
         }
 
+        // FIXME scale = -16?
         if (s.isEmpty()) {
             raiseIncorrectFormat("empty string")
         }
-        var curIndex = StringIndexIterator(s)
+        val view = StringView(s)
         var hasExplicitPositive = false
         var insideParentheses = false
         this.sign = 1
         while (true) try {
-            when (curIndex.char()) {
+            when (view.char()) {
                 '-' -> {
                     if (sign == -1 || hasExplicitPositive) {
                         raiseIncorrectFormat("illegal embedded sign character")
                     }
                     sign = -1
-                    ++curIndex
+                    view.move(1)
                 }
                 '+' -> {
                     if (sign == -1 || hasExplicitPositive) {
                         raiseIncorrectFormat("illegal embedded sign character")
                     }
                     hasExplicitPositive = true
-                    ++curIndex
+                    view.move(1)
                 }
                 '(' -> {
                     if (insideParentheses) {
                         raiseIncorrectFormat("illegal embedded open parenthesis")
                     }
                     insideParentheses = true
-                    ++curIndex
+                    view.move(1)
                 }
-                '1', '2', '3', '4', '5', '6', '7', '8', '9', '.' -> break
                 '0' -> {
-                    ++curIndex
-                    if (curIndex.doesNotExist() || curIndex.char() != '0' ) {
-                        --curIndex
+                    view.move(1)
+                    if (view.satisfies { it != '0' }) {
+                        view.move(-1)
                         break
                     }
                 }
+                '1', '2', '3', '4', '5', '6', '7', '8', '9', '.' -> break
                 else -> raiseIncorrectFormat("illegal embedded character")
             }
         } catch (e: StringIndexOutOfBoundsException) {
             raiseIncorrectFormat("character expected", e)
         }
-        val (unscaledNumer, numerScale) = ScaledLong.at(curIndex, "/eE)")
+        val (unscaledNumer, numerScale) = ScaledLong.parse(view, stop = "/eE)")
         var unscaledDenom = 1L
         var denomScale = 0
-        if (curIndex.char { it == '/' }) {
-            val denom = ScaledLong.at(curIndex, "eE)")
+        if (view.satisfies { it == '/' }) {
+            val denom = ScaledLong.parse(view, stop = "eE)")
             unscaledDenom = denom.component1()
             denomScale = denom.component2()
         }
         if (insideParentheses) {
-            if (curIndex.char { it != ')' }) {
+            if (view.satisfies { it != ')' }) {
                 raiseIncorrectFormat("missing closing parenthesis")
             }
-            ++curIndex
+            view.move(1)
         }
         this.numer = unscaledNumer
         this.denom = unscaledDenom
-        this.scale = if (curIndex.char { it == 'e' || it == 'E'}) {
-            ++curIndex
-            exponentAt(curIndex)
+        this.scale = if (view.satisfies { it == 'e' || it == 'E' }) {
+            view.move(1)
+            parseExponent(view)
         } else {
             0
         }
@@ -279,11 +300,43 @@ open class Rational : CompositeNumber<Rational> {
 
     /**
      * Value function with delegation to by-property constructor.
+     * @throws ArithmeticException [denom] is 0 or the value is too large or small to be represented accurately
+     */
+    internal inline fun valueOf(
+        numer: Int128,
+        denom: Int128,
+        scaleAugment: Int,
+        sign: Int,
+        additionalInfo: () -> String
+    ): Rational {
+        if (denom.stateEquals(Int128.ZERO)) {
+            raiseUndefined("Denominator cannot be zero (numer = $numer)")
+        }
+        val gcf = gcf(numer, denom)
+        val (unscaledNumer, numerScale) = ScaledLong(numer / gcf)   // consume `numer`
+        val (unscaledDenom, denomScale) = ScaledLong(denom / gcf)   // consume `denom`
+        try {
+            if (addOverflowsValue(numerScale, denomScale)) {
+                raiseOverflow()
+            }
+            var scale = numerScale - denomScale
+            if (addOverflowsValue(scale, scaleAugment)) {
+                raiseOverflow()
+            }
+            scale += scaleAugment
+            return valueOf(unscaledNumer, unscaledDenom, scale, sign)
+        } catch (e: ArithmeticException) {
+            raiseOverflow(additionalInfo())
+        }
+    }
+
+    /**
+     * Value function with delegation to by-property constructor.
      *
      * Returns a ratio with the given [numerator][numer] and [denominator][denom] after simplification.
      * @throws ArithmeticException [denom] is 0 or the value is too large or small to be represented accurately
      */
-    internal fun valueOf(numer: Long, denom: Long, scaleAugment: Int): Rational {
+    private fun valueOf(numer: Long, denom: Long, scaleAugment: Int): Rational {
         fun gcf(x: Long, y: Long): Long {
             tailrec fun euclideanGCF(max: Long, min: Long): Long {
                 val rem = max % min
@@ -319,45 +372,12 @@ open class Rational : CompositeNumber<Rational> {
         return valueOf(unscaledNumer / gcf, unscaledDenom / gcf, scale, productSign(numer, denom))
     }
 
-    /**
-     * Value function with delegation to by-property constructor.
-     * @throws ArithmeticException [denom] is 0 or the value is too large or small to be represented accurately
-     */
-    // Accessed only by raiseTo(), plus(), and times()
-    internal inline fun valueOf(
-        numer: Int128,
-        denom: Int128,
-        scaleAugment: Int,
-        sign: Int,
-        additionalInfo: () -> String
-    ): Rational {
-        if (denom.stateEquals(Int128.ZERO)) {
-            raiseUndefined("Denominator cannot be zero (numer = $numer)")
-        }
-        val gcf = gcf(numer, denom)
-        val (unscaledNumer, numerScale) = ScaledLong(numer / gcf)   // consume `numer`
-        val (unscaledDenom, denomScale) = ScaledLong(denom / gcf)   // consume `denom`
-        try {
-            if (addOverflowsValue(numerScale, denomScale)) {
-                raiseOverflow()
-            }
-            var scale = numerScale - denomScale
-            if (addOverflowsValue(scale, scaleAugment)) {
-                raiseOverflow()
-            }
-            scale += scaleAugment
-            return valueOf(unscaledNumer, unscaledDenom, scale, sign)
-        } catch (e: ArithmeticException) {
-            raiseOverflow(additionalInfo())
-        }
-    }
-
     // ---------------------------------------- arithmetic ----------------------------------------
 
     /**
      * Returns an instance equal to this value with its decimal part truncated.
      */
-    fun toWhole() = when {
+    public fun toWhole(): Rational = when {
         scale < LONG_MIN_SCALE -> ZERO
         scale > LONG_MAX_SCALE || denom == 1L && scale >= 0 -> this
         else -> valueOf(numer / tenPow(-scale), 1, 0, sign)
@@ -367,12 +387,12 @@ open class Rational : CompositeNumber<Rational> {
      * Returns an instance equal to this when the numerator and denominator are swapped.
      */
     @Cumulative
-    fun reciprocal() = valueOf(denom, numer, -scale, sign)
+    public fun reciprocal(): Rational = valueOf(denom, numer, -scale, sign)
 
-    final override fun signum() = if (numer == 0L) 0 else sign
+    final override fun signum(): Int = if (numer == 0L) 0 else sign
 
     @Cumulative
-    final override fun unaryMinus() = valueOf(numer, denom, scale, -sign)
+    final override fun unaryMinus(): Rational = valueOf(numer, denom, scale, -sign)
 
     // a/b + c/d = (ad + bc)/bd
     @Cumulative
@@ -432,7 +452,7 @@ open class Rational : CompositeNumber<Rational> {
     }
 
     // a/b / c/d = a/b * d/c
-    final override fun div(other: Rational) = this * other.reciprocal()
+    final override fun div(other: Rational): Rational = this * other.reciprocal()
 
     // a/b % c/d = floor(ad/bc) * c/d
     final override fun rem(other: Rational): Rational {
@@ -506,24 +526,24 @@ open class Rational : CompositeNumber<Rational> {
         return hash * sign
     }
 
-    final override /* internal */ fun stateEquals(other: Rational): Boolean {
+    final override fun stateEquals(other: Rational): Boolean {
         return numer == other.numer && denom == other.denom && scale == other.scale && sign == other.sign
     }
 
-    final override /* internal */ fun isLong() = denom == 1L && scale >= 0 && log10(numer) + scale <= 18
+    final override fun isLong() = denom == 1L && scale >= 0 && log10(numer) + scale <= 18
 
     // ---------------------------------------- conversion functions ----------------------------------------
 
-    final override fun toInt() = toLong().toInt()
+    final override fun toInt(): Int = toLong().toInt()
 
-    final override fun toLong() = (numer / denom) * tenPowExact(scale) * sign
+    final override fun toLong(): Long = (numer / denom) * tenPowExact(scale) * sign
 
-    final override fun toDouble() = (numer.toDouble() / denom) * tenPowExact(scale) * sign
+    final override fun toDouble(): Double = (numer.toDouble() / denom) * tenPowExact(scale) * sign
 
     /**
      * Returns this instance.
      */
-    final override fun toRational() = this
+    final override fun toRational(): Rational = this
 
     /**
      * Returns a 128-bit integer equal in value to this.
@@ -552,35 +572,38 @@ open class Rational : CompositeNumber<Rational> {
      * call `.toBigDecimal().toString()`.
      */
     @Suppress("RedundantOverride")
-    override fun toString() = super.toString()
+    override fun toString(): String = super.toString()
 
     final override fun stringValue(): String {
         if (denom == 1L) return buildString {    // Print in scientific notation
             val numer = numer.toString()
-            val scale = scale - (numer.length - 1)
             append(numer)
             if (scale < 0) {
                 insert(1, '.')
             }
-            if (scale != 0) {   // FIXME fractional values
+            if (sign == -1) {
+                insert(0, '-')
+            }
+            if (scale != 0) {
                 append('e')
-                append(scale)
+                append(scale - numer.length + 1)
             }
         }
         val minusSign = if (this.isNegative) "-" else ""
-        val scale = if (scale != 0) "e$scale" else ""
-        return if (scale.isNotEmpty()) "($minusSign$numer/$denom)$scale" else "$minusSign$numer/$denom$scale"
+        return if (scale != 0) "($minusSign$numer/$denom)e$scale" else "$minusSign$numer/$denom"
     }
 
-    companion object {
-        val NEGATIVE_ONE = Rational(1, 1, 0, -1)
-        val ZERO = Rational(0, 1, 0, 1)
-        val ONE = Rational(1, 1, 0, 1)
-        val TWO = Rational(2, 1, 0, 1)
-        val E = Rational(2718281828459045235, 1, -18, 1)
-        val HALF_PI = Rational(1570796326794896619, 1, -18, 1)
-        val PI = Rational(3141592653589793238, 1, -18, 1)
-        val TWO_PI = Rational(6283185307179586477, 1, -18, 1)
+    public companion object {
+        @JvmStatic public val NEGATIVE_ONE: Rational = Rational(1, 1, 0, -1)
+        @JvmStatic public val ZERO: Rational = Rational(0, 1, 0, 1)
+        @JvmStatic public val ONE: Rational = Rational(1, 1, 0, 1)
+        @JvmStatic public val TWO: Rational = Rational(2, 1, 0, 1)
+        @JvmStatic public val E: Rational = Rational(2718281828459045235, 1, -18, 1)
+        @JvmStatic public val HALF_PI: Rational = Rational(1570796326794896619, 1, -18, 1)
+        @JvmStatic public val PI: Rational = Rational(3141592653589793238, 1, -18, 1)
+        @JvmStatic public val TWO_PI: Rational = Rational(6283185307179586477, 1, -18, 1)
+        @JvmStatic public val MIN_VALUE: Rational = Rational(Long.MAX_VALUE, 1, Int.MIN_VALUE, -1)
+        @JvmStatic public val MAX_VALUE: Rational = Rational(1, Long.MAX_VALUE, Int.MAX_VALUE, 1)
 
         /**
          * The largest integer k where n * 10^k can fit within a 64-bit integer.

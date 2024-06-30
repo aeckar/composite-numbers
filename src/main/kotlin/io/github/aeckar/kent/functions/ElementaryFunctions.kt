@@ -1,3 +1,5 @@
+@file:JvmName("Functions")
+@file:JvmMultifileClass
 package io.github.aeckar.kent.functions
 
 import io.github.aeckar.kent.*
@@ -82,14 +84,14 @@ private /* noinline */ fun seriesApprox(    // FIXME
     val result: Rational = MutableRational(numer, denom)
     val lastResult: Rational = MutableRational(Rational.ZERO)
 
-    var n = 1   // Since 38! overflows a 128-bit integer, may not exceed 37.
+    var n = 1   // Since 34! overflows a 128-bit integer, will never exceed 33.
     do try {
         lastResult/* = */.valueOf(result)
         numer = numerFactor.mutable() */* = */ termNumer(n) */* = */ numerBase.pow(n)
         denom = denomFactor.mutable() */* = */ termDenom(n) */* = */ denomBase.pow(n)
         result +/* = */ Rational(numer, denom)  // Reduces 128-bit integers to scaled Longs whose values determine convergence
         ++n
-    } catch (_: ArithmeticException) {  // Result is close enough
+    } catch (_: FactorialOverflowSignal) {  // Result is close enough
         break
     } while (!result.stateEquals(lastResult))
     return result
@@ -103,7 +105,7 @@ private /* noinline */ fun seriesApprox(    // FIXME
  * Returns an instance approximately equal to the natural logarithm of [x].
  */
 @Cumulative
-fun ln(x: Rational) = seriesApprox(x - Rational.ONE,
+public fun ln(x: Rational): Rational = seriesApprox(x - Rational.ONE,
     termNumer = { neg1Pow(it) },
     termDenom = { it.toInt128() },
     powConstant = 0,
@@ -116,9 +118,9 @@ fun ln(x: Rational) = seriesApprox(x - Rational.ONE,
  * Returns an instance approximately equal to the sine of [x].
  */
 @Cumulative
-fun sin(x: Rational) = seriesApprox(x % TWO_PI,
+public fun sin(x: Rational): Rational = seriesApprox(x % TWO_PI,
     termNumer = { neg1Pow(it) },
-    termDenom = { factorial(2 * it + 1) },
+    termDenom = { exhaustiveFactorial(2 * it + 1) },
     powConstant = 1,
     powCoefficient = 2
 )
@@ -127,9 +129,9 @@ fun sin(x: Rational) = seriesApprox(x % TWO_PI,
  * Returns an instance approximately equal to the cosine of [x].
  */
 @Cumulative
-fun cos(x: Rational) = seriesApprox(x % TWO_PI,
+public fun cos(x: Rational): Rational = seriesApprox(x % TWO_PI,
     termNumer = { neg1Pow(it) },
-    termDenom = { factorial(2 * it) },
+    termDenom = { exhaustiveFactorial(2 * it) },
     powConstant = 0,
     powCoefficient = 2
 )
@@ -138,7 +140,7 @@ fun cos(x: Rational) = seriesApprox(x % TWO_PI,
  * Returns an instance approximately equal to the tangent of [x].
  */
 @Cumulative
-fun tan(x: Rational) = sin(x) / cos(x)
+public fun tan(x: Rational): Rational = sin(x) / cos(x)
 
 // ------------------------------ hyperbolic trigonometry ------------------------------
 
@@ -146,9 +148,9 @@ fun tan(x: Rational) = sin(x) / cos(x)
  * Returns an instance approximately equal to the hyperbolic sine of [x].
  */
 @Cumulative
-fun sinh(x: Rational) = seriesApprox(x % TWO_PI,
+public fun sinh(x: Rational): Rational = seriesApprox(x % TWO_PI,
     termNumer = { Int128.ONE },
-    termDenom = { factorial(2 * it + 1) },
+    termDenom = { exhaustiveFactorial(2 * it + 1) },
     powConstant = 1,
     powCoefficient = 2
 )
@@ -157,9 +159,9 @@ fun sinh(x: Rational) = seriesApprox(x % TWO_PI,
  * Returns an instance approximately equal to the hyperbolic cosine of [x].
  */
 @Cumulative
-fun cosh(x: Rational) = seriesApprox(x % TWO_PI,
+public fun cosh(x: Rational): Rational = seriesApprox(x % TWO_PI,
     termNumer = { Int128.ONE },
-    termDenom = { Int128.TWO * factorial(it) },
+    termDenom = { Int128.TWO * exhaustiveFactorial(it) },
     powConstant = 0,
     powCoefficient = 2
 )
@@ -168,7 +170,7 @@ fun cosh(x: Rational) = seriesApprox(x % TWO_PI,
  * Returns an instance approximately equal to the hyperbolic tangent of [x].
  */
 @Cumulative
-fun tanh(x: Rational) = sinh(x) / cosh(x)
+public fun tanh(x: Rational): Rational = sinh(x) / cosh(x)
 
 // ------------------------------ inverse trigonometry ------------------------------
 
@@ -176,10 +178,10 @@ fun tanh(x: Rational) = sinh(x) / cosh(x)
  * Returns an instance approximately equal to the inverse sine of [x].
  */
 @Cumulative
-fun arcsin(x: Rational) = seriesApprox(x,
-    termNumer = { factorial(2*it) },
+public fun arcsin(x: Rational): Rational = seriesApprox(x,
+    termNumer = { exhaustiveFactorial(2*it) },
     termDenom = {
-        val square = Int128.TWO.pow(it) * factorial(it)
+        val square = Int128.TWO.pow(it) * exhaustiveFactorial(it)
         square * square * Int128(2 * it + 1)
     },
     powConstant = 1,
@@ -192,13 +194,13 @@ fun arcsin(x: Rational) = seriesApprox(x,
 // pi - x does not matter, just use the result of the subtraction
 // Special cases and shortcuts covered by elem func symbols in simplify()
 @Cumulative
-fun arccos(x: Rational) = Rational.HALF_PI - arcsin(x)
+public fun arccos(x: Rational): Rational = Rational.HALF_PI - arcsin(x)
 
 /**
  * Returns an instance approximately equal to the inverse tangent of [x].
  */
 @Cumulative
-fun arctan(x: Rational) = seriesApprox(x,
+public fun arctan(x: Rational): Rational = seriesApprox(x,
     termNumer = { neg1Pow(it) },
     termDenom = { Int128(2 * it + 1) },
     powConstant = 1,

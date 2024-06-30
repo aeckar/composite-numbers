@@ -26,10 +26,10 @@ internal class ScaledLong {
             this.scale = scaleAugment
             return
         }
-        val sign = i128.sign.toShort()
+        val sign = i128.sign
         var value = /* (maybe) i128 = */ i128.abs()
         var scale = scaleAugment
-        while (value > Int.MAX_VALUE.toLong()) {
+        while (value > Long.MAX_VALUE) {
             /* (maybe) value = */ value /= Int128.TEN
             ++scale
         }
@@ -37,7 +37,9 @@ internal class ScaledLong {
         this.scale = scale * sign
     }
 
-    // Accessed by BigInteger pseudo-constructor only
+    /**
+     * Intended for access by `BigInteger` pseudo-constructor only.
+     */
     constructor(value: Long, scale: Int) {
         this.value = value
         this.scale = scale
@@ -53,43 +55,64 @@ internal class ScaledLong {
      */
     operator fun component2() = scale
 
+    override fun toString() = if (scale < 0) "$value * 10^($scale)" else "$value * 10^$scale"
+
     companion object {
+        private val ZERO = ScaledLong(0, 0)
+
         /**
-         * Assumes that the character at the current position in [iterator] exists,
-         * and that all trailing zeros have been skipped over.
+         * Assumes that [view] is within bounds and all trailing `0`s have been skipped over.
+         *
+         * Intended for access by `String`-arg constructor of Rational only.
          */
-        // Accessed by string constructor of Rational only
-        fun at(iterator: StringIndexIterator, sentinels: String): ScaledLong {
-            fun fromInteger(start: Int, curIndex: StringIndexIterator): ScaledLong {
-                val string = curIndex.string
-                val endExclusive = curIndex.position
-                val positiveAugment = if (endExclusive <= 38) 0 else endExclusive % 38
-                return ScaledLong(Int128.parse(string, 10, start, endExclusive - positiveAugment), positiveAugment)
+        fun parse(view: StringView, stop: String): ScaledLong = with(view) {
+            val start = index()
+            var stopIndex: Int
+
+            // Whole part
+            while (satisfies { it != '.' && it !in stop }) {
+                if (char() !in '0'..'9') {
+                    raiseIncorrectFormat("illegal embedded character")
+                }
+                move(1)
             }
 
-            var curIndex = iterator
-            val start = curIndex.position
-            while (curIndex.char { it != '.' && it != '/' }) {
-                ++curIndex
+            // Fractional part
+            var scaleAugment = 0
+            if (satisfies { it == '.' }) {
+                val dotIndex = index()
+                do {
+                    move(1)
+                    if (isWithinBounds()) {
+                        if (char() !in '0'..'9') {
+                            raiseIncorrectFormat("illegal embedded character")
+                        }
+                        if (char() != '0') {
+                            scaleAugment = dotIndex - index()
+                        }
+                    }
+                } while (satisfies { it !in stop })
+                stopIndex = index()
+                if (scaleAugment == 0) {
+                    move(dotIndex - index())
+                    do {
+                        move(-1)
+                    } while(satisfies { it == '0' })
+                    scaleAugment += dotIndex - index() + 1
+                }
+                move(stopIndex - index())
             }
-            if (curIndex.doesNotExist() || curIndex.char() == '/') {
-                return fromInteger(start, curIndex)
-            }
-            val positionAtDot = curIndex.position
+            stopIndex = index()
             do {
-                ++curIndex
-            } while (curIndex.char { it in '0'..'9' })
-            if (curIndex.char { it !in sentinels }) {
-                raiseIncorrectFormat("illegal embedded character")
+                move(-1)
+            } while(satisfies { it == '0' || it == '.' })
+            if (isNotWithinBounds()) {
+                return ZERO
             }
-            do {
-                --curIndex
-            } while (curIndex.char() == '0')
-            val negativeAugment = positionAtDot - curIndex.position
-            if (negativeAugment == 0) {    // Only zeros after dot
-                return fromInteger(start, curIndex)
-            }
-            return ScaledLong(Int128.parse(curIndex.string, 10, start, curIndex.position + 1, true), negativeAugment)
+            // FIXME NOW doesn't work for values that overflow Int128
+            val value = ScaledLong(Int128.parse(string, 10, start, index() + 1, ignoreDot = true), scaleAugment)
+            move(stopIndex - index())
+            value
         }
     }
 }

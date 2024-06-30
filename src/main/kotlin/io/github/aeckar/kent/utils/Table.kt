@@ -38,7 +38,7 @@ internal inline fun <E : Any> Table(
  * Instances are mutable and should be defensively copied when appropriate.
  */
 @JvmInline
-internal value class Table<E : Any>(val backingArray: Array<Array<E?>>) {
+internal value class Table<E : Any> private constructor(val backingArray: Array<Array<E?>>) {
     init {
         if (backingArray.isEmpty() || backingArray[0].isEmpty()) {
             val rowCount = backingArray.size

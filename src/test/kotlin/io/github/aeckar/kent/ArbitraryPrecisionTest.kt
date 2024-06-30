@@ -1,7 +1,5 @@
 package io.github.aeckar.kent
 
-import io.github.aeckar.kent.constants.HUGE_STRING
-import io.github.aeckar.kent.constants.random
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
@@ -14,8 +12,6 @@ import kotlin.test.assertNotEquals
 /*
     When multiplatform support is added, this file will be moved to "/jvmTest".
  */
-
-// BigDecimal conversion does not need to be tested, as it depends only on .toBigInteger() conversion
 class ArbitraryPrecisionTest {
     private val posInt = random.nextInt(0..Int.MAX_VALUE).toBigInteger()
     private val negInt = random.nextInt(Int.MIN_VALUE..-1).toBigInteger()

@@ -1,23 +1,21 @@
+@file:JvmName("Functions")
+@file:JvmMultifileClass
 package io.github.aeckar.kent.functions
 
 import io.github.aeckar.kent.Rational
 
 /**
- * Returns an instance equal to this value with its decimal part [truncated][Rational.toWhole].
- *
- * If negative, 1 is subtracted from the resultant value.
+ * Returns the whole number closest to this value, rounding towards negative infinity.
  */
-fun floor(x: Rational): Rational {
+public fun floor(x: Rational): Rational {
     val whole = x.toWhole()
     return if (x < Rational.ZERO) whole - Rational.ONE else whole
 }
 
 /**
- * Returns an instance equal to this value with its decimal part [truncated][Rational.toWhole].
- *
- * If positive, 1 is added to the resultant value.
+ * Returns the whole number closest to this value, rounding towards positive infinity.
  */
-fun ceil(x: Rational): Rational {
+public fun ceil(x: Rational): Rational {
     val whole = x.toWhole()
     return if (x < Rational.ZERO) whole + Rational.ONE else whole
 }
