@@ -4,8 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="12726248-6293-408b-8509-c256c37abb1d" name="Changes" comment="Successfully implemented rational addition and subtraction">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    <list default="true" id="12726248-6293-408b-8509-c256c37abb1d" name="Changes" comment="Successfully implemented rational exponentiation">
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/Rational.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/Rational.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -119,6 +118,7 @@
     "Gradle.Arithmetic.unaryMinus.executor": "Run",
     "Gradle.BasicArithmetic.executor": "Run",
     "Gradle.BasicArithmetic.minus.executor": "Run",
+    "Gradle.BasicArithmetic.pow.executor": "Debug",
     "Gradle.BitwiseOperations.executor": "Run",
     "Gradle.BitwiseOperations.shr.executor": "Run",
     "Gradle.BitwiseShift.executor": "Run",
@@ -147,7 +147,7 @@
     "Gradle.Rational.big_integer_conversion.executor": "Run",
     "Gradle.RationalTest.TODO.executor": "Run",
     "Gradle.RationalTest.comparison.executor": "Run",
-    "Gradle.RationalTest.executor": "Run",
+    "Gradle.RationalTest.executor": "Debug",
     "Gradle.RationalTest.stringConversion.executor": "Run",
     "Gradle.Rounding.executor": "Run",
     "Gradle.ScalarReturningOperations.determinant.executor": "Run",
@@ -197,7 +197,7 @@
       <recent name="io.github.aeckar.kanum" />
     </key>
   </component>
-  <component name="RunManager" selected="Gradle.RationalTest">
+  <component name="RunManager" selected="Gradle.BasicArithmetic.pow">
     <configuration default="true" type="JetRunConfigurationType">
       <module name="matrix" />
       <method v="2">
@@ -259,6 +259,30 @@
       <RunAsTest>true</RunAsTest>
       <method v="2" />
     </configuration>
+    <configuration name="BasicArithmetic.pow" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" value="" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value=":test" />
+            <option value="--tests" />
+            <option value="&quot;io.github.aeckar.kent.RationalTest$BasicArithmetic.pow&quot;" />
+          </list>
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <ExternalSystemDebugServerProcess>false</ExternalSystemDebugServerProcess>
+      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+      <DebugAllEnabled>false</DebugAllEnabled>
+      <RunAsTest>true</RunAsTest>
+      <method v="2" />
+    </configuration>
     <configuration name="RationalTest" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
@@ -273,30 +297,6 @@
             <option value=":test" />
             <option value="--tests" />
             <option value="&quot;io.github.aeckar.kent.RationalTest&quot;" />
-          </list>
-        </option>
-        <option name="vmOptions" />
-      </ExternalSystemSettings>
-      <ExternalSystemDebugServerProcess>false</ExternalSystemDebugServerProcess>
-      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
-      <DebugAllEnabled>false</DebugAllEnabled>
-      <RunAsTest>true</RunAsTest>
-      <method v="2" />
-    </configuration>
-    <configuration name="RationalTest.stringConversion" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
-      <ExternalSystemSettings>
-        <option name="executionName" />
-        <option name="externalProjectPath" value="$PROJECT_DIR$" />
-        <option name="externalSystemIdString" value="GRADLE" />
-        <option name="scriptParameters" value="" />
-        <option name="taskDescriptions">
-          <list />
-        </option>
-        <option name="taskNames">
-          <list>
-            <option value=":test" />
-            <option value="--tests" />
-            <option value="&quot;io.github.aeckar.kent.RationalTest.stringConversion&quot;" />
           </list>
         </option>
         <option name="vmOptions" />
@@ -346,11 +346,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Gradle.BasicArithmetic.pow" />
         <item itemvalue="Gradle.RationalTest" />
         <item itemvalue="Gradle.BasicArithmetic.minus" />
         <item itemvalue="Gradle.BasicArithmetic" />
         <item itemvalue="Gradle.Rounding" />
-        <item itemvalue="Gradle.RationalTest.stringConversion" />
       </list>
     </recent_temporary>
   </component>
@@ -386,7 +386,7 @@
       <workItem from="1719536022418" duration="16160000" />
       <workItem from="1719614035904" duration="3043000" />
       <workItem from="1719617352446" duration="11184000" />
-      <workItem from="1719705926886" duration="27081000" />
+      <workItem from="1719705926886" duration="27382000" />
     </task>
     <task id="LOCAL-00001" summary="Initial commit">
       <option name="closed" value="true" />
@@ -588,7 +588,15 @@
       <option name="project" value="LOCAL" />
       <updated>1719762568153</updated>
     </task>
-    <option name="localTasksCounter" value="26" />
+    <task id="LOCAL-00026" summary="Successfully implemented rational exponentiation">
+      <option name="closed" value="true" />
+      <created>1719764219752</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1719764219752</updated>
+    </task>
+    <option name="localTasksCounter" value="27" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -606,7 +614,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Initial commit" />
     <MESSAGE value="Continued development I" />
     <MESSAGE value="Continued development II" />
     <MESSAGE value="Continued development III" />
@@ -631,7 +638,8 @@
     <MESSAGE value="Successfully implemented Rational.parse()" />
     <MESSAGE value="Successfully implemented rational rounding functions" />
     <MESSAGE value="Successfully implemented rational addition and subtraction" />
-    <option name="LAST_COMMIT_MESSAGE" value="Successfully implemented rational addition and subtraction" />
+    <MESSAGE value="Successfully implemented rational exponentiation" />
+    <option name="LAST_COMMIT_MESSAGE" value="Successfully implemented rational exponentiation" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -656,6 +664,11 @@
           <url>file://$PROJECT_DIR$/src/test/kotlin/io/github/aeckar/kent/RationalTest.kt</url>
           <line>121</line>
           <option name="timeStamp" value="122" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="kotlin-line">
+          <url>file://$PROJECT_DIR$/src/test/kotlin/io/github/aeckar/kent/RationalTest.kt</url>
+          <line>131</line>
+          <option name="timeStamp" value="123" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

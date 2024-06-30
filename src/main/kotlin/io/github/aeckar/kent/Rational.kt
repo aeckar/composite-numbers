@@ -266,8 +266,8 @@ public open class Rational internal constructor(
         }
         val numerAbs = numer.absoluteValue
         val denomAbs = denom.absoluteValue
-        val numerScale = log10(numerAbs)
-        val denomScale = log10(denomAbs)
+        val numerScale = scale(numerAbs)
+        val denomScale = scale(denomAbs)
         if (addOverflowsValue(numerScale, denomScale)) {
             raiseOverflow()
         }
@@ -370,13 +370,13 @@ public open class Rational internal constructor(
         if (power == Int.MIN_VALUE) {
             raiseOverflow("$this ^ Int.MIN_VALUE")
         }
-        return if (power < 0) powUnchecked(-power)/* = */.reciprocal() else powUnchecked(power)
+        return if (power < 0) powUnsigned(-power).reciprocal() else powUnsigned(power)
     }
 
     /**
-     * Assumes [power] is not [Int.MIN_VALUE].
+     * Assumes [power] is non-negative.
      */
-    private fun powUnchecked(power: Int): Rational {
+    private fun powUnsigned(power: Int): Rational {
         if (power == 0 || this.stateEqualsOne()) {
             return ONE
         }
@@ -443,7 +443,7 @@ public open class Rational internal constructor(
      */
     private fun stateEqualsOne() = numer == denom
 
-    final override fun isLong() = denom == 1L && scale >= 0 && log10(numer) + scale <= 18
+    final override fun isLong() = denom == 1L && scale >= 0 && scale(numer) + scale <= 18
 
     // ---------------------------------------- conversion functions ----------------------------------------
 
@@ -712,24 +712,18 @@ public open class Rational internal constructor(
         private fun productSign(x: Long, y: Long) = if ((x < 0L) == (y < 0L)) 1 else -1
 
         /**
-         * Computes the base-10 logarithm of [x], floored if not a whole number.
+         * Returns the base-10 scale of the given value.
          *
-         * Formally, the returned values are, in order:
-         * - the integer base-10 logarithm of x
-         * - x - 10^result
-         * @return the result paired to the remainder
+         * Assumes [x] is non-negative.
          */
-        private fun log10(x: Long): Int {
-            if (x <= 0) {
-                raiseUndefined("Log10 of $x does not exist")
+        private fun scale(x: Long): Int {
+            var value = x
+            var scale = 0
+            while (value != 0L && value % 10 == 0L) {
+                value /= 10
+                ++scale
             }
-            var arg = x
-            var result = 0
-            while (arg >= 10L) {
-                arg /= 10L
-                ++result
-            }
-            return result
+            return scale
         }
 
         /**
