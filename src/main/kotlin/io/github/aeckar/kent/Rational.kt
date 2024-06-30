@@ -7,6 +7,8 @@ import io.github.aeckar.kent.utils.*
 import io.github.aeckar.kent.utils.productSign
 import kotlin.math.absoluteValue
 
+private const val LONG_MIN_UNSCALED = 922337203685477580L
+
 /**
  * Returns a rational number equal to this value over the other as a fraction after simplification.
  * @throws CompositeArithmeticException [other] is 0 or the value is too large or small to be represented accurately
@@ -91,7 +93,37 @@ public fun Rational(x: Int128): Rational {
  */
 @JvmName("toRational")
 public fun Rational(numer: Long, denom: Long = 1, scaleAugment: Int = 0): Rational {
-    return Rational(numer, denom, scaleAugment, productSign(numer.toInt(), denom.toInt()))
+    fun gcf(x: Long, y: Long): Long {
+        tailrec fun euclideanGCF(max: Long, min: Long): Long {
+            val rem = max % min
+            return if (rem == 0L) min else euclideanGCF(min, rem)
+        }
+
+        val max = maxOf(x, y)
+        val min = if (max == x) y else x
+        if (min == 0L) {
+            return max
+        }
+        return euclideanGCF(max, min)
+    }
+
+    var scale = scaleAugment
+    val numerAbs = if (numer == Long.MIN_VALUE) {
+        ++scale
+        LONG_MIN_UNSCALED
+    } else {
+        numer.absoluteValue
+    }
+    val denomAbs = if (denom == Long.MIN_VALUE) {
+        --scale
+        LONG_MIN_UNSCALED
+    } else {
+        denom.absoluteValue
+    }
+    val gcf = gcf(numerAbs, denomAbs)
+    val simplifiedNumer = numerAbs / gcf
+    val simplifiedDenom = denomAbs / gcf
+    return Rational(simplifiedNumer, simplifiedDenom, scale, productSign(numer, denom))
 }
 
 /**
@@ -122,7 +154,8 @@ public fun Rational(s: String): Rational = Rational.parse(s)
  * allowing all instances to be readily converted to their fractional form.
  *
  * All 64-bit integer values, aside from [Long.MIN_VALUE], can be stored without losing information.
- * Furthermore, all values are guaranteed to be accurate to at least TODO digits.
+ * Furthermore, all values are guaranteed to be accurate to at least 19 digits
+ * before considering error accumulated through calls to multiple operations.
  */
 @Suppress("EqualsOrHashCode")
 public open class Rational internal constructor(
@@ -132,13 +165,13 @@ public open class Rational internal constructor(
     sign: Int
 ) : CompositeNumber<Rational>() {
     /**
-     * The numerator of this value as a fraction.
+     * The numerator when this value is represented as a fraction.
      */
     public var numer: Long = numer
         protected set
 
     /**
-     * The denominator of this value as a fraction.
+     * The denominator when this value is represented as a fraction.
      */
     public var denom: Long = denom
         protected set
@@ -184,7 +217,7 @@ public open class Rational internal constructor(
         denom: Int128,
         scaleAugment: Int,
         sign: Int,
-        additionalInfo: () -> String
+        crossinline additionalInfo: () -> String
     ): Rational {
         if (denom.stateEquals(Int128.ZERO)) {
             raiseUndefined("Denominator cannot be zero (numer = $numer)")
@@ -252,15 +285,6 @@ public open class Rational internal constructor(
     // ---------------------------------------- arithmetic ----------------------------------------
 
     /**
-     * Returns an instance equal to this value with its decimal part truncated.
-     */
-    public fun toWhole(): Rational = when {
-        scale < LONG_MIN_SCALE -> ZERO
-        scale > LONG_MAX_SCALE || denom == 1L && scale >= 0 -> this
-        else -> valueOf(numer / tenPow(-scale), 1, 0, sign)
-    }
-
-    /**
      * Returns an instance equal to this when the numerator and denominator are swapped.
      */
     @Cumulative
@@ -314,10 +338,10 @@ public open class Rational internal constructor(
     // a/b * c/d = ac/cd
     final override fun times(other: Rational): Rational {
         when {
-            other.stateEquals(ONE) -> return this
+            other.stateEqualsOne() -> return this
             other.stateEquals(NEGATIVE_ONE) -> return -this
-            this.stateEquals(ONE) -> return other
-            other.stateEquals(ZERO) || this.stateEquals(ZERO) -> return ZERO
+            this.stateEqualsOne() -> return other
+            other.numer == 0L || this.numer == 0L -> return ZERO
         }
         val numer: Int128 = numer times other.numer
         val denom: Int128 = denom times other.denom
@@ -351,7 +375,7 @@ public open class Rational internal constructor(
      * Assumes [power] is not [Int.MIN_VALUE].
      */
     private fun powUnchecked(power: Int): Rational {
-        if (power == 0 || this.stateEquals(ONE)) {
+        if (power == 0 || this.stateEqualsOne()) {
             return ONE
         }
         if (power == 1) {
@@ -403,9 +427,17 @@ public open class Rational internal constructor(
         return hash * sign
     }
 
+    /**
+     * If [other] is guaranteed to be 1, call [stateEqualsOne] instead.
+     */
     final override fun stateEquals(other: Rational): Boolean {
         return numer == other.numer && denom == other.denom && scale == other.scale && sign == other.sign
     }
+
+    /**
+     * Optimized to only perform one comparison.
+     */
+    private fun stateEqualsOne() = numer == denom
 
     final override fun isLong() = denom == 1L && scale >= 0 && log10(numer) + scale <= 18
 
@@ -463,7 +495,7 @@ public open class Rational internal constructor(
                 insert(0, '-')
             }
             if (scale != 0) {
-                append('e')
+                append('e') // FIXME flips sign for edge cases
                 val exponent = if (negativeScale) scale - numer.length + 1 else scale
                 append(exponent)
             }
@@ -490,7 +522,7 @@ public open class Rational internal constructor(
         @JvmStatic public val MIN_VALUE: Rational
             = ConstantRational(Long.MAX_VALUE, 1, Int.MIN_VALUE, -1, "-9223372036854775807e-2147483648")
         @JvmStatic public val MAX_VALUE: Rational
-            = ConstantRational(Long.MAX_VALUE, 1, Int.MAX_VALUE, 1, "$9223372036854775807e2147483647")
+            = ConstantRational(Long.MAX_VALUE, 1, Int.MAX_VALUE, 1, "9223372036854775807e2147483647")
 
         /**
          * The largest integer k where n * 10^k can fit within a 64-bit integer.
@@ -617,7 +649,7 @@ public open class Rational internal constructor(
             var denom = 1L
             var denomScale = 0
             if (view.satisfies { it == '/' }) {
-                // TODO skip leading zeroes
+                // TODO NOW skip leading zeroes
                 val denomWithScale = ScaledLong.parse(view, stop = "eE)")
                 denom = denomWithScale.component1()
                 denomScale = denomWithScale.component2()

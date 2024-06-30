@@ -30,7 +30,7 @@ class RationalTest {
         val randB = random.nextInt(0..Int.MAX_VALUE)
         assertEquals(randA over randA, randB over randB)
         assertEquals(0 over randA, 0 over randB)
-        assertEquals(PI, -(-(-PI)))
+        assertEquals(PI, -(-PI))
     }
 
     @Test
@@ -74,8 +74,8 @@ class RationalTest {
             assertEquals(b, sum - a)
             assertEquals(a, sum - b)
             assertDoesNotThrow { MAX_VALUE + ZERO }
-            assertDoesNotThrow { MAX_VALUE + NEGATIVE_ONE }
-            assertThrows<CompositeArithmeticException> { MAX_VALUE + ONE }
+            assertDoesNotThrow { MAX_VALUE + ONE }
+            assertThrows<CompositeArithmeticException> { MAX_VALUE + (MAX_VALUE - ONE) }
         }
 
         @Test
@@ -87,8 +87,8 @@ class RationalTest {
             assertEquals(a, b + difference)
             assertEquals(b, a - difference)
             assertDoesNotThrow { MIN_VALUE - ZERO }
-            assertDoesNotThrow { MIN_VALUE - NEGATIVE_ONE }
-            assertThrows<CompositeArithmeticException> { MIN_VALUE - ONE }
+            assertDoesNotThrow { MIN_VALUE - ONE }
+            assertThrows<CompositeArithmeticException> { MIN_VALUE + (MIN_VALUE - ONE) }    // FIXME
         }
 
         @Test
@@ -172,16 +172,20 @@ class RationalTest {
 
     @Nested
     inner class Rounding {
-        @Test
-        fun floor() {
-            assertEquals(ONE, floor(5 over 3))
-            assertEquals(-TWO, floor(-5 over 3))
-        }
+        private val min64 = Rational(Long.MIN_VALUE)
 
         @Test
         fun ceil() {
             assertEquals(TWO, ceil(5 over 3))
             assertEquals(-ONE, ceil(-5 over 3))
+            assertEquals(min64, ceil(Long.MIN_VALUE over 1))
+        }
+
+        @Test
+        fun floor() {
+            assertEquals(ONE, floor(5 over 3))
+            assertEquals(-TWO, floor(-5 over 3))
+            assertEquals(min64, ceil(Long.MIN_VALUE over 1))
         }
     }
 }

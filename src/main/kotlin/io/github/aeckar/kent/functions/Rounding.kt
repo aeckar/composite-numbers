@@ -3,19 +3,28 @@
 package io.github.aeckar.kent.functions
 
 import io.github.aeckar.kent.Rational
-
-/**
- * Returns the whole number closest to this value, rounding towards negative infinity.
- */
-public fun floor(x: Rational): Rational {
-    val whole = x.toWhole()
-    return if (x < Rational.ZERO) whole - Rational.ONE else whole
-}
+import io.github.aeckar.kent.Rational.Companion.NEGATIVE_ONE
+import io.github.aeckar.kent.Rational.Companion.ONE
+import io.github.aeckar.kent.Rational.Companion.ZERO
 
 /**
  * Returns the whole number closest to this value, rounding towards positive infinity.
  */
-public fun ceil(x: Rational): Rational {
-    val whole = x.toWhole()
-    return if (x < Rational.ZERO) whole + Rational.ONE else whole
+public fun ceil(x: Rational): Rational = with(x) {
+    if (numer < denom) {
+        return if (sign == -1) ZERO else ONE
+    }
+    val numer = if (sign == -1) (numer % denom) - (numer + denom) + denom else (numer + denom) - (numer % denom)
+    return Rational(numer, denom, scale)
+}
+
+/**
+ * Returns the whole number closest to this value, rounding towards negative infinity.
+ */
+public fun floor(x: Rational): Rational = with(x) {
+    if (numer < denom) {
+        return if (sign == -1) NEGATIVE_ONE else ZERO
+    }
+    val numer = if (sign == -1) (numer % denom) - numer - denom else numer - (numer % denom)
+    return Rational(numer, denom, scale)
 }
