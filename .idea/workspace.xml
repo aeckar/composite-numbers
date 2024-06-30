@@ -4,8 +4,19 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="12726248-6293-408b-8509-c256c37abb1d" name="Changes" comment="Successfully implemented rational exponentiation">
+    <list default="true" id="12726248-6293-408b-8509-c256c37abb1d" name="Changes" comment="All non-elementary rational operations successfully implemented">
+      <change afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/PrivateInheritance.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/CompositeNumber.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/CompositeNumber.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/Cumulative.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/Cumulative.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/Int128.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/Int128.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/Rational.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/Rational.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/functions/ElementaryFunctions.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/functions/ElementaryFunctions.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/functions/Factorial.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/functions/SignallingFactorial.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/utils/Helpers.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/utils/Helpers.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/utils/ScaledLong.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/io/github/aeckar/kent/utils/ScaledLong.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/kotlin/io/github/aeckar/kent/Int128Test.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/kotlin/io/github/aeckar/kent/Int128Test.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/kotlin/io/github/aeckar/kent/RationalTest.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/kotlin/io/github/aeckar/kent/RationalTest.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -63,9 +74,9 @@
       <list>
         <option value="module-info" />
         <option value="package-info" />
-        <option value="Kotlin Annotation" />
         <option value="Kotlin File" />
         <option value="Kotlin Class" />
+        <option value="Kotlin Annotation" />
       </list>
     </option>
   </component>
@@ -117,8 +128,9 @@
     "Gradle.Arithmetic.times.executor": "Run",
     "Gradle.Arithmetic.unaryMinus.executor": "Run",
     "Gradle.BasicArithmetic.executor": "Run",
+    "Gradle.BasicArithmetic.factorial.executor": "Run",
     "Gradle.BasicArithmetic.minus.executor": "Run",
-    "Gradle.BasicArithmetic.pow.executor": "Debug",
+    "Gradle.BasicArithmetic.pow.executor": "Run",
     "Gradle.BitwiseOperations.executor": "Run",
     "Gradle.BitwiseOperations.shr.executor": "Run",
     "Gradle.BitwiseShift.executor": "Run",
@@ -147,7 +159,7 @@
     "Gradle.Rational.big_integer_conversion.executor": "Run",
     "Gradle.RationalTest.TODO.executor": "Run",
     "Gradle.RationalTest.comparison.executor": "Run",
-    "Gradle.RationalTest.executor": "Debug",
+    "Gradle.RationalTest.executor": "Run",
     "Gradle.RationalTest.stringConversion.executor": "Run",
     "Gradle.Rounding.executor": "Run",
     "Gradle.ScalarReturningOperations.determinant.executor": "Run",
@@ -172,7 +184,7 @@
     "project.structure.last.edited": "Project",
     "project.structure.proportion": "0.0",
     "project.structure.side.proportion": "0.0",
-    "settings.editor.selected.configurable": "preferences.lookFeel",
+    "settings.editor.selected.configurable": "preferences.rainbow.brackets.disable.when",
     "vue.rearranger.settings.migration": "true"
   },
   "keyToStringList": {
@@ -190,14 +202,14 @@
       <recent name="C:\Users\eckar\IdeaProjects\kent\src\main\kotlin\io\github\aeckar\kent\int128" />
     </key>
     <key name="MoveKotlinTopLevelDeclarationsDialog.RECENTS_KEY">
+      <recent name="io.github.aeckar.kent.functions" />
       <recent name="io.github.aeckar.kent" />
       <recent name="io.github.aeckar.kent.utils" />
       <recent name="io.github.aeckar.composite.utils" />
       <recent name="io.github.aeckar.composite" />
-      <recent name="io.github.aeckar.kanum" />
     </key>
   </component>
-  <component name="RunManager" selected="Gradle.BasicArithmetic.pow">
+  <component name="RunManager" selected="Gradle.RationalTest">
     <configuration default="true" type="JetRunConfigurationType">
       <module name="matrix" />
       <method v="2">
@@ -211,7 +223,7 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="BasicArithmetic" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+    <configuration name="BasicArithmetic.factorial" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
@@ -224,7 +236,7 @@
           <list>
             <option value=":test" />
             <option value="--tests" />
-            <option value="&quot;io.github.aeckar.kent.RationalTest$BasicArithmetic&quot;" />
+            <option value="&quot;io.github.aeckar.kent.RationalTest$BasicArithmetic.factorial&quot;" />
           </list>
         </option>
         <option name="vmOptions" />
@@ -307,7 +319,7 @@
       <RunAsTest>true</RunAsTest>
       <method v="2" />
     </configuration>
-    <configuration name="Rounding" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+    <configuration name="RationalTest.stringConversion" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
@@ -320,7 +332,7 @@
           <list>
             <option value=":test" />
             <option value="--tests" />
-            <option value="&quot;io.github.aeckar.kent.RationalTest$Rounding&quot;" />
+            <option value="&quot;io.github.aeckar.kent.RationalTest.stringConversion&quot;" />
           </list>
         </option>
         <option name="vmOptions" />
@@ -346,11 +358,11 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Gradle.BasicArithmetic.pow" />
         <item itemvalue="Gradle.RationalTest" />
+        <item itemvalue="Gradle.BasicArithmetic.factorial" />
+        <item itemvalue="Gradle.RationalTest.stringConversion" />
+        <item itemvalue="Gradle.BasicArithmetic.pow" />
         <item itemvalue="Gradle.BasicArithmetic.minus" />
-        <item itemvalue="Gradle.BasicArithmetic" />
-        <item itemvalue="Gradle.Rounding" />
       </list>
     </recent_temporary>
   </component>
@@ -386,7 +398,8 @@
       <workItem from="1719536022418" duration="16160000" />
       <workItem from="1719614035904" duration="3043000" />
       <workItem from="1719617352446" duration="11184000" />
-      <workItem from="1719705926886" duration="27382000" />
+      <workItem from="1719705926886" duration="28645000" />
+      <workItem from="1719768637574" duration="12138000" />
     </task>
     <task id="LOCAL-00001" summary="Initial commit">
       <option name="closed" value="true" />
@@ -596,7 +609,15 @@
       <option name="project" value="LOCAL" />
       <updated>1719764219752</updated>
     </task>
-    <option name="localTasksCounter" value="27" />
+    <task id="LOCAL-00027" summary="All non-elementary rational operations successfully implemented">
+      <option name="closed" value="true" />
+      <created>1719764752693</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1719764752693</updated>
+    </task>
+    <option name="localTasksCounter" value="28" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -614,7 +635,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Continued development I" />
     <MESSAGE value="Continued development II" />
     <MESSAGE value="Continued development III" />
     <MESSAGE value="Halfway done implementing matrix functions" />
@@ -639,7 +659,8 @@
     <MESSAGE value="Successfully implemented rational rounding functions" />
     <MESSAGE value="Successfully implemented rational addition and subtraction" />
     <MESSAGE value="Successfully implemented rational exponentiation" />
-    <option name="LAST_COMMIT_MESSAGE" value="Successfully implemented rational exponentiation" />
+    <MESSAGE value="All non-elementary rational operations successfully implemented" />
+    <option name="LAST_COMMIT_MESSAGE" value="All non-elementary rational operations successfully implemented" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -652,24 +673,6 @@
           <properties class="java.util.NoSuchElementException" package="java.util" />
           <option name="timeStamp" value="62" />
         </breakpoint>
-        <line-breakpoint enabled="true" type="kotlin-line">
-          <url>file://$PROJECT_DIR$/src/test/kotlin/io/github/aeckar/kent/Int128Test.kt</url>
-          <line>62</line>
-          <properties>
-            <option name="lambda-ordinal" value="-1" />
-          </properties>
-          <option name="timeStamp" value="87" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="kotlin-line">
-          <url>file://$PROJECT_DIR$/src/test/kotlin/io/github/aeckar/kent/RationalTest.kt</url>
-          <line>121</line>
-          <option name="timeStamp" value="122" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="kotlin-line">
-          <url>file://$PROJECT_DIR$/src/test/kotlin/io/github/aeckar/kent/RationalTest.kt</url>
-          <line>131</line>
-          <option name="timeStamp" value="123" />
-        </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
   </component>

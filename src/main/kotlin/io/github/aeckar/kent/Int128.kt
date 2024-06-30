@@ -2,6 +2,9 @@
 @file:JvmMultifileClass
 package io.github.aeckar.kent
 
+import io.github.aeckar.kent.Int128.Companion.blank
+import io.github.aeckar.kent.functions.FactorialOverflowSignal
+import io.github.aeckar.kent.functions.signallingFactorial
 import io.github.aeckar.kent.utils.*
 import kotlin.math.sign
 
@@ -32,6 +35,7 @@ internal infix fun Long.times(other: Long): MutableInt128 {
  * For numbers that are known to be smaller than -1 or larger than 16,
  * the `Int`-arg constructor should be used instead.
  */
+@JvmName("toInt128OrConstant")
 public fun Int.toInt128(): Int128 = when (this) {
     -1 -> Int128.NEGATIVE_ONE
     0 -> Int128.ZERO
@@ -45,6 +49,7 @@ public fun Int.toInt128(): Int128 = when (this) {
 /**
  * See [toInt128] for details.
  */
+@JvmName("toInt128OrConstant")
 public fun Long.toInt128(): Int128 = when (this) {
     -1L -> Int128.NEGATIVE_ONE
     0L -> Int128.ZERO
@@ -61,8 +66,8 @@ public fun Long.toInt128(): Int128 = when (this) {
  * See [Cumulative] for details on composite number mutability.
  */
 internal class MutableInt128 : Int128 {
-    constructor(unique: Int128) : super(unique.q1, unique.q2, unique.q3, unique.q4)
-    constructor(lower: Long) : super(lower)
+    constructor(unique: Int128) : super(unique.q1, unique.q2, unique.q3, unique.q4, PrivateAPIFlag)
+    constructor(lower: Long) : super(lower, PrivateAPIFlag)
 
     override fun immutable() = Int128(q1, q2, q3, q4)
 
@@ -86,6 +91,36 @@ internal class MutableInt128 : Int128 {
     override fun toString() = stringValue()                 // Neither can be cached
     override fun toString(radix: Int) = stringValue(radix)
 }
+
+/**
+ * Returns a 128-bit integer with its lowest 64 bits equivalent to the given value.
+ *
+ * Performs the same widening conversion as a primitive type would.
+ * As such, the sign of the original value is preserved.
+ */
+public fun Int128(q3q4: Long): Int128 = Int128(q3q4, PrivateAPIFlag)
+
+/**
+ * Returns a 128-bit integer with its lowest 32 bits equivalent to the given value.
+ *
+ * Performs the same widening conversion as a primitive type would.
+ * As such, the sign of the original value is preserved.
+ *
+ * For numbers that are known to be between -1 and 16, inclusive,
+ * [Int.toInt128] should be used instead.
+ */
+public fun Int128(q4: Int): Int128 {
+    val blank = blank(q4.sign)
+    return Int128(blank, blank, blank, q4, PrivateAPIFlag)
+}
+
+/**
+ * Returns a 128-bit integer with the specified bits.
+ *
+ * Each quarter consists of 32 bits.
+ * If the highest bit of [q1] is 1, the returned value is [negative][Int128.isNegative].
+ */
+public fun Int128(q1: Int, q2: Int, q3: Int, q4: Int): Int128 = Int128(q1, q2, q3, q4, PrivateAPIFlag)
 
 /**
  * Returns a 128-bit integer equal in value to the given string.
@@ -115,8 +150,9 @@ public fun Int128(s: String, radix: Int = 10, start: Int = 0, endExclusive: Int 
  * - The most significant bit (of the [upper half][high]) determines the sign
  * - Result of division and remainder are truncated
  *
- * Contrary to the behavior of primitive types, operations will throw [CompositeArithmeticException] on overflow or underflow.
+ * Unlike primitive types, operations will throw [CompositeArithmeticException] on overflow or underflow.
  */
+@PrivateInheritance
 @Suppress("EqualsOrHashCode")
 public open class Int128 : CompositeNumber<Int128> {
     public var q1: Int
@@ -133,49 +169,21 @@ public open class Int128 : CompositeNumber<Int128> {
     final override val isNegative: Boolean get() = q1 < 0
     final override val isPositive: Boolean get() = q1 >= 0
 
-    /**
-     * Returns a 128-bit integer with its lowest 64 bits equivalent to the given value.
-     *
-     * Performs the same widening conversion as a primitive type would.
-     * As such, the sign of the original value is preserved.
-     */
-    public constructor(q3q4: Long) {
-        val q3q4High = q3q4.high
-        val blank = blank(q3q4High.sign)
-        this.q1 = blank
-        this.q2 = blank
-        this.q3 = q3q4High
-        this.q4 = q3q4.low
-    }
-
-    /**
-     * Returns a 128-bit integer with its lowest 32 bits equivalent to the given value.
-     *
-     * Performs the same widening conversion as a primitive type would.
-     * As such, the sign of the original value is preserved.
-     *
-     * For numbers that are known to be between -1 and 16, inclusive,
-     * [Int.toInt128] should be used instead.
-     */
-    public constructor(q4: Int) {
-        val blank = blank(q4.sign)
-        this.q1 = blank
-        this.q2 = blank
-        this.q3 = blank
-        this.q4 = q4
-    }
-
-    /**
-     * Returns a 128-bit integer with the specified bits.
-     *
-     * Each quarter consists of 32 bits.
-     * If the highest bit of [q1] is 1, the returned value is [negative][isNegative].
-     */
-    public constructor(q1: Int, q2: Int, q3: Int, q4: Int) {
+    @Suppress("UNUSED_PARAMETER")
+    internal constructor(q1: Int, q2: Int, q3: Int, q4: Int, privateAPIFlag: PrivateAPIFlag) : super() {
         this.q1 = q1
         this.q2 = q2
         this.q3 = q3
         this.q4 = q4
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    internal constructor(q3q4: Long, privateAPIFlag: PrivateAPIFlag) {
+        this.q3 = q3q4.high
+        val blank = blank(q3.sign)
+        this.q1 = blank
+        this.q2 = blank
+        this.q4 = q3q4.low
     }
 
     private enum class DivisionType {
@@ -785,7 +793,7 @@ public open class Int128 : CompositeNumber<Int128> {
      * When passed to the string constructor, creates an instance equal in value to this.
      * The result of this function is cached when `radix == 10`.
      *
-     * To get a binary representation in two's complement form, use [twosComplement].
+     * To get a binary representation of this value in two's complement form, use [twosComplement].
      * @throws IllegalArgumentException `radix` is not between 2 and 36, inclusive
      */
     public open fun toString(radix: Int): String {
@@ -856,14 +864,34 @@ public open class Int128 : CompositeNumber<Int128> {
 
         public const val SIZE_BYTES: Int = 128 / Byte.SIZE_BITS
 
+        @Suppress("ConstPropertyName")
+        private const val serialVersionUID = 1L
+
         private class ConstantInt128(
             q1: Int,
             q2: Int,
             q3: Int,
             q4: Int,
             override val stringValue: String
-        ) : Int128(q1, q2, q3, q4), Constant {
+        ) : Int128(q1, q2, q3, q4, PrivateAPIFlag), Constant {
             override fun toString() = stringValue
+        }
+
+        /**
+         * Returns the factorial of [x] as a 128-bit integer.
+         *
+         * @throws ArithmeticException x is non-negative or the result overflows
+         */
+        @JvmStatic
+        public fun factorial(x: Int): Int128 {
+            if (x < 0) {
+                raiseUndefined("Factorial of $x is undefined")
+            }
+            return try {
+                signallingFactorial(x)
+            } catch (e: FactorialOverflowSignal) {
+                raiseOverflow("$x!", e)
+            }
         }
 
         // ---------------------------------------- destructuring ----------------------------------------

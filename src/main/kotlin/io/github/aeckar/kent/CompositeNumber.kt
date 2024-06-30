@@ -1,5 +1,7 @@
 package io.github.aeckar.kent
 
+// TODO implement kotlinx.serialization support
+
 /**
  * A numeric value composed of multiple primitive values.
  *

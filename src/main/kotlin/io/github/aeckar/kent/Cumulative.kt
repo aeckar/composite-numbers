@@ -1,7 +1,7 @@
 package io.github.aeckar.kent
 
 /**
- * When applied to a function, indicates that if the caller is mutable, the result will be stored in the same instance.
+ * Indicates that if the caller is mutable, the result of this function will be stored in the same instance.
  *
  * Applies to operations that return only their caller or a value returned
  * by [valueOf][CompositeNumber.valueOf] (or some variant of it) from within the same scope.

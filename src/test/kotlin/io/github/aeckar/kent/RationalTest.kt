@@ -1,11 +1,13 @@
 package io.github.aeckar.kent
 
+import io.github.aeckar.kent.Int128.Companion
 import io.github.aeckar.kent.Rational.Companion.MAX_VALUE
 import io.github.aeckar.kent.Rational.Companion.MIN_VALUE
 import io.github.aeckar.kent.Rational.Companion.NEGATIVE_ONE
 import io.github.aeckar.kent.Rational.Companion.ONE
 import io.github.aeckar.kent.Rational.Companion.TWO
 import io.github.aeckar.kent.Rational.Companion.ZERO
+import io.github.aeckar.kent.Rational.Companion.factorial
 import io.github.aeckar.kent.functions.ceil
 import io.github.aeckar.kent.functions.floor
 import org.junit.jupiter.api.Nested
@@ -33,34 +35,46 @@ class RationalTest {
         assertEquals(PI, -(-PI))
     }
 
-    @Test
-    fun stringConversion() {
-        val posStr = random.nextInt(1..Int.MAX_VALUE).toString()
-        val negStr = random.nextInt(Int.MIN_VALUE..-1).toString()
-        val max32Str = Int.MAX_VALUE.toString()
-        val min32Str = Int.MIN_VALUE.toString()
-        val max64Str = Long.MAX_VALUE.toString()
-        val min64Str = Long.MIN_VALUE.toString()
-        val neg1 = Rational("-1")
 
-        assertEquals(posStr, Rational(posStr).toString())
-        assertEquals(negStr, Rational(negStr).toString())
-        assertEquals(max32Str, Rational(max32Str).toString())
-        assertEquals(min32Str, Rational(min32Str).toString())
-        assertEquals(max64Str, Rational(max64Str).toString())
-        assertEquals("-922337203685477580e1", Rational(min64Str).toString()) // Lossy
-        assertEquals("1", Rational("1").toString())
-        assertEquals("0", Rational("0").toString())
-        assertEquals("-1", neg1.toString())
-// todo test e's, fracs
-        assertEquals(NEGATIVE_ONE, neg1)
+    @Nested
+    inner class StringConversion {
+        @Test
+        fun base10() {
+            val posStr = random.nextInt(1..Int.MAX_VALUE).toString()
+            val negStr = random.nextInt(Int.MIN_VALUE..-1).toString()
+            val max32Str = Int.MAX_VALUE.toString()
+            val min32Str = Int.MIN_VALUE.toString()
+            val max64Str = Long.MAX_VALUE.toString()
+            val min64Str = Long.MIN_VALUE.toString()
+            val neg1 = Rational("-1")
 
-        assertThrows<CompositeFormatException> { Rational("") }
-        assertThrows<CompositeFormatException> { Rational("3.1.4") }
-        assertThrows<CompositeFormatException> { Rational("--3.14") }
-        assertThrows<CompositeFormatException> { Rational("((3.14))") }
-        assertThrows<CompositeFormatException> { Rational("(3.14") }
-        assertDoesNotThrow { Rational(HUGE_STRING) }
+            assertEquals(posStr, Rational(posStr).toString())
+            assertEquals(negStr, Rational(negStr).toString())
+            assertEquals(max32Str, Rational(max32Str).toString())
+            assertEquals(min32Str, Rational(min32Str).toString())
+            assertEquals(max64Str, Rational(max64Str).toString())
+            assertEquals("-922337203685477580e1", Rational(min64Str).toString()) // Lossy
+            assertEquals("1", Rational("1").toString())
+            assertEquals("0", Rational("0").toString())
+            assertEquals("-1", neg1.toString())
+            assertEquals(NEGATIVE_ONE, neg1)
+
+            assertEquals("17/31", Rational("17/31").toString())     // Fraction
+            assertEquals("0.05", Rational(".05").toString())        // Leading dot
+            assertEquals("0.000000000000000014e-351", Rational("14e-367").toString()) // Exponent
+
+            assertThrows<CompositeFormatException> { Rational("") }
+            assertThrows<CompositeFormatException> { Rational("3.1.4") }
+            assertThrows<CompositeFormatException> { Rational("--3.14") }
+            assertThrows<CompositeFormatException> { Rational("((3.14))") }
+            assertThrows<CompositeFormatException> { Rational("(3.14") }
+            assertDoesNotThrow { Rational(HUGE_STRING) }
+        }
+
+        @Test
+        fun sciNotation() {
+            TODO()
+        }
     }
 
     @Nested
@@ -131,6 +145,13 @@ class RationalTest {
             assertEquals(base, base.pow(1))
             assertEquals(8 over 27, base.pow(3))
             assertEquals(27 over 8, base.pow(-3))
+        }
+
+        @Test
+        fun factorial() {
+            assertEquals(ONE, factorial(0))
+            assertEquals(ONE, factorial(1))
+            assertEquals(Rational("8683317618811886483000000000000000000"), factorial(33))
         }
     }
 

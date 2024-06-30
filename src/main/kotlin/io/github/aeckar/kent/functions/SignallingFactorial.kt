@@ -3,10 +3,8 @@
 package io.github.aeckar.kent.functions
 
 import io.github.aeckar.kent.Int128
-import io.github.aeckar.kent.raiseOverflow
-import io.github.aeckar.kent.raiseUndefined
 
-private val int128Factorials = arrayOf(
+private val INT128_FACTORIALS = arrayOf(
     Int128.ONE,
     Int128.ONE,
     Int128.TWO,
@@ -44,35 +42,19 @@ private val int128Factorials = arrayOf(
 )
 
 /**
- * Returns the factorial of [x] as a 128-bit integer.
- *
- * @throws ArithmeticException x is non-negative or the result overflows
+ * Avoids the overhead of creating a new exception every time this happens.
  */
-public fun factorial(x: Int): Int128 {
-    if (x < 0) {
-        raiseUndefined("Factorial of $x is undefined")
-    }
-    return try {
-        exhaustiveFactorial(x)
-    } catch (e: FactorialOverflowSignal) {
-        Int128.raiseOverflow("$x!", e)
-    }
-}
+@Suppress("JavaIoSerializableObjectMustHaveReadResolve")
+internal object FactorialOverflowSignal : Throwable()
 
 /**
  * Assumes [x] is non-negative.
  *
  * @throws FactorialOverflowSignal the result overflows
  */
-internal fun exhaustiveFactorial(x: Int): Int128 {
-    if (x > int128Factorials.lastIndex) {
+internal fun signallingFactorial(x: Int): Int128 {
+    if (x > INT128_FACTORIALS.lastIndex) {
         throw FactorialOverflowSignal
     }
-    return int128Factorials[x]
+    return INT128_FACTORIALS[x]
 }
-
-/**
- * Avoids the overhead of creating a new exception every time this happens.
- */
-@Suppress("JavaIoSerializableObjectMustHaveReadResolve")
-internal object FactorialOverflowSignal : Throwable()

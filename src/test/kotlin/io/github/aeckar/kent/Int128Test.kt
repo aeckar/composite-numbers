@@ -7,7 +7,7 @@ import io.github.aeckar.kent.Int128.Companion.ONE
 import io.github.aeckar.kent.Int128.Companion.TEN
 import io.github.aeckar.kent.Int128.Companion.TWO
 import io.github.aeckar.kent.Int128.Companion.ZERO
-import io.github.aeckar.kent.functions.factorial
+import io.github.aeckar.kent.Int128.Companion.factorial
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
@@ -35,7 +35,7 @@ class Int128Test {
     }
 
     @Nested
-    inner class Conversion {
+    inner class StringConversion {
         private val posStr = random.nextInt(1..Int.MAX_VALUE).toString()
         private val negStr = random.nextInt(Int.MIN_VALUE..-1).toString()
         private val max32Str = Int.MAX_VALUE.toString()
@@ -46,7 +46,7 @@ class Int128Test {
         private val neg1 = Int128("-1")
 
         @Test
-        fun base10String() {
+        fun base10() {
             assertEquals(posStr, Int128(posStr).toString())
             assertEquals(negStr, Int128(negStr).toString())
             assertEquals(max32Str, Int128(max32Str).toString())
@@ -65,7 +65,7 @@ class Int128Test {
         }
 
         @Test
-        fun baseNString() {
+        fun baseN() {
             // TODO
         }
     }
@@ -201,9 +201,7 @@ class Int128Test {
         fun factorial() {
             assertEquals2c(ONE, factorial(0))
             assertEquals2c(ONE, factorial(1))
-
-            val factorial33 = Int128("8683317618811886495518194401280000000")
-            assertEquals2c(factorial33, factorial(33))
+            assertEquals2c(Int128("8683317618811886495518194401280000000"), factorial(33))
             assertThrows<CompositeArithmeticException> { factorial(34) }
         }
     }

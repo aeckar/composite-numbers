@@ -6,6 +6,7 @@ import io.github.aeckar.kent.*
 import io.github.aeckar.kent.Cumulative
 import io.github.aeckar.kent.MutableRational
 import io.github.aeckar.kent.Rational.Companion.TWO_PI
+import io.github.aeckar.kent.functions.signallingFactorial as factorial
 
 // TODO test all
 
@@ -14,7 +15,7 @@ import io.github.aeckar.kent.Rational.Companion.TWO_PI
  *
  * Describes an alternating series.
  */
-private fun neg1Pow(n: Int): Int128 = if (n and 1 == 0) Int128.ONE else Int128.NEGATIVE_ONE
+private fun sign(n: Int): Int128 = if (n and 1 == 0) Int128.ONE else Int128.NEGATIVE_ONE
 
 /**
  * Returns an approximation of an elementary operation using the MacLaurin series (Taylor series at a = 0).
@@ -106,7 +107,7 @@ private /* noinline */ fun seriesApprox(    // FIXME
  */
 @Cumulative
 public fun ln(x: Rational): Rational = seriesApprox(x - Rational.ONE,
-    termNumer = { neg1Pow(it) },
+    termNumer = { sign(it) },
     termDenom = { it.toInt128() },
     powConstant = 0,
     powCoefficient = 1
@@ -119,8 +120,8 @@ public fun ln(x: Rational): Rational = seriesApprox(x - Rational.ONE,
  */
 @Cumulative
 public fun sin(x: Rational): Rational = seriesApprox(x % TWO_PI,
-    termNumer = { neg1Pow(it) },
-    termDenom = { exhaustiveFactorial(2 * it + 1) },
+    termNumer = { sign(it) },
+    termDenom = { factorial(2 * it + 1) },
     powConstant = 1,
     powCoefficient = 2
 )
@@ -130,8 +131,8 @@ public fun sin(x: Rational): Rational = seriesApprox(x % TWO_PI,
  */
 @Cumulative
 public fun cos(x: Rational): Rational = seriesApprox(x % TWO_PI,
-    termNumer = { neg1Pow(it) },
-    termDenom = { exhaustiveFactorial(2 * it) },
+    termNumer = { sign(it) },
+    termDenom = { factorial(2 * it) },
     powConstant = 0,
     powCoefficient = 2
 )
@@ -150,7 +151,7 @@ public fun tan(x: Rational): Rational = sin(x) / cos(x)
 @Cumulative
 public fun sinh(x: Rational): Rational = seriesApprox(x % TWO_PI,
     termNumer = { Int128.ONE },
-    termDenom = { exhaustiveFactorial(2 * it + 1) },
+    termDenom = { factorial(2 * it + 1) },
     powConstant = 1,
     powCoefficient = 2
 )
@@ -161,7 +162,7 @@ public fun sinh(x: Rational): Rational = seriesApprox(x % TWO_PI,
 @Cumulative
 public fun cosh(x: Rational): Rational = seriesApprox(x % TWO_PI,
     termNumer = { Int128.ONE },
-    termDenom = { Int128.TWO * exhaustiveFactorial(it) },
+    termDenom = { Int128.TWO * factorial(it) },
     powConstant = 0,
     powCoefficient = 2
 )
@@ -179,9 +180,9 @@ public fun tanh(x: Rational): Rational = sinh(x) / cosh(x)
  */
 @Cumulative
 public fun arcsin(x: Rational): Rational = seriesApprox(x,
-    termNumer = { exhaustiveFactorial(2*it) },
+    termNumer = { factorial(2*it) },
     termDenom = {
-        val square = Int128.TWO.pow(it) * exhaustiveFactorial(it)
+        val square = Int128.TWO.pow(it) * factorial(it)
         square * square * Int128(2 * it + 1)
     },
     powConstant = 1,
@@ -201,7 +202,7 @@ public fun arccos(x: Rational): Rational = Rational.HALF_PI - arcsin(x)
  */
 @Cumulative
 public fun arctan(x: Rational): Rational = seriesApprox(x,
-    termNumer = { neg1Pow(it) },
+    termNumer = { sign(it) },
     termDenom = { Int128(2 * it + 1) },
     powConstant = 1,
     powCoefficient = 2

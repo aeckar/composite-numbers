@@ -32,6 +32,7 @@ public infix fun Long.over(other: Long): Rational = Rational(this, other, 0)
  * For numbers that are known to be smaller than -1 or larger than 16,
  * the `Long`-args constructor should be used instead.
  */
+@JvmName("toRationalOrConstant")
 public fun Int.toRational(): Rational = when (this) {
     -1 -> Rational.NEGATIVE_ONE
     0 -> Rational.ZERO
@@ -43,6 +44,7 @@ public fun Int.toRational(): Rational = when (this) {
 /**
  * See [toRational] for details.
  */
+@JvmName("toRationalOrConstant")
 public fun Long.toRational(): Rational = when (this) {
     -1L -> Rational.NEGATIVE_ONE
     0L -> Rational.ZERO
@@ -75,6 +77,12 @@ internal class MutableRational(unique: Rational) : Rational(unique.numer, unique
 
     override fun toString() = stringValue() // Cannot be cached
 }
+
+/**
+ * Returns a rational number equal in value to [x].
+ */
+@JvmName("toRational")
+public fun Rational(x: Int): Rational = Rational(x.toLong())
 
 /**
  * Returns a rational number equal in value to [x].
@@ -157,6 +165,7 @@ public fun Rational(s: String): Rational = Rational.parse(s)
  * Furthermore, all values are guaranteed to be accurate to at least 19 digits
  * before considering error accumulated through calls to multiple operations.
  */
+@PrivateInheritance
 @Suppress("EqualsOrHashCode")
 public open class Rational internal constructor(
     numer: Long,
@@ -447,6 +456,10 @@ public open class Rational internal constructor(
 
     // ---------------------------------------- conversion functions ----------------------------------------
 
+    public fun sciNotation(): String {
+        TODO()
+    }
+
     final override fun toInt(): Int = toLong().toInt()
 
     final override fun toLong(): Long = (numer / denom) * tenPowExact(scale) * sign
@@ -474,30 +487,32 @@ public open class Rational internal constructor(
     /**
      * Returns a string representation of this value, in terms of its components, in base-10.
      *
-     * If the value of any component would otherwise have no effect on the value of
+     * If the value of any property would otherwise have no effect on the value of
      * this composite numer as a whole, it is omitted from the returned string
      * (for example, if the [denominator][denom] is 1).
-     * If the denominator is 1, the returned string will be in scientific notation.
      *
-     * For details on what instances of this class are composed of, see [Rational].
+     * The value represented by the returned string is scaled so that
+     * its representation without a dot will always be able to fit within a Long.
+     * Because of this, if this number was instantiated by passing `n.`[toString][Long.toString]`()`,
+     * the returned string is identical to that one (given `n != `[Long.MIN_VALUE]).
      *
-     * On the JVM, to get a string representation of this value after the division is evaluated,
+     * To get a representation of this value in scientific notation, use [sciNotation].
+     *
+     * On the JVM, to get a representation of this value after the division is evaluated,
      * call `.toBigDecimal().toString()`.
      */
     @Suppress("RedundantOverride")
     override fun toString(): String = super.toString()
 
-    // TODO remove public
-    public final override fun stringValue(): String {
-        if (denom == 1L) return buildString {    // Print in scientific notation
+    final override fun stringValue(): String {
+        if (denom == 1L) return buildString {    // String is scaled numerator
             val numerDigits = numer.toString()
             val negativeScale = scale < 0
             append(numerDigits)
             if (negativeScale) {
-                if (numerDigits.length == 1) {
-                    insert(0, '0')
-                    ++scale
-                }
+                val leadingZeros = (LONG_MAX_STRING.length - numerDigits.length).coerceAtMost(-scale)
+                repeat(leadingZeros) { insert(0, '0') }
+                scale += leadingZeros
                 insert(1, '.')
             }
             if (sign == -1) {
@@ -529,24 +544,29 @@ public open class Rational internal constructor(
                 = ConstantRational(6283185307179586477, 1, -18, 1, "6.283185307179586477")
 
         @JvmStatic public val MIN_VALUE: Rational
-            = ConstantRational(Long.MAX_VALUE, 1, Int.MAX_VALUE, -1, "-9.223372036854775807e2147483665")
+                = ConstantRational(Long.MAX_VALUE, 1, Int.MAX_VALUE, -1, "-9223372036854775807e2147483647")
         @JvmStatic public val MAX_VALUE: Rational
-            = ConstantRational(Long.MAX_VALUE, 1, Int.MAX_VALUE, 1, "9.223372036854775807e2147483665")
+                = ConstantRational(Long.MAX_VALUE, 1, Int.MAX_VALUE, 1, "9223372036854775807e2147483647")
 
         /**
-         * The largest integer k where n * 10^k can fit within a 64-bit integer.
+         * The largest integer k where n * 10^k is guaranteed to fit within a 64-bit integer.
          *
-         * Equal in value to `-`[LONG_MIN_SCALE]` + 2`.
+         * Equal to 19, which is `-`[LONG_MIN_SCALE]` + 2`.
          */
         private const val LONG_MAX_SCALE = 19
 
         /**
          * The smallest integer k where n * 10^k is not equal to 0,
-         * where n is a 64-bit integer.
+         * where n is guaranteed to fit in a 64-bit integer.
          *
-         * Equal in value to `-`[LONG_MAX_SCALE]` - 2`.
+         * Equal to -17, which is `-`[LONG_MAX_SCALE]` - 2`.
          */
         private const val LONG_MIN_SCALE = -17
+
+        @Suppress("ConstPropertyName")
+        private const val serialVersionUID = 1L
+
+        @Volatile private var factorialCache = arrayOf(ONE, ONE, TWO)
 
         private class ConstantRational(
             numer: Long,
@@ -556,6 +576,28 @@ public open class Rational internal constructor(
             override val stringValue: String
         ) : Rational(numer, denom, scale, sign), Constant {
             override fun toString() = stringValue
+        }
+
+        /**
+         * Returns the factorial of [x] as a 128-bit integer.
+         *
+         * @throws ArithmeticException x is non-negative or the result overflows
+         */
+        @JvmStatic
+        public fun factorial(x: Int): Rational {
+            val lastFactorial = factorialCache.lastIndex
+            if (x <= lastFactorial) {
+                return factorialCache[x]
+            }
+            val factorialsNeeded = x - lastFactorial
+            val cacheSize = x + 1
+            val cache = factorialCache.copyInto(Array(cacheSize) { ZERO })
+            repeat(factorialsNeeded) {
+                val lastIndex = lastFactorial + it
+                cache[lastIndex + 1] = cache[lastIndex] * Rational(lastIndex + 1)
+            }
+            factorialCache = cache
+            return cache.last()
         }
 
         // ------------------------------ string conversion ------------------------------
@@ -647,7 +689,7 @@ public open class Rational internal constructor(
                         }
                         view.move(-1)
                     }
-                    '1', '2', '3', '4', '5', '6', '7', '8', '9', '.' -> break
+                    '1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '/', 'e', 'E', ')' -> break
                     else -> raiseIncorrectFormat("illegal embedded character")
                 }
             } catch (e: StringIndexOutOfBoundsException) {
@@ -657,6 +699,7 @@ public open class Rational internal constructor(
             var denom = 1L
             var denomScale = 0
             if (view.satisfies { it == '/' }) {
+                view.move(1)
                 while (view.satisfies { it == '0' }) {
                     view.move(1)
                 }

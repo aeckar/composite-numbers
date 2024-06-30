@@ -1,5 +1,12 @@
 package io.github.aeckar.kent.utils
 
+internal const val LONG_MAX_STRING = "9223372036854775807"
+
+/**
+ * Passed to a constructor of a class to distinguish it from a pseudo-constructor with the same arguments.
+ */
+internal object PrivateAPIFlag
+
 /**
  * C-style boolean-to-integer conversion. 1 if true, 0 if false.
  */

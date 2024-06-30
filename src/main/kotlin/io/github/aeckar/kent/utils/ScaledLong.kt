@@ -3,8 +3,6 @@ package io.github.aeckar.kent.utils
 import io.github.aeckar.kent.Int128
 import io.github.aeckar.kent.raiseIncorrectFormat
 
-private const val LONG_MAX = "9223372036854775807"
-
 /**
  * Destructuring of a value into the closest scaled 64-bit integer to this and its scale.
  */
@@ -92,8 +90,9 @@ internal class ScaledLong {
                 move(1)
             }
             var scale = 0
-            val lacksDot = if (satisfies { it == '.' }) {   // If value has a fractional part...
-                val dotIndex = index()
+            val dotIndex: Int
+            if (satisfies { it == '.' }) {   // If value has a fractional part...
+                dotIndex = index()
                 do {
                     move(1)
                     if (isWithinBounds()) {
@@ -105,9 +104,8 @@ internal class ScaledLong {
                         }
                     }
                 } while (satisfies { it !in stop }) // ...while the end of the value is not reached
-                false
             } else {    // char() is rightmost whole digit
-                true
+                dotIndex = -1
             }
             val stopIndex: Int = index()
             do {
@@ -117,10 +115,12 @@ internal class ScaledLong {
             if (isNotWithinBounds()) {
                 return ZERO
             }
-            var length = index() - start + lacksDot.toInt()
-            if (length >= LONG_MAX.length) {
+            val trailingZeros = stopIndex - index() - 1
+            scale += trailingZeros + (dotIndex in index()..stopIndex).toInt()
+            var length = index() - start + (dotIndex != -1).toInt()
+            if (length >= LONG_MAX_STRING.length) {
                 val startingLength = length
-                while (length != LONG_MAX.length) { // Scale down to a length that can possibly fit a Long
+                while (length != LONG_MAX_STRING.length) { // Scale down to a length that can possibly fit a Long
                     if (char() == '.') {            // Skip digit to the left
                         move(-2)                    // Always within bounds
                     } else {
@@ -137,7 +137,7 @@ internal class ScaledLong {
                             break
                         }
                     }
-                    if (char() > LONG_MAX[index() - start]) {   // Value overflows, scale down by 1
+                    if (char() > LONG_MAX_STRING[index() - start]) {   // Value overflows, scale down by 1
                         --rightmostDigitOrDot
                         --length
                         break
