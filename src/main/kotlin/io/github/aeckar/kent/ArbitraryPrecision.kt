@@ -7,7 +7,7 @@ import java.math.BigInteger
 import java.nio.ByteBuffer
 
 /*
-    When multiplatform support is added, this file will be moved to "/jvmMain".
+    TODO LATER When multiplatform support is added, this file will be moved to "/jvmMain".
 
     This library is primarily useful for performing calculations with a low margin of error.
     Therefore, it would not make sense to code in constructors with a Double argument

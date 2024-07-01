@@ -1,11 +1,17 @@
-@file:JvmName("Conversions")
-@file:JvmMultifileClass
+@file:JvmName("Rationals")
 package io.github.aeckar.kent
 
 import io.github.aeckar.kent.functions.floor
 import io.github.aeckar.kent.utils.*
 import io.github.aeckar.kent.utils.productSign
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.buildClassSerialDescriptor
+import kotlinx.serialization.descriptors.element
+import kotlinx.serialization.encoding.*
 import kotlin.math.absoluteValue
+import kotlin.random.Random
 
 private const val LONG_MIN_UNSCALED = 922337203685477580L
 
@@ -13,7 +19,7 @@ private const val LONG_MIN_UNSCALED = 922337203685477580L
  * Returns a rational number equal to this value over the other as a fraction after simplification.
  * @throws CompositeArithmeticException [other] is 0 or the value is too large or small to be represented accurately
  */
-@JvmName("toRational")
+@JvmName("newInstance")
 public infix fun Int.over(other: Int): Rational = Rational(this.toLong(), other.toLong(), 0)
 
 /**
@@ -22,7 +28,7 @@ public infix fun Int.over(other: Int): Rational = Rational(this.toLong(), other.
  * If this value is [Long.MIN_VALUE], the value stored will be equal to −2^63 + 8.
  * @throws CompositeArithmeticException [other] is 0 or the value is too large or small to be represented accurately
  */
-@JvmName("toRational")
+@JvmName("newInstance")
 @Suppress("unused")
 public infix fun Long.over(other: Long): Rational = Rational(this, other, 0)
 
@@ -32,7 +38,7 @@ public infix fun Long.over(other: Long): Rational = Rational(this, other, 0)
  * For numbers that are known to be smaller than -1 or larger than 16,
  * the `Long`-args constructor should be used instead.
  */
-@JvmName("toRationalOrConstant")
+@JvmName("instanceOf")
 public fun Int.toRational(): Rational = when (this) {
     -1 -> Rational.NEGATIVE_ONE
     0 -> Rational.ZERO
@@ -44,7 +50,7 @@ public fun Int.toRational(): Rational = when (this) {
 /**
  * See [toRational] for details.
  */
-@JvmName("toRationalOrConstant")
+@JvmName("instanceOf")
 public fun Long.toRational(): Rational = when (this) {
     -1L -> Rational.NEGATIVE_ONE
     0L -> Rational.ZERO
@@ -53,35 +59,17 @@ public fun Long.toRational(): Rational = when (this) {
     else -> this over 1
 }
 
-internal fun MutableRational(numer: Int128, denom: Int128): MutableRational {
-    val sign = productSign(numer.sign, denom.sign)  // May be mutated by abs()
-    return Rational.ONE.mutable().valueOf(numer.abs(), denom.abs(), 0, sign) { "Instantiation" } as MutableRational
-}
-
 /**
- * A mutable rational number.
- *
- * See [Cumulative] for details on composite number mutability.
+ * Returns a random rational number.
  */
-internal class MutableRational(unique: Rational) : Rational(unique.numer, unique.denom, unique.scale, unique.sign) {
-    override fun immutable() = Rational(numer, denom, scale, sign)
-
-    @Cumulative
-    override fun mutable() = this
-
-    @Cumulative
-    override fun valueOf(numer: Long, denom: Long, scale: Int, sign: Int) = this.also {
-        it.numer = numer;   it.scale = scale
-        it.denom = denom;   it.sign = sign
-    }
-
-    override fun toString() = stringValue() // Cannot be cached
+public fun Random.nextRational(): Rational {
+    TODO("Not yet implemented")
 }
 
 /**
  * Returns a rational number equal in value to [x].
  */
-@JvmName("toRational")
+@JvmName("newInstance")
 public fun Rational(x: Int): Rational = Rational(x.toLong())
 
 /**
@@ -89,7 +77,7 @@ public fun Rational(x: Int): Rational = Rational(x.toLong())
  *
  * Some information may be lost after conversion.
  */
-@JvmName("toRational")
+@JvmName("newInstance")
 public fun Rational(x: Int128): Rational {
     val (numer, scale) = ScaledLong(x)
     return Rational(numer, 1, scale, x.sign)
@@ -99,7 +87,7 @@ public fun Rational(x: Int128): Rational {
  * Returns a rational number with the given [numerator][numer] and [denominator][denom] after simplification.
  * @throws CompositeArithmeticException [denom] is 0 or the value is too large or small to be represented accurately
  */
-@JvmName("toRational")
+@JvmName("newInstance")
 public fun Rational(numer: Long, denom: Long = 1, scaleAugment: Int = 0): Rational {
     fun gcf(x: Long, y: Long): Long {
         tailrec fun euclideanGCF(max: Long, min: Long): Long {
@@ -140,13 +128,13 @@ public fun Rational(numer: Long, denom: Long = 1, scaleAugment: Int = 0): Ration
  * Some information may be lost during conversion.
  * @throws CompositeArithmeticException [denom] is 0 or the value is too large or small to be represented accurately
  */
-@JvmName("toRational")
+@JvmName("newInstance")
 public fun Rational(numer: Int128, denom: Int128, scaleAugment: Int = 0): Rational {
     val sign = productSign(numer.sign, denom.sign)  // May be mutated by abs()
     return Rational.ONE.valueOf(numer.abs(), denom.abs(), scaleAugment, sign) { "Instantiation" }
 }
 
-@JvmName("toRational")
+@JvmName("newInstance")
 public fun Rational(s: String): Rational = Rational.parse(s)
 
 /**
@@ -165,6 +153,7 @@ public fun Rational(s: String): Rational = Rational.parse(s)
  * Furthermore, all values are guaranteed to be accurate to at least 19 digits
  * before considering error accumulated through calls to multiple operations.
  */
+@Serializable(with = Rational.Serializer::class)
 @PrivateInheritance
 @Suppress("EqualsOrHashCode")
 public open class Rational internal constructor(
@@ -200,6 +189,45 @@ public open class Rational internal constructor(
     final override val isNegative: Boolean get() = sign == -1
     final override val isPositive: Boolean get() = sign == 1
 
+    /**
+     * *kotlinx.serialization* serializer for rational numbers.
+     */
+    public object Serializer : KSerializer<Rational> {
+        override val descriptor: SerialDescriptor = buildClassSerialDescriptor("Rational") {
+            element<Long>("numer")
+            element<Long>("denom")
+            element<Int>("scale")
+            element<Int>("sign")
+        }
+
+        override fun deserialize(decoder: Decoder): Rational = decoder.decodeStructure(descriptor) {
+            var numer = 0L
+            var denom = 0L
+            var scale = 0
+            var sign = 0
+            while (true) {
+                when (val index = decodeElementIndex(descriptor)) {
+                    0 -> numer = decodeLongElement(descriptor, 0)
+                    1 -> denom = decodeLongElement(descriptor, 1)
+                    2 -> scale = decodeIntElement(descriptor, 2)
+                    3 -> sign = decodeIntElement(descriptor, 3)
+                    CompositeDecoder.DECODE_DONE -> break
+                    else -> error("Unexpected index: $index")
+                }
+            }
+            Rational(numer, denom, scale, sign)
+        }
+
+        override fun serialize(encoder: Encoder, value: Rational) {
+            encoder.encodeStructure(descriptor) {
+                encodeLongElement(descriptor, 0, value.numer)
+                encodeLongElement(descriptor, 1, value.denom)
+                encodeIntElement(descriptor, 2, value.scale)
+                encodeIntElement(descriptor, 3, value.sign)
+            }
+        }
+    }
+
     // ---------------------------------------- mutability ----------------------------------------
 
     override fun immutable() = this
@@ -218,7 +246,7 @@ public open class Rational internal constructor(
     }
 
     /**
-     * Value function with delegation to by-property constructor.
+     * Value function accepting a ratio of 128-bit integers.
      * @throws CompositeArithmeticException [denom] is 0 or the value is too large or small to be represented accurately
      */
     internal inline fun valueOf(
@@ -250,9 +278,9 @@ public open class Rational internal constructor(
     }
 
     /**
-     * Value function with delegation to by-property constructor.
+     * Value function accepting a ratio of 64-bit integers.
      *
-     * Returns a ratio with the given [numerator][numer] and [denominator][denom] after simplification.
+     * Returns a rational number with the given [numerator][numer] and [denominator][denom] after simplification.
      * @throws CompositeArithmeticException [denom] is 0 or the value is too large or small to be represented accurately
      */
     private fun valueOf(numer: Long, denom: Long, scaleAugment: Int): Rational {
@@ -456,8 +484,12 @@ public open class Rational internal constructor(
 
     // ---------------------------------------- conversion functions ----------------------------------------
 
-    public fun sciNotation(): String {
-        TODO()
+    public fun sciNotationString(): String {
+        TODO("Not yet implemented")
+    }
+
+    public fun decimalString(): String {
+        TODO("Not implemented yet")
     }
 
     final override fun toInt(): Int = toLong().toInt()
@@ -496,10 +528,8 @@ public open class Rational internal constructor(
      * Because of this, if this number was instantiated by passing `n.`[toString][Long.toString]`()`,
      * the returned string is identical to that one (given `n != `[Long.MIN_VALUE]).
      *
-     * To get a representation of this value in scientific notation, use [sciNotation].
-     *
-     * On the JVM, to get a representation of this value after the division is evaluated,
-     * call `.toBigDecimal().toString()`.
+     * To get a representation of this value in scientific notation, use [sciNotationString].
+     * For a fully evaluated representation, use [decimalString].
      */
     @Suppress("RedundantOverride")
     override fun toString(): String = super.toString()

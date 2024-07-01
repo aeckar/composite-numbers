@@ -1,12 +1,17 @@
-@file:JvmName("Conversions")
-@file:JvmMultifileClass
+@file:JvmName("Int128s")
 package io.github.aeckar.kent
 
-import io.github.aeckar.kent.Int128.Companion.blank
 import io.github.aeckar.kent.functions.FactorialOverflowSignal
 import io.github.aeckar.kent.functions.signallingFactorial
 import io.github.aeckar.kent.utils.*
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.buildClassSerialDescriptor
+import kotlinx.serialization.descriptors.element
+import kotlinx.serialization.encoding.*
 import kotlin.math.sign
+import kotlin.random.Random
 
 /**
  * Multiplies the two 64-bit integers and stores the result accurately within a 128-bit integer.
@@ -35,7 +40,7 @@ internal infix fun Long.times(other: Long): MutableInt128 {
  * For numbers that are known to be smaller than -1 or larger than 16,
  * the `Int`-arg constructor should be used instead.
  */
-@JvmName("toInt128OrConstant")
+@JvmName("instanceOf")
 public fun Int.toInt128(): Int128 = when (this) {
     -1 -> Int128.NEGATIVE_ONE
     0 -> Int128.ZERO
@@ -49,7 +54,7 @@ public fun Int.toInt128(): Int128 = when (this) {
 /**
  * See [toInt128] for details.
  */
-@JvmName("toInt128OrConstant")
+@JvmName("instanceOf")
 public fun Long.toInt128(): Int128 = when (this) {
     -1L -> Int128.NEGATIVE_ONE
     0L -> Int128.ZERO
@@ -61,35 +66,16 @@ public fun Long.toInt128(): Int128 = when (this) {
 }
 
 /**
- * A mutable 128-bit integer.
- *
- * See [Cumulative] for details on composite number mutability.
+ * Returns a random 128-bit integer.
  */
-internal class MutableInt128 : Int128 {
-    constructor(unique: Int128) : super(unique.q1, unique.q2, unique.q3, unique.q4, PrivateAPIFlag)
-    constructor(lower: Long) : super(lower, PrivateAPIFlag)
-
-    override fun immutable() = Int128(q1, q2, q3, q4)
-
-    @Cumulative
-    override fun mutable() = this
-
-    @Cumulative
-    override fun valueOf(q1: Int, q2: Int, q3: Int, q4: Int) = this.also {
-        it.q1 = q1; it.q3 = q3
-        it.q2 = q2; it.q4 = q4
-    }
-
-    @Cumulative
-    override fun valueOf(q3q4: Long) = this.also {
-        it.q3 = q3q4.high
-        it.q4 = q3q4.low
-    }
-
-    override fun out(operationResult: Int128) = operationResult
-
-    override fun toString() = stringValue()                 // Neither can be cached
-    override fun toString(radix: Int) = stringValue(radix)
+public fun Random.nextInt128(): Int128 {
+    val mag = nextInt(1, 5)
+    return Int128(
+        nextInt(),
+        if (mag > 1) 0 else nextInt(),
+        if (mag > 2) 0 else nextInt(),
+        if (mag == 4) 0 else nextInt()
+    )
 }
 
 /**
@@ -98,6 +84,7 @@ internal class MutableInt128 : Int128 {
  * Performs the same widening conversion as a primitive type would.
  * As such, the sign of the original value is preserved.
  */
+@JvmName("newInstance")
 public fun Int128(q3q4: Long): Int128 = Int128(q3q4, PrivateAPIFlag)
 
 /**
@@ -109,8 +96,9 @@ public fun Int128(q3q4: Long): Int128 = Int128(q3q4, PrivateAPIFlag)
  * For numbers that are known to be between -1 and 16, inclusive,
  * [Int.toInt128] should be used instead.
  */
+@JvmName("newInstance")
 public fun Int128(q4: Int): Int128 {
-    val blank = blank(q4.sign)
+    val blank = Int128.blank(q4.sign)
     return Int128(blank, blank, blank, q4, PrivateAPIFlag)
 }
 
@@ -120,6 +108,7 @@ public fun Int128(q4: Int): Int128 {
  * Each quarter consists of 32 bits.
  * If the highest bit of [q1] is 1, the returned value is [negative][Int128.isNegative].
  */
+@JvmName("newInstance")
 public fun Int128(q1: Int, q2: Int, q3: Int, q4: Int): Int128 = Int128(q1, q2, q3, q4, PrivateAPIFlag)
 
 /**
@@ -136,7 +125,7 @@ public fun Int128(q1: Int, q2: Int, q3: Int, q4: Int): Int128 = Int128(q1, q2, q
  * @throws CompositeArithmeticException the value cannot be represented accurately as a 128-bit integer
  * @throws IllegalArgumentException [radix] is negative or over 36
  */
-@JvmName("toInt128")
+@JvmName("newInstance")
 public fun Int128(s: String, radix: Int = 10, start: Int = 0, endExclusive: Int = s.length): Int128 {
     // Any radix above base-36 requires use of non-alphanumeric digits
     require(radix in 0..36) { "illegal radix" }
@@ -152,6 +141,7 @@ public fun Int128(s: String, radix: Int = 10, start: Int = 0, endExclusive: Int 
  *
  * Unlike primitive types, operations will throw [CompositeArithmeticException] on overflow or underflow.
  */
+@Serializable(with = Int128.Serializer::class)
 @PrivateInheritance
 @Suppress("EqualsOrHashCode")
 public open class Int128 : CompositeNumber<Int128> {
@@ -199,6 +189,45 @@ public open class Int128 : CompositeNumber<Int128> {
         }
     }
 
+    /**
+     * *kotlinx.serialization* serializer for 128-bit integers.
+     */
+    public object Serializer : KSerializer<Int128> {
+        override val descriptor: SerialDescriptor = buildClassSerialDescriptor("Int128") {
+            element<Int>("q1")
+            element<Int>("q2")
+            element<Int>("q3")
+            element<Int>("q4")
+        }
+
+        override fun deserialize(decoder: Decoder): Int128 = decoder.decodeStructure(descriptor) {
+            var q1 = 0
+            var q2 = 0
+            var q3 = 0
+            var q4 = 0
+            while (true) {
+                when (val index = decodeElementIndex(descriptor)) {
+                    0 -> q1 = decodeIntElement(descriptor, 0)
+                    1 -> q2 = decodeIntElement(descriptor, 1)
+                    2 -> q3 = decodeIntElement(descriptor, 2)
+                    3 -> q4 = decodeIntElement(descriptor, 3)
+                    CompositeDecoder.DECODE_DONE -> break
+                    else -> error("Unexpected index: $index")
+                }
+            }
+            Int128(q1, q2, q3, q4)
+        }
+
+        override fun serialize(encoder: Encoder, value: Int128) {
+            encoder.encodeStructure(descriptor) {
+                encodeIntElement(descriptor, 0, value.q1)
+                encodeIntElement(descriptor, 1, value.q2)
+                encodeIntElement(descriptor, 2, value.q3)
+                encodeIntElement(descriptor, 3, value.q4)
+            }
+        }
+    }
+
     // ---------------------------------------- mutability ----------------------------------------
 
     override fun immutable() = this
@@ -212,13 +241,13 @@ public open class Int128 : CompositeNumber<Int128> {
     final override fun valueOf(other: Int128) = with (other) { this@Int128.valueOf(q1, q2, q3, q4) }
 
     /**
-     * Value function with delegation to by-quarter constructor.
+     * Value function with delegation to by-property pseudo-constructor.
      */
     @Cumulative
     protected open fun valueOf(q1: Int, q2: Int, q3: Int, q4: Int): Int128 = Int128(q1, q2, q3, q4)
 
     /**
-     * Value function with delegation to `Long`-arg constructor.
+     * Value function with delegation to `Long`-arg pseudo-constructor.
      */
     @Cumulative
     protected open fun valueOf(q3q4: Long): Int128 = Int128(q3q4)
@@ -232,8 +261,9 @@ public open class Int128 : CompositeNumber<Int128> {
 
     /**
      * Value function with delegation to fourth-quarter constructor.
+     * 
+     * Intended for external access by [ScaledLong.parse] only.
      */
-    // Accessed by Companion.parse, divide(), ScaledLong.at()
     @Cumulative
     internal fun valueOf(q4: Int) = valueOf(0, 0, 0, q4)
 
@@ -781,10 +811,10 @@ public open class Int128 : CompositeNumber<Int128> {
      *
      * To get an ordinary binary representation with an optional negative sign, use [toString] with radix 2.
      */
-    public fun twosComplement(): String {
+    public fun binaryString(): String {
         fun Int.to2c() = this.toUInt().toString(radix = 2).padStart(Int.SIZE_BITS, '0')
 
-        return "${q1.to2c()}_${q2.to2c()}_${q3.to2c()}_${q4.to2c()}"
+        return "${q1.to2c()}${q2.to2c()}${q3.to2c()}${q4.to2c()}"
     }
 
     /**
@@ -793,7 +823,7 @@ public open class Int128 : CompositeNumber<Int128> {
      * When passed to the string constructor, creates an instance equal in value to this.
      * The result of this function is cached when `radix == 10`.
      *
-     * To get a binary representation of this value in two's complement form, use [twosComplement].
+     * To get a binary representation of this value in two's complement form, use [binaryString].
      * @throws IllegalArgumentException `radix` is not between 2 and 36, inclusive
      */
     public open fun toString(radix: Int): String {
@@ -950,6 +980,30 @@ public open class Int128 : CompositeNumber<Int128> {
 
         // ---------------------------------------- helpers ----------------------------------------
 
+        /**
+         * The most significant 32 bits of this value.
+         *
+         * Intended for external access by mutable value function with delegation to `Long`-arg constructor only.
+         */
+        @JvmStatic protected val Long.high: Int inline get() = (this ushr 32).toInt()
+
+        /**
+         * The least significant 32 bits of this value.
+         *
+         * Intended for external access by mutable value function with delegation to `Long`-arg constructor only.
+         */
+        @JvmStatic protected val Long.low: Int inline get() = this.toInt()
+
+        /**
+         * The [upper half][high] of this value.
+         */
+        private operator fun Long.component1() = high
+
+        /**
+         * The [lower half][low] of this value.
+         */
+        private operator fun Long.component2() = low
+
         private fun Int.widen() = this.toUInt().toLong()
 
         private fun ensureValidShift(count: Int) = require(count >= 0) { "Shift argument cannot be negative" }
@@ -971,25 +1025,3 @@ public open class Int128 : CompositeNumber<Int128> {
         }
     }
 }
-
-// ---------------------------------------- helper functions ----------------------------------------
-
-/**
- * The most significant 32 bits of this value.
- */
-private val Long.high inline get() = (this ushr 32).toInt()
-
-/**
- * The least significant 32 bits of this value.
- */
-private val Long.low inline get() = this.toInt()
-
-/**
- * The [upper half][high] of this value.
- */
-private operator fun Long.component1() = high
-
-/**
- * The [lower half][low] of this value.
- */
-private operator fun Long.component2() = low

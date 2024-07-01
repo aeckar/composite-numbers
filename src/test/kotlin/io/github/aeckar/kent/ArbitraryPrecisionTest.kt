@@ -1,6 +1,5 @@
 package io.github.aeckar.kent
 
-import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
@@ -10,8 +9,9 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 
 /*
-    When multiplatform support is added, this file will be moved to "/jvmTest".
+    TODO LATER When multiplatform support is added, this file will be moved to "/jvmTest".
  */
+
 class ArbitraryPrecisionTest {
     private val posInt = random.nextInt(0..Int.MAX_VALUE).toBigInteger()
     private val negInt = random.nextInt(Int.MIN_VALUE..-1).toBigInteger()
@@ -23,41 +23,35 @@ class ArbitraryPrecisionTest {
     private val zeroInt = BigInteger.ZERO
     private val neg1Int = (-1).toBigInteger()
 
-    @Nested
-    inner class Int128 {
-        @Test
-        fun big_integer_conversion() {
-            assertEquals(posInt, Int128(posInt).toBigInteger())
-            assertEquals(negInt, Int128(negInt).toBigInteger())
-            assertEquals(max32Int, Int128(max32Int).toBigInteger())
-            assertEquals(min32Int, Int128(min32Int).toBigInteger())
-            assertEquals(max64Int, Int128(max64Int).toBigInteger())
-            assertEquals(min64Int, Int128(min64Int).toBigInteger())
-            assertEquals(oneInt, Int128(oneInt).toBigInteger())
-            assertEquals(zeroInt, Int128(zeroInt).toBigInteger())
-            assertEquals(neg1Int, Int128(neg1Int).toBigInteger())
+    @Test
+    fun int128ToBigInteger() {
+        assertEquals(posInt, Int128(posInt).toBigInteger())
+        assertEquals(negInt, Int128(negInt).toBigInteger())
+        assertEquals(max32Int, Int128(max32Int).toBigInteger())
+        assertEquals(min32Int, Int128(min32Int).toBigInteger())
+        assertEquals(max64Int, Int128(max64Int).toBigInteger())
+        assertEquals(min64Int, Int128(min64Int).toBigInteger())
+        assertEquals(oneInt, Int128(oneInt).toBigInteger())
+        assertEquals(zeroInt, Int128(zeroInt).toBigInteger())
+        assertEquals(neg1Int, Int128(neg1Int).toBigInteger())
 
-            assertThrows<ArithmeticException> { Int128(BigInteger(HUGE_STRING)) }
-        }
+        assertThrows<ArithmeticException> { Int128(BigInteger(HUGE_STRING)) }
     }
 
-    @Nested
-    inner class Rational {
-        @Test
-        fun big_integer_conversion() {
-            val min64Plus1Int = min64Int + BigInteger.ONE
-            assertEquals(posInt, Rational(posInt).toBigInteger())
-            assertEquals(negInt, Rational(negInt).toBigInteger())
-            assertEquals(max32Int, Rational(max32Int).toBigInteger())
-            assertEquals(min32Int, Rational(min32Int).toBigInteger())
-            assertEquals(max64Int, Rational(max64Int).toBigInteger())
-            assertEquals(min64Plus1Int, Rational(min64Plus1Int).toBigInteger())
-            assertNotEquals(min64Int, Rational(min64Int).toBigInteger())
-            assertEquals(oneInt, Rational(oneInt).toBigInteger())
-            assertEquals(zeroInt, Rational(zeroInt).toBigInteger())
-            assertEquals(neg1Int, Rational(neg1Int).toBigInteger())
+    @Test
+    fun rationalToBigInteger() {
+        val min64Plus1Int = min64Int + BigInteger.ONE
+        assertEquals(posInt, Rational(posInt).toBigInteger())
+        assertEquals(negInt, Rational(negInt).toBigInteger())
+        assertEquals(max32Int, Rational(max32Int).toBigInteger())
+        assertEquals(min32Int, Rational(min32Int).toBigInteger())
+        assertEquals(max64Int, Rational(max64Int).toBigInteger())
+        assertEquals(min64Plus1Int, Rational(min64Plus1Int).toBigInteger())
+        assertNotEquals(min64Int, Rational(min64Int).toBigInteger())
+        assertEquals(oneInt, Rational(oneInt).toBigInteger())
+        assertEquals(zeroInt, Rational(zeroInt).toBigInteger())
+        assertEquals(neg1Int, Rational(neg1Int).toBigInteger())
 
-            assertDoesNotThrow { Rational(BigInteger(HUGE_STRING)) }
-        }
+        assertDoesNotThrow { Rational(BigInteger(HUGE_STRING)) }
     }
 }

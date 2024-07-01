@@ -1,6 +1,29 @@
 package io.github.aeckar.kent
 
-// TODO implement kotlinx.serialization support
+// ------------------------------ bulletin board ------------------------------
+
+                                /* Major features */
+
+// TODO implement multiplatform support
+// TODO create checkers for annotations using Checker Framework
+
+                                /* Int128 */
+
+// TODO implement Int128Test.StringConversion.baseNString
+
+                                /* Rational */
+
+// TODO implement Random.nextRational
+// TODO implement Rational.sciNotation
+// TODO implement RationalTest.StringConversion.sciNotationString
+// FIXME Rational.toString
+
+                                /* Matrix */
+
+// TODO implement, Matrix.ref, Matrix.rref, Matrix.inverse
+// TODO implement tests
+
+// ----------------------------------------------------------------------------
 
 /**
  * A numeric value composed of multiple primitive values.
@@ -101,12 +124,8 @@ public sealed class CompositeNumber<T : CompositeNumber<T>> : Number(), Comparab
     internal abstract fun uniqueMutable(): T
 
     /**
-     * Returns a new instance with the given value, or if [mutable], the same instance with the value stored.
-     *
-     * Overrides of this function will typically delegate the responsibility
-     * of value creation to another value function.
-     *
-     * Overrides of this function should never be marked final.
+     * Value function that returns a new instance with the given value,
+     * or if [mutable], the same instance with the value stored.
      */
     @Cumulative
     internal abstract fun valueOf(other: T): T

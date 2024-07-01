@@ -7,13 +7,13 @@ private fun Any.receiver() = when (this) {
 }
 
 /**
- * @throws ArithmeticException always
+ * @throws CompositeArithmeticException always
  */
 internal fun raiseUndefined(message: String): Nothing = throw CompositeArithmeticException(message)
 
 /**
  * The name of the expected result may be inferred from the composite number receiver type or companion.
- * @throws ArithmeticException always
+ * @throws CompositeArithmeticException always
  */
 internal fun Any.raiseOverflow(
     additionalInfo: String? = null,
@@ -24,7 +24,7 @@ internal fun Any.raiseOverflow(
 
 /**
  * The name of the expected result may be inferred from the composite number receiver type or companion.
- * @throws ArithmeticException always
+ * @throws CompositeFormatException always
  */
 internal fun Any.raiseIncorrectFormat(
     reason: String,
@@ -35,7 +35,25 @@ internal fun Any.raiseIncorrectFormat(
 }
 
 /**
- * Thrown when an operation involving [composite numbers][CompositeNumber] cannot proceed due to overflow or an undefined result.
+ * @throws TableDimensionsException always
+ */
+internal fun raiseInvalidDimensions(rows: Int, columns: Int, cause: Throwable? = null): Nothing {
+    throw TableDimensionsException(rows, columns, cause)
+}
+
+/**
+ * @throws NoSuchElementException always
+ */
+internal fun Table<*>.raiseOutOfBounds(rowIndex: Int, columnIndex: Int): Nothing {
+    throw NoSuchElementException(
+        "Index [$rowIndex, $columnIndex] lies outside the bounds of the table " +
+                "(rows = $rows, columns = $columns)"
+    )
+}
+
+/**
+ * Thrown when an operation involving [composite numbers][CompositeNumber] or [matrices][Matrix]
+ * cannot proceed due to overflow or an undefined result.
  */
 public class CompositeArithmeticException internal constructor(
     message: String,
@@ -50,3 +68,12 @@ public class CompositeFormatException internal constructor(
     message: String,
     cause: Throwable? = null
 ) : Exception(message, cause)
+
+/**
+ * Thrown when a [table][Table] is initialized with invalid dimensions.
+ */
+public class TableDimensionsException internal constructor(
+    rows: Int,
+    columns: Int,
+    cause: Throwable? = null
+) : Exception("Table has invalid dimensions (rows = $rows, columns = $columns)", cause)

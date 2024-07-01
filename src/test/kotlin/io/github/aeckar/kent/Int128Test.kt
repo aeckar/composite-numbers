@@ -21,8 +21,8 @@ private fun assertEquals2c(x: Int128, y: Int128) {
     try {
         assertEquals(x, y)
     } catch (e: AssertionFailedError) {
-        println("Expected :" + x.twosComplement())
-        println("Actual   :" + y.twosComplement())
+        println("Expected :" + x.binaryString())
+        println("Actual   :" + y.binaryString())
         throw e
     }
 }

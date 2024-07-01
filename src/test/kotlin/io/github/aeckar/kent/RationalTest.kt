@@ -1,6 +1,5 @@
 package io.github.aeckar.kent
 
-import io.github.aeckar.kent.Int128.Companion
 import io.github.aeckar.kent.Rational.Companion.MAX_VALUE
 import io.github.aeckar.kent.Rational.Companion.MIN_VALUE
 import io.github.aeckar.kent.Rational.Companion.NEGATIVE_ONE
@@ -73,7 +72,12 @@ class RationalTest {
 
         @Test
         fun sciNotation() {
-            TODO()
+            TODO("Not implemented yet")
+        }
+
+        @Test
+        fun full() {
+            TODO("Not implemented yet")
         }
     }
 
@@ -156,40 +160,40 @@ class RationalTest {
     }
 
     @Nested
-    inner class ElementaryFunctions {
+    inner class ElementaryFactorialKt {
         @Test
         fun ln() {
-            // TODO
+            TODO("Not implemented yet")
         }
 
         @Test
         fun sin() {
-            // TODO
+            TODO("Not implemented yet")
         }
 
         @Test
         fun cos() {
-            // TODO
+            TODO("Not implemented yet")
         }
 
         @Test
         fun sinh() {
-            // TODO
+            TODO("Not implemented yet")
         }
 
         @Test
         fun cosh() {
-            // TODO
+            TODO("Not implemented yet")
         }
 
         @Test
         fun arcsin() {
-            // TODO
+            TODO("Not implemented yet")
         }
 
         @Test
         fun arctan() {
-            // TODO
+            TODO("Not implemented yet")
         }
     }
 

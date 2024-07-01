@@ -1,7 +1,5 @@
 package io.github.aeckar.kent
 
-// TODO create checkers using the Checker Framework
-
 /**
  * Indicates that no constructors of this class may be public.
  *
